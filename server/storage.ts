@@ -680,8 +680,10 @@ export class DatabaseStorage implements IStorage {
       }
       
       // تحديث الملخصات اليومية للمشروعين
-      await this.updateDailySummaryForDate(transfer.fromProjectId, transfer.transferDate);
-      await this.updateDailySummaryForDate(transfer.toProjectId, transfer.transferDate);
+      if (transfer.transferDate) {
+        await this.updateDailySummaryForDate(transfer.fromProjectId, transfer.transferDate);
+        await this.updateDailySummaryForDate(transfer.toProjectId, transfer.transferDate);
+      }
       
       return newTransfer;
     } catch (error) {
@@ -720,8 +722,10 @@ export class DatabaseStorage implements IStorage {
     
     if (transfer) {
       // تحديث الملخصات اليومية للمشروعين
-      await this.updateDailySummaryForDate(transfer.fromProjectId, transfer.transferDate);
-      await this.updateDailySummaryForDate(transfer.toProjectId, transfer.transferDate);
+      if (transfer.transferDate) {
+        await this.updateDailySummaryForDate(transfer.fromProjectId, transfer.transferDate);
+        await this.updateDailySummaryForDate(transfer.toProjectId, transfer.transferDate);
+      }
     }
   }
 
@@ -3629,8 +3633,6 @@ export class DatabaseStorage implements IStorage {
   // AI System Logs
   async getAiSystemLogs(filters?: { logType?: string; operation?: string; limit?: number }): Promise<AiSystemLog[]> {
     try {
-      let query = db.select().from(aiSystemLogs);
-      
       const conditions = [];
       if (filters?.logType) {
         conditions.push(eq(aiSystemLogs.logType, filters.logType));
@@ -3639,17 +3641,13 @@ export class DatabaseStorage implements IStorage {
         conditions.push(ilike(aiSystemLogs.operation, `%${filters.operation}%`));
       }
 
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
+      const baseQuery = db.select().from(aiSystemLogs);
+      const finalQuery = baseQuery
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(aiSystemLogs.createdAt))
+        .limit(filters?.limit || 100);
 
-      query = query.orderBy(desc(aiSystemLogs.createdAt));
-      
-      if (filters?.limit) {
-        query = query.limit(filters.limit);
-      }
-
-      const results = await query;
+      const results = await finalQuery;
       return results;
     } catch (error) {
       console.error('Error getting AI system logs:', error);
@@ -3683,8 +3681,6 @@ export class DatabaseStorage implements IStorage {
   // AI System Metrics
   async getAiSystemMetrics(filters?: { metricType?: string; isActive?: boolean; limit?: number }): Promise<AiSystemMetric[]> {
     try {
-      let query = db.select().from(aiSystemMetrics);
-      
       const conditions = [];
       if (filters?.metricType) {
         conditions.push(eq(aiSystemMetrics.metricType, filters.metricType));
@@ -3693,17 +3689,13 @@ export class DatabaseStorage implements IStorage {
         conditions.push(eq(aiSystemMetrics.isActive, filters.isActive));
       }
 
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
+      const baseQuery = db.select().from(aiSystemMetrics);
+      const finalQuery = baseQuery
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(aiSystemMetrics.timestamp))
+        .limit(filters?.limit || 100);
 
-      query = query.orderBy(desc(aiSystemMetrics.timestamp));
-      
-      if (filters?.limit) {
-        query = query.limit(filters.limit);
-      }
-
-      const results = await query;
+      const results = await finalQuery;
       return results;
     } catch (error) {
       console.error('Error getting AI system metrics:', error);
@@ -3749,8 +3741,6 @@ export class DatabaseStorage implements IStorage {
   // AI System Decisions
   async getAiSystemDecisions(filters?: { status?: string; decisionType?: string; priority?: number }): Promise<AiSystemDecision[]> {
     try {
-      let query = db.select().from(aiSystemDecisions);
-      
       const conditions = [];
       if (filters?.status) {
         conditions.push(eq(aiSystemDecisions.status, filters.status));
@@ -3762,11 +3752,12 @@ export class DatabaseStorage implements IStorage {
         conditions.push(eq(aiSystemDecisions.priority, filters.priority));
       }
 
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
+      const baseQuery = db.select().from(aiSystemDecisions);
+      const finalQuery = baseQuery
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(aiSystemDecisions.createdAt));
 
-      const results = await query.orderBy(desc(aiSystemDecisions.createdAt));
+      const results = await finalQuery;
       return results;
     } catch (error) {
       console.error('Error getting AI system decisions:', error);
@@ -3829,8 +3820,6 @@ export class DatabaseStorage implements IStorage {
   // AI System Recommendations
   async getAiSystemRecommendations(filters?: { status?: string; priority?: string; targetArea?: string }): Promise<AiSystemRecommendation[]> {
     try {
-      let query = db.select().from(aiSystemRecommendations);
-      
       const conditions = [];
       if (filters?.status) {
         conditions.push(eq(aiSystemRecommendations.status, filters.status));
@@ -3843,11 +3832,12 @@ export class DatabaseStorage implements IStorage {
       //   conditions.push(eq(aiSystemRecommendations.targetArea, filters.targetArea));
       // }
 
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
+      const baseQuery = db.select().from(aiSystemRecommendations);
+      const finalQuery = baseQuery
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(aiSystemRecommendations.createdAt));
 
-      const results = await query.orderBy(desc(aiSystemRecommendations.createdAt));
+      const results = await finalQuery;
       return results;
     } catch (error) {
       console.error('Error getting AI system recommendations:', error);
@@ -3943,9 +3933,9 @@ export class DatabaseStorage implements IStorage {
         const notification = {
           id: `security-${table.table_name}-${Date.now()}`,
           userId: 'system', // نظام الأمان الداخلي
-          type: 'security' as const,
+          type: 'security',
           title: `🔐 تحذير أمني: الجدول ${table.table_name}`,
-          message: `الجدول ${table.table_name} يحتوي على بيانات حساسة ولا يحتوي على سياسات RLS. هذا قد يعرض البيانات للخطر.`,
+          body: `الجدول ${table.table_name} يحتوي على بيانات حساسة ولا يحتوي على سياسات RLS. هذا قد يعرض البيانات للخطر.`,
           data: {
             tableName: table.table_name,
             securityLevel: table.security_level,
@@ -3953,8 +3943,8 @@ export class DatabaseStorage implements IStorage {
             policySuggestions: policySuggestions,
             suggestedAction: 'تفعيل RLS وإضافة سياسات أمان'
           },
-          priority: 'high' as const,
-          read: false,
+          priority: 1,
+          isRead: false,
           createdAt: new Date(),
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // ينتهي خلال أسبوع
         };
@@ -3964,9 +3954,7 @@ export class DatabaseStorage implements IStorage {
 
       // حفظ الإشعارات الأمنية
       if (securityNotifications.length > 0) {
-        for (const notification of securityNotifications) {
-          await db.insert(notifications).values(notification);
-        }
+        await db.insert(notifications).values(securityNotifications);
         console.log(`⚠️ تم إنشاء ${securityNotifications.length} إشعار أمني للجداول عالية الخطورة`);
       }
 
