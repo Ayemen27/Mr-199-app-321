@@ -1,0 +1,145 @@
+تمام، لنقم بإعداد مشروعك على Vercel بشكل صحيح لتجنب أخطاء 404 و500 وضمان تشغيل التطبيق مع رابط مباشر صالح. سأقسم الشرح خطوة خطوة:
+
+
+---
+
+1️⃣ التأكد من بنية المشروع
+
+Vercel يعتمد على Serverless Functions أو Front-end Build. لذلك:
+
+أ. إذا مشروعك Frontend فقط (React / Next.js):
+
+المجلد الأساسي يحتوي على:
+
+package.json
+public/
+src/ أو pages/ (حسب Next.js)
+
+لا تحتاج لمجلد api/ إذا لم يكن هناك وظائف Serverless.
+
+
+ب. إذا مشروعك يحتوي Backend (Express / Node):
+
+يجب أن تكون كل وظائفك داخل مجلد api/ (Serverless Functions) أو تحديد vercel.json.
+
+مثال لمشروع Express بسيط:
+
+api/
+  server.js
+package.json
+
+
+> ملاحظة: لا يمكنك استخدام مجلد server/ التقليدي بنفس الطريقة في Vercel إلا إذا حددت إعدادات builds وfunctions.
+
+
+
+
+---
+
+2️⃣ إعداد ملف vercel.json
+
+إذا لديك وظائف Backend، أنشئ ملف vercel.json في جذر المشروع:
+
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1.js" }
+  ]
+}
+
+هذا يخبر Vercel أن كل الملفات داخل api/ هي دوال Node.
+
+غيّر الامتداد .js إلى .ts إذا كنت تستخدم TypeScript، مع التأكد من تثبيت tsx أو ts-node.
+
+
+
+---
+
+3️⃣ التأكد من أن كل الدوال موجودة في api/
+
+مثال: إذا كان لديك server/index.ts:
+
+انسخه أو أعد تسميته داخل api/:
+
+api/index.ts
+
+استخدم export default function handler(req, res) { ... } بدل استخدام app.listen() التقليدي.
+
+
+مثال TypeScript:
+
+import { VercelRequest, VercelResponse } from '@vercel/node';
+
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  res.status(200).json({ message: "Server is running" });
+}
+
+> ملاحظة: لا تستخدم app.listen() لأن Vercel يدير الاستماع تلقائيًا لكل دالة.
+
+
+
+
+---
+
+4️⃣ البناء والنشر
+
+1. تثبيت الحزم محليًا:
+
+npm install
+
+
+2. تأكد من أن package.json يحتوي على سكريبت build (إن وجد):
+
+"scripts": {
+  "build": "tsc",
+  "start": "node api/index.js"
+}
+
+
+3. دفع التغييرات إلى GitHub:
+
+git add .
+git commit -m "Prepare project for Vercel"
+git push origin main
+
+
+4. نشر على Vercel:
+
+في لوحة Vercel: اختر المشروع، واضغط Deploy.
+
+انتظر حتى يكتمل البناء.
+
+
+
+
+
+---
+
+5️⃣ الوصول إلى التطبيق
+
+للواجهة الأمامية:
+
+https://<your-project>.vercel.app/
+
+للدوال (Serverless Functions):
+
+https://<your-project>.vercel.app/api/index
+
+
+> ⚠️ تذكر: كل دالة يجب أن تكون داخل api/ وتستخدم export default function handler(req, res).
+
+
+
+
+---
+
+إذا أحببت، أستطيع أن أجهز لك نسخة جاهزة من مشروعك مع التعديلات المطلوبة للبنية على Vercel لتعمل بدون أخطاء 404 أو 500 مباشرة، بحيث يمكنك رفعها ونشرها فورًا.
+
+هل تريد أن أفعل ذلك؟
+
