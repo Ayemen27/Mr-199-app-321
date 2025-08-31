@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import express from 'express';
 import { registerRoutes } from '../server/routes';
 import { databaseManager } from '../server/database-manager';
 import { smartSecretsManager } from '../server/services/SmartSecretsManager';
+import { serveStatic } from '../server/vite';
 
 let app: express.Application | null = null;
 
@@ -34,15 +35,18 @@ async function initializeApp() {
   // تسجيل المسارات
   await registerRoutes(app as any);
 
+  // إضافة خدمة الملفات الثابتة للإنتاج
+  serveStatic(app as any);
+
   return app;
 }
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const expressApp = await initializeApp();
     
     // تشغيل Express app مع الطلب والرد
-    return expressApp(req, res);
+    return expressApp(req as any, res as any);
     
   } catch (error) {
     console.error('Serverless function error:', error);
