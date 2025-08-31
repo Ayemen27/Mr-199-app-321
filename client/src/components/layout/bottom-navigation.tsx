@@ -74,7 +74,7 @@ const allPagesData = [
     pages: [
       { path: "/ai-system", icon: Brain, label: "النظام الذكي", description: "مراقبة ذكية ولوحة تحكم الذكاء الاصطناعي", requireAdmin: true },
       { path: "/security-policies", icon: Shield, label: "السياسات الأمنية", description: "إدارة السياسات الأمنية والامتثال", requireAdmin: true },
-      { path: "/smart-errors", icon: Database, label: "كشف الأخطاء الذكي", description: "مراقبة وتحليل أخطاء قاعدة البيانات بذكاء اصطناعي", requireAdmin: false },
+      { path: "/smart-errors", icon: Database, label: "كشف الأخطاء الذكي", description: "مراقبة وتحليل أخطاء قاعدة البيانات بذكاء اصطناعي", requireAdmin: true },
     ]
   },
   // الإعدادات والإدارة - للمسؤولين فقط
