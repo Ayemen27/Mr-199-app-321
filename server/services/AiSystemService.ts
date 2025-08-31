@@ -690,7 +690,7 @@ export class AiSystemService {
           autoExecutable: recommendation.autoExecutable
         },
         outputData: executionResult,
-        confidence: typeof recommendation.confidence === 'number' ? recommendation.confidence : parseInt(recommendation.confidence?.toString() || '50'),
+        confidence: String(typeof recommendation.confidence === 'number' ? recommendation.confidence : parseInt(String(recommendation.confidence) || '50')),
         priority: recommendation.priority === 'critical' ? 5 : 
                   recommendation.priority === 'high' ? 4 : 3,
         status: executionResult.success ? 'executed' : 'failed',
@@ -1170,7 +1170,7 @@ export class AiSystemService {
       const supplierAnalysis = await Promise.all(
         suppliers.map(async (supplier) => {
           const payments = await storage.getSupplierPayments(supplier.id);
-          const totalDebt = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+          const totalDebt = payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
           
           return {
             supplierId: supplier.id,
@@ -1308,7 +1308,7 @@ export class AiSystemService {
           decisionTitle: 'تحذير: نقص في العمالة',
           decisionDescription: `يوجد ${activeProjects} مشروع نشط مع ${totalWorkers} عامل فقط. قد تحتاج لتوظيف عمال إضافيين.`,
           inputData: { activeProjects, totalWorkers, ratio: totalWorkers / activeProjects },
-          confidence: 87,
+          confidence: '87',
           priority: 4,
           status: 'pending',
           autoExecutable: false

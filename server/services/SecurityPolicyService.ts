@@ -105,12 +105,6 @@ export class SecurityPolicyService {
         title: 'سياسة أمنية جديدة',
         body: `تم إنشاء السياسة الأمنية: ${newPolicy.title}`,
         priority: this.getSeverityPriority(newPolicy.severity),
-        metadata: {
-          policyId: newPolicy.id,
-          category: newPolicy.category,
-          severity: newPolicy.severity
-        },
-        userId: policyData.createdBy || 'system'
       });
       
       console.log('✅ تم إنشاء السياسة الأمنية بنجاح:', newPolicy.id);
@@ -147,11 +141,7 @@ export class SecurityPolicyService {
         title: 'تحديث السياسة الأمنية',
         body: `تم تحديث السياسة الأمنية: ${updatedPolicy.title}`,
         priority: 3,
-        metadata: {
-          policyId: updatedPolicy.id,
-          updates: Object.keys(updates)
-        },
-        userId: 'system'
+
       });
       
       console.log('✅ تم تحديث السياسة الأمنية بنجاح');
@@ -191,11 +181,7 @@ export class SecurityPolicyService {
         title: 'حذف السياسة الأمنية',
         body: `تم حذف السياسة الأمنية: ${policy.title}`,
         priority: 2,
-        metadata: {
-          deletedPolicyId: id,
-          policyTitle: policy.title
-        },
-        userId: 'system'
+
       });
       
       console.log('✅ تم حذف السياسة الأمنية بنجاح');
@@ -265,12 +251,7 @@ export class SecurityPolicyService {
         title: 'اقتراح سياسة أمنية جديد',
         body: `اقتراح جديد: ${newSuggestion.title}`,
         priority: this.getPriorityNumber(newSuggestion.priority),
-        metadata: {
-          suggestionId: newSuggestion.id,
-          category: newSuggestion.category,
-          confidence: newSuggestion.confidence
-        },
-        userId: 'system'
+
       });
       
       console.log('✅ تم إنشاء اقتراح السياسة بنجاح');
@@ -352,12 +333,6 @@ export class SecurityPolicyService {
         title: 'تم تنفيذ اقتراح السياسة',
         body: `تم تحويل الاقتراح "${suggestion.title}" إلى سياسة فعالة`,
         priority: 2,
-        metadata: {
-          originalSuggestionId: suggestionId,
-          newPolicyId: newPolicy.id,
-          reviewerId
-        },
-        userId: reviewerId
       });
       
       console.log('✅ تم تحويل الاقتراح إلى سياسة فعالة بنجاح');
@@ -453,12 +428,7 @@ export class SecurityPolicyService {
         title: 'انتهاك سياسة أمنية',
         body: `تم اكتشاف انتهاك: ${violationData.violatedRule}`,
         priority: this.getSeverityPriority(violationData.severity),
-        metadata: {
-          violationId: newViolation.id,
-          policyId: violationData.policyId,
-          severity: violationData.severity
-        },
-        userId: 'system'
+
       });
       
       console.log('⚠️ تم تسجيل الانتهاك بنجاح');
