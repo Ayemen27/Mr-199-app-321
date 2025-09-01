@@ -13,7 +13,8 @@ const __dirname = path.dirname(__filename);
 
 // إعداد Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // التحقق من وجود متغيرات البيئة المطلوبة
 if (!supabaseUrl) {
@@ -21,12 +22,16 @@ if (!supabaseUrl) {
   throw new Error('SUPABASE_URL is required');
 }
 
-if (!supabaseKey) {
-  console.error('❌ متغير SUPABASE_ANON_KEY غير معرف');
-  throw new Error('SUPABASE_ANON_KEY is required');
+if (!supabaseServiceKey) {
+  console.error('❌ متغير SUPABASE_SERVICE_ROLE_KEY غير معرف');
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// عميل Supabase للعمليات الإدارية (تجاوز RLS)
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+// عميل Supabase العادي للعمليات العامة
+const supabase = supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : supabaseAdmin;
 
 // إعدادات المصادقة
 const JWT_SECRET = process.env.JWT_ACCESS_SECRET || 'construction-app-jwt-secret-2025';
@@ -103,7 +108,7 @@ app.post('/api/auth/login', async (req, res) => {
     console.log('🔍 البحث عن المستخدم:', email);
 
     // البحث عن المستخدم
-    const { data: users, error: fetchError } = await supabase
+    const { data: users, error: fetchError } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('email', email)
@@ -193,7 +198,7 @@ app.post('/api/auth/register', async (req, res) => {
     console.log('🔍 التحقق من وجود المستخدم:', email);
 
     // التحقق من وجود المستخدم
-    const { data: existingUsers, error: checkError } = await supabase
+    const { data: existingUsers, error: checkError } = await supabaseAdmin
       .from('users')
       .select('email')
       .eq('email', email)
@@ -221,7 +226,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     console.log('💾 إنشاء المستخدم في قاعدة البيانات...');
     // إنشاء المستخدم
-    const { data: newUser, error: insertError } = await supabase
+    const { data: newUser, error: insertError } = await supabaseAdmin
       .from('users')
       .insert({
         email,
