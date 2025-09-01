@@ -12,8 +12,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // إعداد Supabase
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+// التحقق من وجود متغيرات البيئة المطلوبة
+if (!supabaseUrl) {
+  console.error('❌ متغير SUPABASE_URL غير معرف');
+  throw new Error('SUPABASE_URL is required');
+}
+
+if (!supabaseKey) {
+  console.error('❌ متغير SUPABASE_ANON_KEY غير معرف');
+  throw new Error('SUPABASE_ANON_KEY is required');
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // إعدادات المصادقة
