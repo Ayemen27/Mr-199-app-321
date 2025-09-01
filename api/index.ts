@@ -284,13 +284,208 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+// ============ مسارات البيانات الأساسية ============
+
+// مسار جلب المشاريع مع الإحصائيات
+app.get('/api/projects/with-stats', async (req, res) => {
+  try {
+    console.log('📊 جلب المشاريع مع الإحصائيات');
+    
+    const { data: projects, error } = await supabaseAdmin
+      .from('projects')
+      .select(`
+        id,
+        name,
+        status,
+        imageUrl: image_url,
+        createdAt: created_at
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('خطأ في جلب المشاريع:', error);
+      return res.status(500).json({ message: 'خطأ في جلب المشاريع' });
+    }
+
+    res.json(projects || []);
+  } catch (error) {
+    console.error('خطأ في جلب المشاريع:', error);
+    res.status(500).json({ message: 'خطأ في جلب المشاريع' });
+  }
+});
+
+// مسار جلب العمال
+app.get('/api/workers', async (req, res) => {
+  try {
+    console.log('👷 جلب العمال');
+    
+    const { data: workers, error } = await supabaseAdmin
+      .from('workers')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('خطأ في جلب العمال:', error);
+      return res.status(500).json({ message: 'خطأ في جلب العمال' });
+    }
+
+    res.json(workers || []);
+  } catch (error) {
+    console.error('خطأ في جلب العمال:', error);
+    res.status(500).json({ message: 'خطأ في جلب العمال' });
+  }
+});
+
+// مسار إنشاء مشروع جديد
+app.post('/api/projects', async (req, res) => {
+  try {
+    console.log('➕ إنشاء مشروع جديد:', req.body);
+    
+    const { name, status, imageUrl } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ message: 'اسم المشروع مطلوب' });
+    }
+
+    const { data: newProject, error } = await supabaseAdmin
+      .from('projects')
+      .insert({
+        name,
+        status: status || 'active',
+        image_url: imageUrl
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('خطأ في إنشاء المشروع:', error);
+      return res.status(500).json({ message: 'خطأ في إنشاء المشروع' });
+    }
+
+    res.status(201).json(newProject);
+  } catch (error) {
+    console.error('خطأ في إنشاء المشروع:', error);
+    res.status(500).json({ message: 'خطأ في إنشاء المشروع' });
+  }
+});
+
+// مسار إنشاء عامل جديد
+app.post('/api/workers', async (req, res) => {
+  try {
+    console.log('👷 إنشاء عامل جديد:', req.body);
+    
+    const { name, type, dailyWage } = req.body;
+    
+    if (!name || !type || !dailyWage) {
+      return res.status(400).json({ message: 'جميع البيانات مطلوبة' });
+    }
+
+    const { data: newWorker, error } = await supabaseAdmin
+      .from('workers')
+      .insert({
+        name,
+        type,
+        daily_wage: dailyWage,
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('خطأ في إنشاء العامل:', error);
+      return res.status(500).json({ message: 'خطأ في إنشاء العامل' });
+    }
+
+    res.status(201).json(newWorker);
+  } catch (error) {
+    console.error('خطأ في إنشاء العامل:', error);
+    res.status(500).json({ message: 'خطأ في إنشاء العامل' });
+  }
+});
+
+// مسار جلب أنواع العمال
+app.get('/api/worker-types', async (req, res) => {
+  try {
+    const { data: workerTypes, error } = await supabaseAdmin
+      .from('worker_types')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('خطأ في جلب أنواع العمال:', error);
+      return res.status(500).json({ message: 'خطأ في جلب أنواع العمال' });
+    }
+
+    res.json(workerTypes || []);
+  } catch (error) {
+    console.error('خطأ في جلب أنواع العمال:', error);
+    res.status(500).json({ message: 'خطأ في جلب أنواع العمال' });
+  }
+});
+
+// مسار الإكمال التلقائي
+app.post('/api/autocomplete', async (req, res) => {
+  try {
+    const { category, value } = req.body;
+    
+    if (!category || !value) {
+      return res.status(400).json({ message: 'الفئة والقيمة مطلوبان' });
+    }
+
+    // حفظ البيانات للإكمال التلقائي
+    const { error } = await supabaseAdmin
+      .from('autocomplete_data')
+      .upsert({
+        category,
+        value: value.trim(),
+        usage_count: 1
+      }, {
+        onConflict: 'category,value',
+        ignoreDuplicates: false
+      });
+
+    if (error) {
+      console.error('خطأ في حفظ بيانات الإكمال التلقائي:', error);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('خطأ في الإكمال التلقائي:', error);
+    res.status(500).json({ message: 'خطأ في الإكمال التلقائي' });
+  }
+});
+
+// مسار جلب الملخص اليومي
+app.get('/api/projects/:projectId/daily-summary/:date', async (req, res) => {
+  try {
+    const { projectId, date } = req.params;
+    
+    const { data: summary, error } = await supabaseAdmin
+      .from('daily_expense_summaries')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('date', date)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('خطأ في جلب الملخص اليومي:', error);
+      return res.status(500).json({ message: 'خطأ في جلب الملخص اليومي' });
+    }
+
+    res.json(summary || null);
+  } catch (error) {
+    console.error('خطأ في جلب الملخص اليومي:', error);
+    res.status(500).json({ message: 'خطأ في جلب الملخص اليومي' });
+  }
+});
+
 // Route للتعامل مع جميع المسارات الأخرى
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ 
       message: 'API endpoint not found',
       path: req.path,
-      availableEndpoints: ['/api/health']
+      availableEndpoints: ['/api/health', '/api/projects/with-stats', '/api/workers', '/api/worker-types']
     });
   }
   
