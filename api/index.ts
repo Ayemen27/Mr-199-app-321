@@ -1,7 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-// نسخة مبسطة للاختبار أولاً
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
 app.use(express.json({ limit: '50mb' }));
@@ -19,58 +24,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// مسار الملفات الثابتة (مبني من قِبل Vite)
+const distPath = path.join(__dirname, 'dist');
+
+// خدمة الملفات الثابتة من dist/public
+app.use(express.static(distPath, {
+  maxAge: '1y', // Cache للملفات الثابتة
+  etag: true
+}));
+
 // Route اختبار أساسي
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'نظام إدارة المشاريع الإنشائية يعمل بنجاح',
     timestamp: new Date().toISOString(),
-    version: '1.1.0'
+    version: '1.2.0',
+    environment: 'production'
   });
-});
-
-// Route للصفحة الرئيسية
-app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html dir="rtl" lang="ar">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>نظام إدارة المشاريع الإنشائية</title>
-      <style>
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin: 0;
-          text-align: center;
-        }
-        .container {
-          max-width: 600px;
-          padding: 2rem;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 15px;
-          backdrop-filter: blur(10px);
-        }
-        h1 { font-size: 2.5rem; margin-bottom: 1rem; }
-        p { font-size: 1.2rem; margin-bottom: 1.5rem; }
-        .status { background: #22c55e; padding: 0.5rem 1rem; border-radius: 25px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>🏗️ نظام إدارة المشاريع الإنشائية</h1>
-        <p>تم نشر التطبيق بنجاح على Vercel!</p>
-        <div class="status">✅ النظام يعمل بكفاءة عالية</div>
-        <p><small>API متاح على: <a href="/api/health" style="color: #fbbf24;">/api/health</a></small></p>
-      </div>
-    </body>
-    </html>
-  `);
 });
 
 // Route للتعامل مع جميع المسارات الأخرى
@@ -83,8 +53,14 @@ app.get('*', (req, res) => {
     });
   }
   
-  // إعادة توجيه للصفحة الرئيسية
-  res.redirect('/');
+  // خدمة index.html للتطبيق الأساسي (SPA fallback)
+  const indexPath = path.join(distPath, 'index.html');
+  
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('التطبيق غير متوفر - يرجى التأكد من بناء التطبيق أولاً');
+  }
 });
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
