@@ -56,3 +56,4 @@ localPort = 19006
 externalPort = 8080
 
 [agent]
+integrations = ["javascript_log_in_with_replit==1.0.0"]
