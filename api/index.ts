@@ -159,7 +159,7 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
         role: user.role
       },
       token
@@ -226,11 +226,11 @@ app.post('/api/auth/register', async (req, res) => {
       .insert({
         email,
         password: hashedPassword,
-        name,
+        first_name: name.split(' ')[0] || name,
+        last_name: name.split(' ').slice(1).join(' ') || null,
         phone: phone || null,
         role: role || 'user',
-        isActive: true,
-        createdAt: new Date().toISOString()
+        is_active: true
       })
       .select()
       .single();
@@ -264,7 +264,7 @@ app.post('/api/auth/register', async (req, res) => {
       user: {
         id: newUser.id,
         email: newUser.email,
-        name: newUser.name,
+        name: `${newUser.first_name || ''} ${newUser.last_name || ''}`.trim(),
         role: newUser.role
       },
       token
