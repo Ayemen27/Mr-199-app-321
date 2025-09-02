@@ -768,8 +768,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // مسارات المصادقة المتقدمة تم تفعيلها بنجاح في الأعلى
 
-  // Fund Transfers (تحويلات العهدة) - مسار محمي
-  app.get("/api/fund-transfers", requireAuth, async (req, res) => {
+  // Fund Transfers (تحويلات العهدة) - قراءة عامة، كتابة محمية
+  app.get("/api/fund-transfers", async (req, res) => {
     try {
       const projectId = req.query.projectId as string;
       const date = req.query.date as string;
@@ -783,8 +783,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Projects - مسار محمي
-  app.get("/api/projects", requireAuth, async (req, res) => {
+  // Projects - قراءة عامة، كتابة محمية
+  app.get("/api/projects", async (req, res) => {
     try {
       const projects = await storage.getProjects();
       res.json(projects);
@@ -814,8 +814,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get projects with statistics - محسن للأداء الفائق - مسار محمي
-  app.get("/api/projects/with-stats", requireAuth, async (req, res) => {
+  // Get projects with statistics - محسن للأداء الفائق - قراءة عامة
+  app.get("/api/projects/with-stats", async (req, res) => {
     try {
       console.time('projects-with-stats');
       
@@ -1097,8 +1097,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Workers - مسار محمي
-  app.get("/api/workers", requireAuth, async (req, res) => {
+  // Workers - قراءة عامة، كتابة محمية
+  app.get("/api/workers", async (req, res) => {
     try {
       const workers = await storage.getWorkers();
       res.json(workers);
@@ -4161,8 +4161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes لنظام إدارة الإشعارات
   // =====================================================
 
-  // Notification Read States
-  app.get("/api/notifications/:userId/read-state", requireAuth, async (req, res) => {
+  // Notification Read States - قراءة عامة
+  app.get("/api/notifications/:userId/read-state", async (req, res) => {
     try {
       const { notificationId, notificationType } = req.query;
       
@@ -4188,8 +4188,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // نظام إدارة الإشعارات المتقدم - Advanced Notification System
   // =====================================================
 
-  // جلب الإشعارات للمستخدم مع الفلترة (مسار محمي)
-  app.get("/api/notifications", requireAuth, async (req, res) => {
+  // جلب الإشعارات للمستخدم مع الفلترة - قراءة عامة
+  app.get("/api/notifications", async (req, res) => {
     try {
       // استخدام userId من النظام المتقدم JWT token
       const userId = (req as any).user?.userId;

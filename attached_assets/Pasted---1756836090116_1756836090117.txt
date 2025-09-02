@@ -1,0 +1,416 @@
+تمام — خلّيني ألخّص كلّ الأسباب التي ظهرت في سجلاتك، ثم أعطيك “خطة إصلاح نهائية ومنهجية” + نظام تتبّع (Observability) ورسائل أخطاء موحّدة. سأقسّمها إلى مراحل واضحة مع شيفرات جاهزة للّصق.
+
+
+---
+
+1) الأسباب الجذرية من السجلات
+
+1. أخطاء 401 بعد النشر على Vercel
+السبب المعتاد هو أن الطلبات المحمية تُنفَّذ بدون توكن صالح أو أن الكوكي/الهيدر لا يصل من الدومين الأمامي إلى الـ API (خصوصًا مع كروس دومين)، أو أن مفاتيح البيئة الخاصة بالمصادقة غير متوفّرة في بيئة الإنتاج على Vercel. ‏بيئة Vercel تفصل متغيّرات البيئة بين Preview وProduction ويجب ضبطها صراحة أو استخدام integration لسحبها تلقائيًا. ‏أيضًا الكوكي عبر الدومينات يتطلّب SameSite=None; Secure. 
+
+
+2. الخطأ التنفيذي: “متغيّرات Supabase غير متاحة في بيئة الإنتاج”
+هذا يعني أن مفاتيح SUPABASE_URL و/أو SUPABASE_ANON_KEY (وأي مفاتيح أخرى كـ Service Role) غير مضبوطة في Vercel (أو اسم المتغيّر مختلف عمّا يقرأه الكود). حلّه يكون بضبطها في Project → Settings → Environment Variables أو باستخدام دمج Supabase مع Vercel الذي يزرع المفاتيح تلقائيًا. 
+
+
+3. أخطاء TypeScript TS7006 (Implicit any)
+هذه أخطاء نوعية تُفشل الفحص النوعي (أو تظهر تحذيرات قاسية) لأن معاملات الدوال لم تُكتب Types لها (مثل callbacks لـ reduce/map). الحل هو كتابة أنواع صريحة أو تفعيل/الالتزام بـ noImplicitAny. 
+
+
+4. تحذير pnpm: “Ignored build scripts … Run pnpm approve-builds”
+ابتداءً من pnpm 10 هناك نمط أمني يمنع سكربتات البناء لبعض الحِزم (مثل esbuild, puppeteer, bcrypt) ما لم تُوافق عليها صراحةً (approve) أو تضيف إعدادًا يسمح ببنائها. هذا مهمّ لأن حِزمًا مثل bcrypt تحتاج ما بعد التثبيت (build) وقد تفشل على Serverless. الحل: إما استبدال الحِزم (مثلاً استخدام bcryptjs) أو السماح بسكربتات البناء في pnpm عبر CI/الكونفيج. 
+
+
+5. Puppeteer و bcrypt تحديدًا على Vercel
+
+Puppeteer: على Serverless يوصى باستخدام puppeteer-core مع @sparticuz/chromium أو اتّباع دليل Vercel لتشغيله كتبعيات متوافقة. ‏المنصّة تذكر إرشادات خاصّة. 
+
+bcrypt: يُفضَّل bcryptjs (نسخة JS خالصة) بدل bcrypt (الذي يحتاج build native) على وظائف Serverless. 
+
+
+
+
+
+---
+
+2) خطة إصلاح نهائية (خطوة بخطوة)
+
+> نفّذ الخطوات حسب الترتيب لضمان نتيجة ثابتة.
+
+
+
+A) تثبيت متغيّرات البيئة (Supabase + غيره) على Vercel
+
+1. من لوحة Vercel: Project → Settings → Environment Variables
+أضِف القيم التالية (أسماء طبقًا لما يقرأه كودك):
+
+SUPABASE_URL
+
+SUPABASE_ANON_KEY
+
+(اختياري للسيرفر فقط) SUPABASE_SERVICE_ROLE_KEY لا تكشفه للمتصفح
+
+أي مفاتيح JWT أو Secrets أخرى (JWT_SECRET, DATABASE_URL, …)
+
+
+
+2. لو تستخدم تكامل Supabase: اربطه بالمشروع ليُنشئ المتغيّرات تلقائيًا. 
+
+
+3. اسحبها محليًا للفحص:
+
+vercel env pull .env
+
+واحرص على أنّ الكود يقرأ نفس الأسماء تمامًا. ‏‏
+
+
+4. أضِف تحقّقًا صارمًا وقت التشغيل (Runtime Env Validation) في أول نقطة دخول للسيرفر:
+
+
+
+// server/env.ts
+import { z } from "zod";
+
+const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("production"),
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_ANON_KEY: z.string().min(1),
+  // مفاتيح سيرفر فقط (لا تُعرِّضها للمتصفح)
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  JWT_SECRET: z.string().min(32).optional(),
+  DATABASE_URL: z.string().url().optional(),
+});
+
+export const ENV = envSchema.parse(process.env);
+
+> أي نقص سيُرمى كخطأ واضح مع اسم المتغيّر المفقود بدل كراش غامض.
+
+
+
+B) إصلاح المصادقة ومنع 401
+
+إن كنت تعتمد على كوكي عبر دومين مختلف: اضبط الكوكي على SameSite=None; Secure، وفعّل CORS مع السماح بالمصدر الأمامي وإرسال الكوكي (credentials: true). ‏هذا فارق شائع بين التطوير المحلي والإنتاج. 
+
+إن كنت تستخدم هيدر Authorization Bearer: تأكد أن الفرونت يمرّر الهيدر، وأن الـ API لا يُسقِطه عبر redirect أو proxy، وأنك لا تعتمد على كاش يحجب الهيدر. (علمًا أن وجود Authorization يُعطّل الكاش على بعض الطبقات — سلوك مقصود). 
+
+أضِف طبقة مصادقة موحّدة كوسيط (middleware) أمام المسارات المحمية:
+
+
+// server/auth.ts
+import type { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { ENV } from "./env";
+
+export function authRequired(req: Request, res: Response, next: NextFunction) {
+  const hdr = req.headers.authorization;
+  const token = hdr?.startsWith("Bearer ") ? hdr.slice(7) : null;
+
+  if (!token) return res.status(401).json({
+    ok: false,
+    code: "AUTH_MISSING_TOKEN",
+    message: "يجب إرسال توكن المصادقة في ترويسة Authorization.",
+    requestId: req.id,
+  });
+
+  try {
+    const payload = jwt.verify(token, ENV.JWT_SECRET!) as { sub: string };
+    (req as any).userId = payload.sub;
+    next();
+  } catch (e) {
+    return res.status(401).json({
+      ok: false,
+      code: "AUTH_INVALID_TOKEN",
+      message: "التوكن مفقود أو منتهي أو غير صالح.",
+      requestId: req.id,
+    });
+  }
+}
+
+> طبّق authRequired على /api/projects و/api/projects/with-stats وأي مسار محمي.
+
+
+
+Supabase Auth (لو تستخدمه): أنشئ عميل Supabase على السيرفر بمفاتيح من ENV ولا تمرّر Service Role للمتصفح، واستعمل توكن المستخدم الصادر من Supabase للتحقق داخل السيرفر. ‏دليل الدمج مع Vercel مفيد لو أردت إدارة المفاتيح تلقائيًا. 
+
+
+C) قفل الأنواع وإزالة TS7006
+
+اجعل البناء يفشل عند أخطاء الأنواع بإضافة خطوة typecheck:
+
+
+// package.json
+{
+  "scripts": {
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
+
+في tsconfig.json تأكّد من:
+
+
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true
+  }
+}
+
+صحّح callbacks الشائعة (أمثلة نموذجية من أخطائك):
+
+
+type T = { amount: number };
+const arr: T[] = [];
+
+const total = arr.reduce<number>((sum, t) => sum + t.amount, 0);
+//            ^^^^^^^  أضف نوع المُراكِم
+
+// أمثلة متكررة أخرى:
+const map = new Map<string, number>();
+map.forEach((value: number, key: string) => { /* ... */ });
+
+["a","b"].reduce<string[]>((acc: string[], s: string) => { acc.push(s); return acc; }, []);
+
+> بهذا لن يظهر TS7006 (المعاملات ذات النوع الضمني any). 
+
+
+
+D) التعامل مع تحذير pnpm “Ignored build scripts”
+
+اختر أحد النهجين:
+
+1) تلافي الحِزم التي تحتاج build
+
+استبدل bcrypt بـ bcryptjs. (لا يحتاج build).
+
+لـ Puppeteer استخدم puppeteer-core + @sparticuz/chromium (مخصّص للبيئات عديمة النظام مثل Serverless). ‏إتّبع دليل Vercel. 
+
+
+2) أو السماح بسكربتات البناء في pnpm (CI-approved)
+
+في CI/البناء (أو محليًا) نفِّذ:
+
+pnpm approve-builds
+
+ثم ادفع ملف الموافقات إلى المستودع (انظر مستندات pnpm). أو استخدم إعدادات pnpm CI لضبط السلوك. الفكرة: السماح المسبق لحِزم محددة بتشغيل سكربتات postinstall/build. ‏(تفاصيل في مراجع pnpm). 
+
+
+> شخصيًا أوصي بالخيار (1) على Vercel للبساطة والاعتمادية.
+
+
+
+E) تشغيل Express على Vercel بطريقة صحيحة
+
+الأفضل تحويل كل مسار إلى Serverless Function تحت مجلّد api/، أو توليد مخرجات Build Output API بالشكل الصحيح إن كنت تبني ذاتيًا. اطلع على “Using Express.js with Vercel” و”Build Output API”. ‏تضمن هذه الطريقة توجيه الطلبات بشكل صحيح في بيئة Serverless. 
+
+عند الحاجة، استخدم Runtime Node على Vercel (Functions) وحدّد الإعدادات اللازمة (الذاكرة/المدّة) في vercel.json أو config.json (Build Output API). 
+
+
+F) (اختياري) Puppeteer على Vercel
+
+استبدل puppeteer بـ:
+
+pnpm add puppeteer-core @sparticuz/chromium
+
+مثال تهيئة:
+
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
+
+const browser = await puppeteer.launch({
+  args: chromium.args,
+  defaultViewport: chromium.defaultViewport,
+  executablePath: await chromium.executablePath(),
+  headless: true,
+});
+
+خصّص الذاكرة/المدّة للدالة عند الحاجة. ‏(راجع دليل Vercel). 
+
+
+
+---
+
+3) نظام تتبّع (Observability) ورسائل أخطاء موحّدة
+
+(1) Structured Logging + Request ID
+
+أضِف pino + pino-http لتسجيل مُهيكل JSON يسهل تتبّعه في “Vercel Logs”:
+
+// server/logging.ts
+import pino from "pino";
+import pinoHttp from "pino-http";
+import { randomUUID } from "crypto";
+
+export const logger = pino({
+  level: process.env.LOG_LEVEL || "info",
+  base: undefined, // لا تُضمّن pid/hostname لتقليل الضوضاء
+});
+
+export const httpLogger = pinoHttp({
+  logger,
+  genReqId: (req) => req.headers["x-request-id"]?.toString() || randomUUID(),
+  customLogLevel: (res, err) => (err ? "error" : res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info"),
+  serializers: {
+    req(req) { return { id: req.id, method: req.method, url: req.url }; },
+    res(res) { return { statusCode: res.statusCode }; },
+  },
+});
+
+وفي السيرفر:
+
+import express from "express";
+import { httpLogger } from "./logging";
+const app = express();
+app.use(httpLogger);
+
+> سجّلات JSON تجعل تتبّع 401/500 أسهل عبر x-request-id. ‏(ممارسات pino). 
+
+
+
+(2) مُعالج أخطاء عام + كود أخطاء مُوحّد
+
+عرّف أصناف أخطاء وأرسل ردودًا موحّدة:
+
+// server/errors.ts
+export class AppError extends Error {
+  status: number; code: string; details?: unknown;
+  constructor(status: number, code: string, message: string, details?: unknown) {
+    super(message); this.status = status; this.code = code; this.details = details;
+  }
+}
+export class AuthError extends AppError {
+  constructor(message = "غير مصرح") { super(401, "AUTH_ERROR", message); }
+}
+// ... ValidationError, NotFoundError, ExternalServiceError, ...
+
+// middleware
+import type { Request, Response, NextFunction } from "express";
+import { logger } from "./logging";
+
+export function errorHandler(err: any, req: Request, res: Response, _next: NextFunction) {
+  const status = err?.status ?? 500;
+  const code   = err?.code   ?? "INTERNAL_ERROR";
+  const body = {
+    ok: false,
+    code,
+    message: err?.message || "حدث خطأ غير متوقع.",
+    requestId: (req as any).id,
+    details: process.env.NODE_ENV === "production" ? undefined : err?.details ?? String(err),
+  };
+  if (status >= 500) logger.error({ err, requestId: (req as any).id }, "Unhandled error");
+  else logger.warn({ err, requestId: (req as any).id }, "Handled error");
+  res.status(status).json(body);
+}
+
+ثم:
+
+app.use(errorHandler);
+
+(3) فحص إدخال الطلبات (Zod) مع رسائل واضحة
+
+import { z } from "zod";
+import type { RequestHandler } from "express";
+import { AppError } from "./errors";
+
+const createProjectSchema = z.object({
+  name: z.string().min(1),
+  budget: z.number().nonnegative(),
+});
+
+export const createProject: RequestHandler = (req, res, next) => {
+  const parsed = createProjectSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return next(new AppError(400, "VALIDATION_ERROR", "البيانات غير صالحة", parsed.error.flatten()));
+  }
+  // ... أكمل
+};
+
+(4) Sentry (اختياري لكنه قوي)
+
+دمج Sentry يعطيك تتبّع StackTraces وسياق الطلب بنقرة:
+
+// server/sentry.ts
+import * as Sentry from "@sentry/node";
+import "@sentry/tracing";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 0.2,
+});
+// في express:
+app.use(Sentry.Handlers.requestHandler());
+app.use(Sentry.Handlers.tracingHandler());
+// ... routes
+app.use(Sentry.Handlers.errorHandler()); // قبل errorHandler الخاص بك
+
+> يوجد تكامل رسمي لـ Express ويمكن ربطه مع Vercel بسهولة. 
+
+
+
+
+---
+
+4) ضبط النشر على Vercel (Express/Functions)
+
+إن أردت Express كاملًا: اتّبع دليل Vercel “Using Express.js with Vercel” لتحويله إلى Serverless Function داخل api/ (أو توليد Build Output API بالشكل المناسب). هذا يضمن أن vercel build يضع مخرجاتك في .vercel/output/functions/.... ‏‏
+
+افصل الواجهة (Vite) عن الـ API السيرفلس (مجلد api/) واسمح للواجهة بالنداء على /api/... مباشرة. ‏(راجع وثائق Functions). 
+
+
+
+---
+
+5) قائمة تحقق قبل/بعد النشر
+
+قبل:
+
+pnpm run typecheck → يجب صفر أخطاء TS. 
+
+.env محليًا = متغيرات Vercel (vercel env pull .env). 
+
+إن وجدت تحذير Ignored build scripts: إمّا استبدال الحِزم (bcryptjs/puppeteer-core) أو pnpm approve-builds. 
+
+
+بعد:
+
+جرّب مسار محمي بدون توكن → يجب 401 مع code: "AUTH_MISSING_TOKEN" ورسالة عربية.
+
+جرّبه مع توكن غير صالح → 401 مع AUTH_INVALID_TOKEN.
+
+جرّبه مع توكن صالح → 200.
+
+افتح Vercel → Logs وتأكد من ظهور requestId في كل سطر (pino). 
+
+
+
+---
+
+لماذا هذا ينجح “فعليًا” بعد Replit → Vercel؟
+
+البيئة: Replit يحقن ENV محليًا؛ Vercel يتطلب تعريفها لكل بيئة (Preview/Prod) أو ربط Integration (Supabase). حلّنا يضمن فحصًا صارمًا عند الإقلاع. 
+
+الكوكي والهيدرز: الإنتاج غالبًا دومين مختلف → نحتاج SameSite=None; Secure و CORS مضبوط. 
+
+Serverless قيود: استبدال الحزم غير المناسبة (bcrypt/puppeteer) أو السماح بسكربتاتها وفق سياسة pnpm الحديثة. 
+
+الأنواع: نمنع أي أخطاء TS7006 مستقبلًا بــ noImplicitAny + فحص build. 
+
+التتبّع: pino + Sentry + أكواد أخطاء موحّدة تُسهّل تشخيص أي فشل جديد بسرعة. 
+
+
+
+---
+
+إذا أردت، أرتّب لك PR جاهز يحتوي على:
+
+server/env.ts, server/auth.ts, server/logging.ts, server/errors.ts, تكامل Sentry،
+
+ترقيات tsconfig/package.json،
+
+مثال تحويل /api/projects إلى وظيفة سيرفلس على Vercel،
+
+واستبدال bcrypt بـ bcryptjs و puppeteer بـ puppeteer-core + @sparticuz/chromium.
+
+
+قول لي وسأجهّز التعديلات كاملة في نص واحد لنسخه إلى مشروعك.
+

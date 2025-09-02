@@ -7,6 +7,9 @@ import { db } from "./db";
 import { createNotificationTables, createTestNotifications } from "./create-notification-tables";
 import { secretsManager } from "./services/SecretsManager";
 import { smartSecretsManager } from "./services/SmartSecretsManager";
+import { ENV } from "./env.js";
+import { httpLogger, logger } from "./logging.js";
+import { errorHandler } from "./errors.js";
 
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -14,6 +17,10 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 const app = express();
+
+// إضافة HTTP logging مع pino
+app.use(httpLogger);
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
@@ -59,9 +66,19 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // 🔐 تهيئة النظام الذكي للمفاتيح السرية التلقائي أولاً
+  // 🔐 التحقق من متغيرات البيئة المطلوبة أولاً
   try {
-    log("🚀 بدء النظام الذكي لإدارة المفاتيح السرية...");
+    logger.info("🔍 فحص متغيرات البيئة المطلوبة...");
+    // ENV سيرمي خطأ واضح إذا كانت متغيرات مفقودة
+    logger.info(`✅ تم التحقق من جميع متغيرات البيئة - البيئة: ${ENV.NODE_ENV}`);
+  } catch (envError: any) {
+    logger.error("❌ متغيرات بيئة مفقودة:", envError.message);
+    process.exit(1);
+  }
+
+  // 🔐 تهيئة النظام الذكي للمفاتيح السرية التلقائي
+  try {
+    logger.info("🚀 بدء النظام الذكي لإدارة المفاتيح السرية...");
     const smartInitialized = await smartSecretsManager.initializeOnStartup();
     
     if (smartInitialized) {
@@ -303,13 +320,8 @@ app.use((req, res, next) => {
     res.status(404).json({ message: `API endpoint not found: ${req.path}` });
   });
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  // استخدام معالج الأخطاء الموحد الجديد
+  app.use(errorHandler);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route

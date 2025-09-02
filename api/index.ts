@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import bcrypt from 'bcryptjs';
+import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
@@ -447,7 +447,7 @@ app.post('/api/auth/login', async (req, res) => {
     console.log('✅ تم العثور على المستخدم:', user.id);
 
     // التحقق من كلمة المرور
-    const passwordValid = await bcrypt.compare(password, user.password);
+    const passwordValid = await bcryptjs.compare(password, user.password);
     if (!passwordValid) {
       console.log('❌ كلمة مرور خاطئة');
       return res.status(401).json({
@@ -549,7 +549,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     console.log('🔐 تشفير كلمة المرور...');
     // تشفير كلمة المرور
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    const hashedPassword = await bcryptjs.hash(password, SALT_ROUNDS);
 
     console.log('💾 إنشاء المستخدم في قاعدة البيانات...');
     // إنشاء المستخدم
