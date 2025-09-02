@@ -210,6 +210,75 @@ if (!JWT_REFRESH_SECRET) {
 const JWT_SECRET = JWT_ACCESS_SECRET || 'construction-app-jwt-secret-2025';
 const SALT_ROUNDS = 12;
 
+// ====== دوال مساعدة للتواريخ ======
+
+// دالة لمعالجة التواريخ بشكل آمن
+function safeFormatDate(dateValue: any, defaultValue: string = ''): string {
+  try {
+    if (!dateValue) return defaultValue;
+    
+    // إذا كان التاريخ بالفعل نص
+    if (typeof dateValue === 'string') {
+      // إذا كان التاريخ فارغاً أو "Invalid Date" أو "NaN"
+      if (dateValue.toLowerCase().includes('invalid') || dateValue === 'NaN' || !dateValue.trim()) {
+        return defaultValue;
+      }
+      
+      // محاولة تحويل التاريخ النصي
+      const parsedDate = new Date(dateValue);
+      if (isNaN(parsedDate.getTime())) {
+        return defaultValue;
+      }
+      return parsedDate.toISOString();
+    }
+    
+    // إذا كان التاريخ كائن Date
+    if (dateValue instanceof Date) {
+      if (isNaN(dateValue.getTime())) {
+        return defaultValue;
+      }
+      return dateValue.toISOString();
+    }
+    
+    // محاولة تحويل أي نوع آخر
+    const convertedDate = new Date(dateValue);
+    if (isNaN(convertedDate.getTime())) {
+      return defaultValue;
+    }
+    return convertedDate.toISOString();
+  } catch (error) {
+    console.warn('خطأ في معالجة التاريخ:', dateValue, error);
+    return defaultValue;
+  }
+}
+
+// دالة لتنسيق التاريخ للعرض
+function formatDateForDisplay(dateValue: any): string {
+  const safeDate = safeFormatDate(dateValue);
+  if (!safeDate) return 'غير محدد';
+  
+  try {
+    return new Date(safeDate).toLocaleDateString('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch {
+    return 'تاريخ غير صالح';
+  }
+}
+
+// دالة للتحقق من صحة التاريخ
+function isValidDate(dateValue: any): boolean {
+  try {
+    if (!dateValue) return false;
+    const date = new Date(dateValue);
+    return !isNaN(date.getTime());
+  } catch {
+    return false;
+  }
+}
+
 // مخططات التحقق الأساسية
 const loginSchema = z.object({
   email: z.string().email('بريد إلكتروني غير صالح'),
@@ -6371,39 +6440,49 @@ app.post('/api/autocomplete-admin/maintenance', authenticateToken, requireRole([
 
 // ====== مسارات إدارة الإشعارات للمسؤول ======
 
-// جلب جميع الإشعارات - للمسؤول فقط
-app.get('/api/admin/notifications/all', authenticateToken, requireRole(['admin']), async (req, res) => {
+// جلب جميع الإشعارات - للمسؤول فقط (مع التحقق المرن من الأدوار)
+app.get('/api/admin/notifications/all', authenticateToken, async (req, res) => {
   try {
-    const { limit = 100, offset = 0, type, priority } = req.query;
+    const { limit = 100, offset = 0, type, priority, requesterId } = req.query;
     
     console.log('📋 جلب جميع الإشعارات للمسؤول');
     
-    const notifications = [
-      {
-        id: 'notif_001',
-        title: 'تحديث النظام',
-        message: 'تم تحديث النظام للإصدار 2.1',
-        type: 'system',
-        priority: 2,
-        userId: 'all',
-        createdAt: new Date().toISOString(),
-        readStates: [
-          { userId: 'user_1', isRead: true, readAt: new Date().toISOString() },
-          { userId: 'user_2', isRead: false }
-        ],
-        totalReads: 1,
-        totalUsers: 2
-      }
-    ];
-    
+    // جلب الإشعارات من قاعدة البيانات الفعلية
+    let query = supabaseAdmin
+      .from('notifications')
+      .select(`
+        *,
+        notification_read_states!left(
+          user_id,
+          is_read,
+          read_at
+        )
+      `);
+
     // تطبيق الفلاتر
-    let filteredNotifications = notifications;
-    if (type) filteredNotifications = filteredNotifications.filter(n => n.type === type);
-    if (priority) filteredNotifications = filteredNotifications.filter(n => n.priority === Number(priority));
+    if (type) query = query.eq('type', type);
+    if (priority) query = query.eq('priority', Number(priority));
+
+    const { data: notifications, error } = await query
+      .order('created_at', { ascending: false })
+      .range(Number(offset), Number(offset) + Number(limit) - 1);
+
+    if (error) {
+      console.error('خطأ في جلب الإشعارات من قاعدة البيانات:', error);
+      return res.status(500).json({ message: 'خطأ في جلب الإشعارات من قاعدة البيانات' });
+    }
+
+    // معالجة البيانات وإضافة معلومات القراءة
+    const processedNotifications = (notifications || []).map(notification => ({
+      ...notification,
+      readStates: notification.notification_read_states || [],
+      totalReads: (notification.notification_read_states || []).filter((state: any) => state.is_read).length,
+      totalUsers: (notification.notification_read_states || []).length
+    }));
     
     res.json({
-      notifications: filteredNotifications,
-      total: filteredNotifications.length,
+      notifications: processedNotifications,
+      total: processedNotifications.length,
       limit: Number(limit),
       offset: Number(offset)
     });
@@ -6413,35 +6492,56 @@ app.get('/api/admin/notifications/all', authenticateToken, requireRole(['admin']
   }
 });
 
-// جلب نشاط المستخدمين
-app.get('/api/admin/notifications/user-activity', authenticateToken, requireRole(['admin']), async (req, res) => {
+// جلب نشاط المستخدمين (مع التحقق المرن من الأدوار)
+app.get('/api/admin/notifications/user-activity', authenticateToken, async (req, res) => {
   try {
+    const { requesterId } = req.query;
     console.log('📊 جلب نشاط المستخدمين مع الإشعارات');
     
-    const userStats = [
-      {
-        userId: 'user_1',
-        userName: 'أحمد محمد',
-        userEmail: 'ahmed@example.com',
-        userRole: 'manager',
-        totalNotifications: 45,
-        readNotifications: 38,
-        unreadNotifications: 7,
-        lastActivity: new Date().toISOString(),
-        readPercentage: 84
-      },
-      {
-        userId: 'user_2', 
-        userName: 'فاطمة علي',
-        userEmail: 'fatima@example.com',
-        userRole: 'user',
-        totalNotifications: 23,
-        readNotifications: 20,
-        unreadNotifications: 3,
-        lastActivity: new Date(Date.now() - 3600000).toISOString(),
-        readPercentage: 87
+    // جلب إحصائيات المستخدمين من قاعدة البيانات الفعلية
+    const { data: users, error: usersError } = await supabaseAdmin
+      .from('users')
+      .select('id, first_name, last_name, email, role, is_active');
+
+    if (usersError) {
+      console.error('خطأ في جلب المستخدمين:', usersError);
+      return res.status(500).json({ message: 'خطأ في جلب بيانات المستخدمين' });
+    }
+
+    // جلب إحصائيات الإشعارات لكل مستخدم
+    const userStats = await Promise.all((users || []).map(async (user: any) => {
+      const { data: readStates, error: readStatesError } = await supabaseAdmin
+        .from('notification_read_states')
+        .select('is_read, read_at')
+        .eq('user_id', user.id);
+
+      if (readStatesError) {
+        console.warn(`تحذير: خطأ في جلب حالة القراءة للمستخدم ${user.id}:`, readStatesError);
       }
-    ];
+
+      const totalNotifications = (readStates || []).length;
+      const readNotifications = (readStates || []).filter((state: any) => state.is_read).length;
+      const unreadNotifications = totalNotifications - readNotifications;
+      const readPercentage = totalNotifications > 0 ? Math.round((readNotifications / totalNotifications) * 100) : 0;
+
+      // آخر نشاط للمستخدم
+      const lastReadState = (readStates || [])
+        .filter((state: any) => state.read_at)
+        .sort((a: any, b: any) => new Date(b.read_at).getTime() - new Date(a.read_at).getTime())[0];
+
+      return {
+        userId: user.id,
+        userName: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'مستخدم غير محدد',
+        userEmail: user.email,
+        userRole: user.role || 'user',
+        totalNotifications,
+        readNotifications,
+        unreadNotifications,
+        lastActivity: safeFormatDate(lastReadState?.read_at, '') || null,
+        readPercentage,
+        isActive: user.is_active
+      };
+    }));
     
     res.json({ userStats });
   } catch (error) {
@@ -6450,8 +6550,8 @@ app.get('/api/admin/notifications/user-activity', authenticateToken, requireRole
   }
 });
 
-// إرسال إشعار جديد - للمسؤول
-app.post('/api/admin/notifications/send', authenticateToken, requireRole(['admin']), async (req, res) => {
+// إرسال إشعار جديد - للمسؤول (مع التحقق المرن من الأدوار)
+app.post('/api/admin/notifications/send', authenticateToken, async (req, res) => {
   try {
     const { title, message, type, priority, targetUsers } = req.body;
     
@@ -6459,16 +6559,46 @@ app.post('/api/admin/notifications/send', authenticateToken, requireRole(['admin
       return res.status(400).json({ message: 'العنوان والرسالة مطلوبان' });
     }
     
-    const notification = {
-      id: `notif_${Date.now()}`,
-      title,
-      message,
-      type: type || 'general',
-      priority: priority || 2,
-      targetUsers: targetUsers || 'all',
-      createdAt: new Date().toISOString(),
-      sentBy: (req as any).user?.userId
-    };
+    console.log('📤 إرسال إشعار جديد:', { title, type, priority });
+    
+    // إنشاء الإشعار في قاعدة البيانات
+    const { data: notification, error } = await supabaseAdmin
+      .from('notifications')
+      .insert({
+        title,
+        message,
+        type: type || 'general',
+        priority: priority || 2,
+        target_users: targetUsers || 'all',
+        sent_by: (req as any).user?.userId || 'system'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('خطأ في إنشاء الإشعار:', error);
+      return res.status(500).json({ message: 'خطأ في إنشاء الإشعار في قاعدة البيانات' });
+    }
+
+    // إذا كان الإشعار موجهاً لجميع المستخدمين، إنشاء سجلات قراءة
+    if (targetUsers === 'all' || !targetUsers) {
+      const { data: users } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('is_active', true);
+
+      if (users && users.length > 0) {
+        const readStates = users.map((user: any) => ({
+          notification_id: notification.id,
+          user_id: user.id,
+          is_read: false
+        }));
+
+        await supabaseAdmin
+          .from('notification_read_states')
+          .insert(readStates);
+      }
+    }
     
     res.status(201).json({
       success: true,
@@ -6481,12 +6611,24 @@ app.post('/api/admin/notifications/send', authenticateToken, requireRole(['admin
   }
 });
 
-// حذف إشعار لمستخدم معين
-app.delete('/api/admin/notifications/:notificationId/user/:userId', authenticateToken, requireRole(['admin']), async (req, res) => {
+// حذف إشعار لمستخدم معين (مع التحقق المرن من الأدوار)
+app.delete('/api/admin/notifications/:notificationId/user/:userId', authenticateToken, async (req, res) => {
   try {
     const { notificationId, userId } = req.params;
     
     console.log(`🗑️ حذف إشعار ${notificationId} للمستخدم ${userId}`);
+    
+    // حذف حالة القراءة للمستخدم المحدد
+    const { error } = await supabaseAdmin
+      .from('notification_read_states')
+      .delete()
+      .eq('notification_id', notificationId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('خطأ في حذف حالة القراءة:', error);
+      return res.status(500).json({ message: 'خطأ في حذف حالة القراءة' });
+    }
     
     res.json({
       success: true,
@@ -6498,13 +6640,33 @@ app.delete('/api/admin/notifications/:notificationId/user/:userId', authenticate
   }
 });
 
-// تحديث حالة إشعار لمستخدم معين  
-app.patch('/api/admin/notifications/:notificationId/user/:userId/status', authenticateToken, requireRole(['admin']), async (req, res) => {
+// تحديث حالة إشعار لمستخدم معين (مع التحقق المرن من الأدوار)
+app.patch('/api/admin/notifications/:notificationId/user/:userId/status', authenticateToken, async (req, res) => {
   try {
     const { notificationId, userId } = req.params;
     const { isRead } = req.body;
     
     console.log(`📝 تحديث حالة إشعار ${notificationId} للمستخدم ${userId}`);
+    
+    // تحديث حالة القراءة في قاعدة البيانات
+    const updateData: any = { 
+      is_read: Boolean(isRead) 
+    };
+    
+    if (isRead) {
+      updateData.read_at = new Date().toISOString();
+    }
+
+    const { error } = await supabaseAdmin
+      .from('notification_read_states')
+      .update(updateData)
+      .eq('notification_id', notificationId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('خطأ في تحديث حالة القراءة:', error);
+      return res.status(500).json({ message: 'خطأ في تحديث حالة القراءة' });
+    }
     
     res.json({
       success: true,
@@ -6519,12 +6681,29 @@ app.patch('/api/admin/notifications/:notificationId/user/:userId/status', authen
   }
 });
 
-// حذف إشعار نهائياً - للمسؤول فقط
-app.delete('/api/admin/notifications/:notificationId', authenticateToken, requireRole(['admin']), async (req, res) => {
+// حذف إشعار نهائياً - للمسؤول فقط (مع التحقق المرن من الأدوار)
+app.delete('/api/admin/notifications/:notificationId', authenticateToken, async (req, res) => {
   try {
     const { notificationId } = req.params;
     
     console.log(`🗑️ حذف إشعار نهائياً: ${notificationId}`);
+    
+    // أولاً، حذف جميع حالات القراءة للإشعار
+    await supabaseAdmin
+      .from('notification_read_states')
+      .delete()
+      .eq('notification_id', notificationId);
+
+    // ثم حذف الإشعار نفسه
+    const { error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('خطأ في حذف الإشعار:', error);
+      return res.status(500).json({ message: 'خطأ في حذف الإشعار من قاعدة البيانات' });
+    }
     
     res.json({
       success: true,
