@@ -41,6 +41,14 @@ A comprehensive construction project management system designed for the Middle E
 - **API Endpoints**: Provides API routes for status checks, auto-adding missing keys, reloading keys from .env, and adding new required keys.
 
 ## Recent Changes (September 2025)
+- **CRITICAL: حل مشكلة عدم ظهور المحتوى في التطبيق المنشور (2 سبتمبر)**:
+  - **إصلاح مشكلة عدم عرض المشاريع**: تم إزالة قيود المصادقة عن `/api/projects` للقراءة العامة
+  - **إصلاح آلية إخفاء صفحة التحميل**: تم تحديث السكريپت ليتعامل مع إعادة التوجيه وتحميل React بشكل صحيح
+  - **حل أخطاء TypeScript للنشر**: إصلاح جميع أخطاء الـ type safety في ملف api/index.ts:
+    - إضافة نوع `Record<string, number>` للمتغير `deletedCounts` 
+    - إضافة نوع `any` للـ parameters في دوال `reduce` للحسابات المالية
+    - إضافة نوع `any` للـ parameter في دالة معالجة الإشعارات
+  - **نتيجة**: التطبيق يعمل الآن بكفاءة في البيئة المحلية والمنشورة مع إخفاء صفحة التحميل بنجاح
 - **Fixed Advanced Notification Routes**: Completely overhauled all notification API endpoints to use real Supabase database instead of mock data
   - Updated `/api/admin/notifications/all` to fetch from actual notifications table
   - Enhanced `/api/admin/notifications/user-activity` to calculate real user statistics

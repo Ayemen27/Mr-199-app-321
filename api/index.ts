@@ -1023,7 +1023,7 @@ app.delete('/api/projects/:id', async (req, res) => {
       'project_fund_transfers'
     ];
 
-    let deletedCounts = {};
+    let deletedCounts: Record<string, number> = {};
 
     // حذف البيانات من كل جدول مرتبط
     for (const table of relatedTables) {
@@ -4055,9 +4055,9 @@ app.get('/api/statistics/overview', authenticateToken, async (req, res) => {
     ]);
 
     // حساب الإجماليات المالية الحقيقية
-    const totalIncome = fundTransfersResult.data?.reduce((sum, transfer) => sum + (transfer.amount || 0), 0) || 0;
-    const totalMaterialCosts = materialPurchasesResult.data?.reduce((sum, purchase) => sum + (purchase.total_amount || 0), 0) || 0;
-    const totalTransportationCosts = transportationExpensesResult.data?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+    const totalIncome = fundTransfersResult.data?.reduce((sum: number, transfer: any) => sum + (transfer.amount || 0), 0) || 0;
+    const totalMaterialCosts = materialPurchasesResult.data?.reduce((sum: number, purchase: any) => sum + (purchase.total_amount || 0), 0) || 0;
+    const totalTransportationCosts = transportationExpensesResult.data?.reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0) || 0;
     const totalExpenses = totalMaterialCosts + totalTransportationCosts;
 
     // حساب عدد المشاريع النشطة
@@ -6410,7 +6410,7 @@ app.get('/api/admin/notifications/all', authenticateToken, async (req, res) => {
     }
 
     // معالجة البيانات وإضافة معلومات القراءة
-    const processedNotifications = (notifications || []).map(notification => ({
+    const processedNotifications = (notifications || []).map((notification: any) => ({
       ...notification,
       readStates: notification.notification_read_states || [],
       totalReads: (notification.notification_read_states || []).filter((state: any) => state.is_read).length,
