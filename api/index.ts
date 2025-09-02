@@ -739,7 +739,7 @@ app.get('/api/projects/with-stats', async (req, res) => {
 
     // إضافة إحصائيات لكل مشروع
     const projectsWithStats = await Promise.all(
-      (projects || []).map(async (project) => {
+      (projects || []).map(async (project: any) => {
         // إحصائيات العمال
         const { count: workersCount } = await supabaseAdmin
           .from('worker_attendance')
@@ -752,7 +752,7 @@ app.get('/api/projects/with-stats', async (req, res) => {
           .select('amount')
           .eq('project_id', project.id);
 
-        const totalTransfers = transfers?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+        const totalTransfers = transfers?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0;
 
         // إجمالي المصروفات
         const { data: expenses } = await supabaseAdmin
@@ -760,7 +760,7 @@ app.get('/api/projects/with-stats', async (req, res) => {
           .select('total_amount')
           .eq('project_id', project.id);
 
-        const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.total_amount), 0) || 0;
+        const totalExpenses = expenses?.reduce((sum: number, e: any) => sum + parseFloat(e.total_amount), 0) || 0;
 
         return {
           ...project,
@@ -1477,7 +1477,7 @@ app.get('/api/autocomplete/:category', async (req, res) => {
       return res.status(500).json({ message: 'خطأ في جلب الاقتراحات' });
     }
 
-    res.json((suggestions || []).map(s => s.value));
+    res.json((suggestions || []).map((s: any) => s.value));
   } catch (error) {
     console.error('خطأ في جلب الاقتراحات:', error);
     res.status(500).json({ message: 'خطأ في جلب الاقتراحات' });
@@ -1539,9 +1539,9 @@ app.post('/api/projects/:projectId/daily-summary/:date', async (req, res) => {
       return res.status(500).json({ message: 'خطأ في حساب الملخص' });
     }
 
-    const totalWages = attendance?.reduce((sum, a) => sum + parseFloat(a.actual_wage), 0) || 0;
-    const totalPaid = attendance?.reduce((sum, a) => sum + parseFloat(a.paid_amount), 0) || 0;
-    const totalPurchases = purchases?.reduce((sum, p) => sum + parseFloat(p.total_amount), 0) || 0;
+    const totalWages = attendance?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage), 0) || 0;
+    const totalPaid = attendance?.reduce((sum: number, a: any) => sum + parseFloat(a.paid_amount), 0) || 0;
+    const totalPurchases = purchases?.reduce((sum: number, p: any) => sum + parseFloat(p.total_amount), 0) || 0;
     const totalExpenses = totalWages + totalPurchases;
 
     // حفظ أو تحديث الملخص
@@ -2217,9 +2217,9 @@ app.get('/api/reports/daily-expenses/:projectId/:date', async (req, res) => {
       purchases: purchasesResult.data || [],
       transportation: transportationResult.data || [],
       summary: {
-        totalWages: attendanceResult.data?.reduce((sum, a) => sum + parseFloat(a.actual_wage), 0) || 0,
-        totalPurchases: purchasesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_amount), 0) || 0,
-        totalTransportation: transportationResult.data?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0
+        totalWages: attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage), 0) || 0,
+        totalPurchases: purchasesResult.data?.reduce((sum: number, p: any) => sum + parseFloat(p.total_amount), 0) || 0,
+        totalTransportation: transportationResult.data?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0
       }
     };
 
@@ -2276,10 +2276,10 @@ app.get('/api/reports/project-summary/:projectId', async (req, res) => {
       transfersQuery
     ]);
     
-    const totalWages = attendanceResult.data?.reduce((sum, a) => sum + parseFloat(a.actual_wage), 0) || 0;
-    const totalPaid = attendanceResult.data?.reduce((sum, a) => sum + parseFloat(a.paid_amount), 0) || 0;
-    const totalPurchases = purchasesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_amount), 0) || 0;
-    const totalTransfers = transfersResult.data?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+    const totalWages = attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage), 0) || 0;
+    const totalPaid = attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.paid_amount), 0) || 0;
+    const totalPurchases = purchasesResult.data?.reduce((sum: number, p: any) => sum + parseFloat(p.total_amount), 0) || 0;
+    const totalTransfers = transfersResult.data?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0;
     
     const summary = {
       totalTransfers,
@@ -2370,9 +2370,9 @@ app.get('/api/workers/:workerId/account-statement', async (req, res) => {
       return res.status(500).json({ message: 'خطأ في جلب بيانات العامل' });
     }
     
-    const totalEarned = attendanceResult.data?.reduce((sum, a) => sum + parseFloat(a.actual_wage), 0) || 0;
-    const totalPaid = attendanceResult.data?.reduce((sum, a) => sum + parseFloat(a.paid_amount), 0) || 0;
-    const totalTransfers = transfersResult.data?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+    const totalEarned = attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage), 0) || 0;
+    const totalPaid = attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.paid_amount), 0) || 0;
+    const totalTransfers = transfersResult.data?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0;
     
     const statement = {
       attendance: attendanceResult.data || [],
@@ -2570,7 +2570,7 @@ app.get('/api/database/statistics', async (req, res) => {
 
     const statistics = {
       totalTables: Object.keys(tablesStats).length,
-      totalRows: Object.values(tablesStats).reduce((sum, table) => sum + table.rows, 0),
+      totalRows: Object.values(tablesStats).reduce((sum: number, table: any) => sum + table.rows, 0),
       totalSize: '10.85MB',
       tables: tablesStats,
       performance: {
@@ -3596,9 +3596,9 @@ app.get('/api/reports/daily-expenses/:projectId/:date', async (req, res) => {
     }
 
     // حساب المجاميع
-    const totalWages = attendance?.reduce((sum, a) => sum + parseFloat(a.actual_wage || 0), 0) || 0;
-    const totalPurchases = purchases?.reduce((sum, p) => sum + parseFloat(p.total_amount || 0), 0) || 0;
-    const totalTransportation = transportation?.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0) || 0;
+    const totalWages = attendance?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage || 0), 0) || 0;
+    const totalPurchases = purchases?.reduce((sum: number, p: any) => sum + parseFloat(p.total_amount || 0), 0) || 0;
+    const totalTransportation = transportation?.reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0) || 0;
 
     const report = {
       project,
@@ -3687,8 +3687,8 @@ app.get('/api/suppliers/:supplierId/statement', async (req, res) => {
     }
 
     // حساب المجاميع
-    const totalPurchases = purchases?.reduce((sum, p) => sum + parseFloat(p.total_amount), 0) || 0;
-    const totalPayments = payments?.reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
+    const totalPurchases = purchases?.reduce((sum: number, p: any) => sum + parseFloat(p.total_amount), 0) || 0;
+    const totalPayments = payments?.reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0) || 0;
 
     const statement = {
       supplier,
@@ -5473,15 +5473,15 @@ app.get('/api/workers/:workerId/account-statement', async (req, res) => {
     }
 
     // حساب الملخص
-    const totalEarnings = attendance?.reduce((sum, record) => {
+    const totalEarnings = attendance?.reduce((sum: number, record: any) => {
       return sum + (record.is_present ? parseFloat(record.actual_wage || record.daily_wage) : 0);
     }, 0) || 0;
 
-    const totalPaid = attendance?.reduce((sum, record) => {
+    const totalPaid = attendance?.reduce((sum: number, record: any) => {
       return sum + parseFloat(record.paid_amount || 0);
     }, 0) || 0;
 
-    const totalDays = attendance?.reduce((sum, record) => {
+    const totalDays = attendance?.reduce((sum: number, record: any) => {
       return sum + (record.is_present ? parseFloat(record.work_days || 1) : 0);
     }, 0) || 0;
 
@@ -5531,7 +5531,7 @@ app.get('/api/reports/project-summary/:projectId', async (req, res) => {
     if (dateTo) transfersQuery = transfersQuery.lte('transfer_date', dateTo);
 
     const { data: transfers } = await transfersQuery;
-    const totalTransfers = transfers?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+    const totalTransfers = transfers?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0;
 
     // جلب المشتريات
     let purchasesQuery = supabaseAdmin
@@ -5543,7 +5543,7 @@ app.get('/api/reports/project-summary/:projectId', async (req, res) => {
     if (dateTo) purchasesQuery = purchasesQuery.lte('purchase_date', dateTo);
 
     const { data: purchases } = await purchasesQuery;
-    const totalPurchases = purchases?.reduce((sum, p) => sum + parseFloat(p.total_amount), 0) || 0;
+    const totalPurchases = purchases?.reduce((sum: number, p: any) => sum + parseFloat(p.total_amount), 0) || 0;
 
     // جلب تكلفة العمالة
     let attendanceQuery = supabaseAdmin
@@ -5555,8 +5555,8 @@ app.get('/api/reports/project-summary/:projectId', async (req, res) => {
     if (dateTo) attendanceQuery = attendanceQuery.lte('date', dateTo);
 
     const { data: attendance } = await attendanceQuery;
-    const totalWages = attendance?.reduce((sum, a) => sum + parseFloat(a.actual_wage || 0), 0) || 0;
-    const totalPaidWages = attendance?.reduce((sum, a) => sum + parseFloat(a.paid_amount || 0), 0) || 0;
+    const totalWages = attendance?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage || 0), 0) || 0;
+    const totalPaidWages = attendance?.reduce((sum: number, a: any) => sum + parseFloat(a.paid_amount || 0), 0) || 0;
 
     const summary = {
       project,
@@ -6426,7 +6426,7 @@ app.get('/api/reports/daily-expenses/:projectId/:date', authenticateToken, async
       { type: 'نقل', amount: 1200, description: 'نقل مواد' }
     ];
     
-    const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const total = expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0);
     
     res.json({
       projectId,
@@ -6585,9 +6585,9 @@ app.get('/api/reports/workers-settlement', authenticateToken, async (req, res) =
     
     const summary = {
       totalWorkers: settlements.length,
-      totalWages: settlements.reduce((sum, w) => sum + w.totalWages, 0),
-      totalAdvances: settlements.reduce((sum, w) => sum + w.advances, 0),
-      netPayable: settlements.reduce((sum, w) => sum + w.netAmount, 0)
+      totalWages: settlements.reduce((sum: number, w: any) => sum + w.totalWages, 0),
+      totalAdvances: settlements.reduce((sum: number, w: any) => sum + w.advances, 0),
+      netPayable: settlements.reduce((sum: number, w: any) => sum + w.netAmount, 0)
     };
     
     res.json({
