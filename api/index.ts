@@ -893,20 +893,89 @@ app.put('/api/projects/:id', async (req, res) => {
 // حذف مشروع
 app.delete('/api/projects/:id', async (req, res) => {
   try {
-    const { error } = await supabaseAdmin
-      .from('projects')
-      .delete()
-      .eq('id', req.params.id);
+    const projectId = req.params.id;
+    console.log(`🗑️ بدء حذف المشروع وجميع البيانات المرتبطة: ${projectId}`);
 
-    if (error) {
-      console.error('خطأ في حذف المشروع:', error);
-      return res.status(500).json({ message: 'خطأ في حذف المشروع' });
+    // التحقق من وجود المشروع أولاً
+    const { data: project, error: projectError } = await supabaseAdmin
+      .from('projects')
+      .select('id, name')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError || !project) {
+      console.log('❌ المشروع غير موجود');
+      return res.status(404).json({ message: 'المشروع غير موجود' });
     }
 
-    res.status(204).send();
+    console.log(`🎯 تأكيد وجود المشروع: ${project.name}`);
+
+    // حذف البيانات المرتبطة بالترتيب الصحيح (من التابع إلى الأساسي)
+    const relatedTables = [
+      'daily_expense_summaries',
+      'material_purchases', 
+      'transportation_expenses',
+      'worker_transfers',
+      'worker_misc_expenses',
+      'worker_attendance',
+      'fund_transfers',
+      'project_fund_transfers'
+    ];
+
+    let deletedCounts = {};
+
+    // حذف البيانات من كل جدول مرتبط
+    for (const table of relatedTables) {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from(table)
+          .delete()
+          .eq('project_id', projectId)
+          .select('id');
+
+        if (error) {
+          console.warn(`⚠️ تحذير عند حذف من ${table}:`, error.message);
+        } else {
+          const count = data?.length || 0;
+          if (count > 0) {
+            deletedCounts[table] = count;
+            console.log(`✅ تم حذف ${count} سجل من ${table}`);
+          }
+        }
+      } catch (tableError) {
+        console.warn(`⚠️ خطأ في حذف البيانات من ${table}:`, tableError);
+        // نستمر في العملية حتى لو فشل جدول واحد
+      }
+    }
+
+    // الآن حذف المشروع نفسه
+    const { error: deleteError } = await supabaseAdmin
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (deleteError) {
+      console.error('❌ خطأ في حذف المشروع:', deleteError);
+      return res.status(500).json({ 
+        message: 'خطأ في حذف المشروع', 
+        error: deleteError.message 
+      });
+    }
+
+    console.log('🎉 تم حذف المشروع وجميع البيانات المرتبطة بنجاح');
+    console.log('📊 ملخص الحذف:', deletedCounts);
+
+    res.json({ 
+      message: 'تم حذف المشروع وجميع البيانات المرتبطة بنجاح',
+      deletedCounts: deletedCounts
+    });
+
   } catch (error) {
-    console.error('خطأ في حذف المشروع:', error);
-    res.status(500).json({ message: 'خطأ في حذف المشروع' });
+    console.error('❌ خطأ في حذف المشروع:', error);
+    res.status(500).json({ 
+      message: 'خطأ في حذف المشروع', 
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
