@@ -259,11 +259,11 @@ app.use((req, res, next) => {
         // تشغيل الاختبار الشامل لجميع الوظائف
         log("🧪 بدء الاختبار الشامل لجميع وظائف التطبيق...");
 
-        // تحسين نظام الإكمال التلقائي
+        // تحسين نظام الإكمال التلقائي (مُعطل مؤقتاً لحل مشكلة process.exit)
         try {
-          log("🔧 بدء تحسين نظام الإكمال التلقائي...");
-          const { runAutocompleteIndexMigration } = await import("./db/run-autocomplete-migrations");
-          await runAutocompleteIndexMigration();
+          log("🔧 تخطي تحسين نظام الإكمال التلقائي مؤقتاً...");
+          // const { runAutocompleteIndexMigration } = await import("./db/run-autocomplete-migrations");
+          // await runAutocompleteIndexMigration();
           
           // بدء جدولة صيانة النظام
           log("🕒 بدء جدولة صيانة نظام الإكمال التلقائي...");
@@ -271,7 +271,7 @@ app.use((req, res, next) => {
           autocompleteScheduler.startScheduledMaintenance();
           log("✅ تم تفعيل جدولة الصيانة الدورية");
           
-          log("✅ تم تحسين نظام الإكمال التلقائي بنجاح");
+          log("✅ سيتم تشغيل نظام الإكمال التلقائي لاحقاً");
         } catch (error) {
           log("⚠️ تحذير: فشل في تحسين نظام الإكمال التلقائي - سيعمل النظام بالوضع العادي");
           console.log("🔍 تفاصيل الخطأ:", error);
@@ -293,7 +293,9 @@ app.use((req, res, next) => {
     console.error(error);
   }
 
+  log("🚀 بدء تسجيل المسارات والسيرفر...");
   const server = await registerRoutes(app);
+  log("✅ تم تسجيل المسارات بنجاح");
 
   // Add middleware to ensure API routes are handled correctly (AFTER routes are registered)
   app.use('/api/*', (req, res, next) => {

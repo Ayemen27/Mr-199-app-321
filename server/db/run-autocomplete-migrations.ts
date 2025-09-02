@@ -109,7 +109,8 @@ export async function runAutocompleteIndexMigration(): Promise<void> {
 }
 
 // تشغيل الهجرة إذا تم استدعاء الملف مباشرة
-if (import.meta.url === `file://${process.argv[1]}`) {
+// تحقق من أن الملف يتم تشغيله مباشرة وليس من خلال import
+if (import.meta.url === `file://${process.argv[1]}` && process.argv[1].includes('run-autocomplete-migrations')) {
   runAutocompleteIndexMigration()
     .then(() => {
       console.log('✅ تم تشغيل الهجرة بنجاح');
