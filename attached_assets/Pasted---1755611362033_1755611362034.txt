@@ -1,270 +1,0 @@
-يا عمار، ممتاز—المرحلة الأولى خلصت بنجاح 👌
-هذه توجيهات “تنفيذ الآن → اليوم → هذا الأسبوع”، مع أوامر جاهزة وقوالب إصلاح لأكثر أخطاء TS شيوعًا عندك.
-
-
----
-
-ماذا تفعل الآن (قرار وتطبيق)
-
-0) قرار الدمج
-
-الأكثر أمانًا: افتح PR بدل الدفع إلى main مباشرة (مع الـ CI).
-
-عندك ملفات جاهزة (cleanup-patch.patch, COMMIT_MESSAGE.txt, …). اختر أحد المسارين:
-
-
-خيار A — تطبيق الـ patch كما هو
-
-git checkout -b chore/audit-cleanup-apply
-git apply cleanup-patch.patch
-git add -A
-git commit -F COMMIT_MESSAGE.txt
-git push origin chore/audit-cleanup-apply
-# افتح PR واستخدم PR_TEMPLATE.md كنص الوصف
-
-خيار B — إن كنت طبّقت التغييرات يدويًا
-
-git checkout -b chore/audit-cleanup-$(date +%F)
-git add -A
-git commit -F COMMIT_MESSAGE.txt
-git push origin chore/audit-cleanup-$(date +%F)
-# افتح PR واستخدم PR_TEMPLATE.md
-
-
----
-
-اليوم (بعد فتح الـ PR)
-
-1) تشغيل فحوصات الجودة محليًا قبل مراجعة الـ PR
-
-npx tsc --noEmit
-npm run build
-npx eslint . --ext .js,.ts,.tsx --max-warnings=0 || true
-
-2) تفعيل/التحقق من CI (لو الملف موجود)
-
-تأكد أن .github/workflows/ci.yml موجود في الفرع.
-
-بعد دفع الفرع، ادخل تبويب Actions وتأكد أن خطوات:
-
-TypeScript check
-
-ESLint
-
-Build تمر بنجاح.
-
-
-
-3) إعداد بيئة staging سريعة (Smoke Test)
-
-ارفع نسخة staging واختبر:
-
-فتح الصفحة الرئيسية/لوحة التقارير
-
-تصدير Excel/PDF
-
-استعلامات Supabase الأساسية
-
-
-راقب الـ logs لمدة 30–60 دقيقة.
-
-
-
----
-
-غدًا (بدء المرحلة الثانية: إصلاح 24 خطأ TypeScript)
-
-الهدف: صفر أخطاء بدون كسر، بأقل تغييرات.
-
-1) أخطاء Props في المكوّنات (مثل ProjectSelector)
-
-النمط المقترح:
-
-// types/project.ts
-export type ProjectId = string;
-
-export interface ProjectSelectorProps {
-  selectedId?: ProjectId;
-  onSelect: (id: ProjectId) => void;
-  disabled?: boolean;
-}
-
-// components/ProjectSelector.tsx
-export function ProjectSelector({ selectedId, onSelect, disabled = false }: ProjectSelectorProps) {
-  // …
-}
-
-نصائح:
-
-عرّف واجهات props في ملف types/ مشترك.
-
-استبدل any بـ unknown ثم ضيّق النوع لاحقًا داخل الدالة.
-
-
-2) useSelectedProject (خصائص/قيم قد تكون undefined)
-
-type UseSelectedProject = {
-  project?: Project;               // قد تكون undefined وقت التحميل
-  setProject: (p?: Project) => void;
-  isLoading: boolean;
-};
-
-export function useSelectedProject(): UseSelectedProject {
-  // …
-}
-
-حيثما تُستهلك: تعامل مع حالة عدم التوفر:
-
-
-if (isLoading) return <Spinner/>;
-if (!project) return <EmptyState message="اختر مشروعاً" />;
-
-3) Drizzle ORM / SQL types
-
-تأكد من الاستيراد:
-
-
-import { sql } from "drizzle-orm";
-
-لتطابق الأنواع من الـ schema:
-
-
-import { projects } from "@/db/schema";
-import { InferModel } from "drizzle-orm"; // أو drizzle-orm/pg-core حسب الإصدار
-
-type Project = InferModel<typeof projects, "select">;
-type NewProject = InferModel<typeof projects, "insert">;
-
-عند التجميع:
-
-
-const rows = await db.select().from(projects);
-const result: Project[] = rows; // يطابق النوع
-
-إن لزم تضييق آمن:
-
-
-const count = Number(row.count ?? 0);
-
-4) مشاكل تصدير Excel (xlsx) — ضبط الأنواع
-
-عرّف نوع الصف الذي تُصدّره:
-
-
-export type ExpenseRow = {
-  date: string;        // ISO
-  category: string;
-  amount: number;
-  note?: string;
-};
-
-عند البناء:
-
-
-const rows: ExpenseRow[] = data.map(/* … */);
-
-إن كانت الدالة تقبل مصفوفات عامة:
-
-
-function toSheet<T extends Record<string, unknown>>(rows: T[]) { /* … */ }
-
-5) تحسينات عامة تخفّض ضجيج TS:
-
-أضف قواعد دقيقة بدل التغاضي:
-
-استبدل // @ts-ignore بـ // @ts-expect-error <سبب مختصر> عند الضرورة.
-
-
-إن تراكمت أخطاء من مكتبات خارجية، استخدم ملف دوال مساعدات:
-
-
-// utils/narrow.ts
-export const isNonEmptyString = (v: unknown): v is string =>
-  typeof v === "string" && v.trim().length > 0;
-
-
----
-
-هذا الأسبوع
-
-1) مراجعة الحزم “المشتبه بها”
-
-passport, passport-local, framer-motion, react-icons, tw-animate-css, xlsx
-
-بحث دقيق (يدعم الديناميكي):
-
-
-rg -n "from ['\"][^'\"]*passport|require\(['\"]passport" .
-rg -n "framer-motion" .
-rg -n "react-icons" .
-rg -n "xlsx" .
-
-لو لا استخدام: أضفها لقائمة إزالة لاحقة بفرع مستقل وPR منفصل.
-
-
-2) تنظيف orphan files
-
-راجع madge-orphans.txt (من تقرير التدقيق):
-
-انقل المشكوك فيه إلى archive/ أولاً.
-
-افتح PR بعنوان: chore: archive orphaned files (round 1).
-
-
-
-3) توثيق + Hooks قبل الدمج
-
-أضف سطر في CHANGELOG:
-
-
-## [Unreleased]
-- Cleanup: remove unused deps, archive assets
-- Fix: TS props/types groundwork for ProjectSelector/useSelectedProject
-
-
----
-
-Checklists سريعة (انسخها في وصف الـ PR)
-
-Pre-merge
-
-[ ] npx tsc --noEmit يمر
-
-[ ] npm run build يمر
-
-[ ] لا أخطاء ESLint حرجة
-
-[ ] Smoke test في staging (تقارير + تصدير Excel/PDF + Supabase)
-
-
-Post-merge (خلال 48 ساعة)
-
-[ ] مراقبة logs
-
-[ ] اختبار سيناريوهات التقارير الكثيفة
-
-[ ] تأكيد عدم تأثر الـ bundle size سلبًا
-
-
-
----
-
-لو تحب أسرّع عليك أكثر
-
-قل لي تفضّل أي واحد من التالي الآن، وأنا أرفعه لك نصًا جاهزًا للصق في نفس الرد:
-
-1. Patch محدث يجمع: ضبط أنواع Drizzle + قوالب ProjectSelector وuseSelectedProject.
-
-
-2. وصف PR نهائي بثلاثة أقسام: ملخص/كيف تختبر/نقاط مراجعة + checklists.
-
-
-3. ملف TYPES.d.ts تجميعي يعرّف الأنواع المشتركة (Project, ExpenseRow, …) لتقليل أخطاء TS فورًا.
-
-
-
-> رأيي: ابدأ بـ (2) لتدمج المرحلة الأولى بأمان، ثم خذ (1) كبداية المرحلة الثانية.
-ولو تحب لمسة دعابة: “احذف حزمة غير مستخدمة كل يوم، يطول عمر الـ node_modules وتخف أعصابه!” 😄
-
-
-

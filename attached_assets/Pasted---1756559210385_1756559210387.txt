@@ -1,462 +1,0 @@
-مراجعة سريعة + خطة إصلاح شاملة لنظام الإشعارات (ليصبح متقدمًا وذكيًا)
-
-جميل — التقرير ممتاز والأساس قوي. سأقدّم لك خطة إصلاح عملية، مرتبة حسب الأولوية، مع مقاطع SQL/TypeScript عملية، مع معايير قبول (Acceptance Criteria) لكل بند. أحاول أكون دقيق لكن بلمسة خفيفة من الدعابة: النظام هذي المرة ما راح يرسل إشعار بخبر "القهوة خلصت" إلّا لو أنت فعلته! ☕🙂
-
-
----
-
-1. أهداف الخطة (بإيجاز)
-
-إصلاح الدوال الناقصة في NotificationService.ts.
-
-جعل نظام القوالب ديناميكيًا وآمنًا (التولّد، التحقق، العرض).
-
-تعزيز طابور الإرسال (retry, backoff, dead-letter, batching).
-
-تحسين معالجة الأخطاء ووجود rollback في العمليات الحساسة.
-
-إضافة رصد ومراقبة متقدمة + تنبيهات تلقائية عند انحراف المؤشرات.
-
-إضافة قدرات ذكاء اصطناعي (اختبارية): تصنيف أولويات، توقع أفضل وقت للإرسال، كشف شذوذ في معدلات التسليم/القراءة.
-
-اختبارات (Unit/Integration/E2E) وأتمتة CI.
-
-تحسين الأداء (فهرسة، caching، استعلامات محسّنة).
-
-
-
----
-
-2. أولويات العمل (تصنيف بدون تقديرات زمنية)
-
-أ. أولوية حرجة (Critical)
-
-1. إتمام دوال القوالب: createNotificationTemplate, updateTemplate, validateTemplate, renderTemplate.
-
-
-2. إصلاح setup-security-notifications.ts والربط بـ notification_settings.
-
-
-3. إضافة معاملات transaction/rollback في مسارات الإنشاء والإرسال.
-
-
-4. إصلاح نقاط الضعف في معالجة الأخطاء وإضافة لوق (structured logs).
-
-
-5. إضافة اختبارات وحدة أساسية للخدمات الحرجة.
-
-
-
-ب. أولوية عالية (High)
-
-1. تحسين طابور الإرسال: retry مع exponential backoff، dead-letter queue.
-
-
-2. ضبط فهارس وإنشاء استعلامات سريعة لحساب عدد غير المقروءة وفلترة.
-
-
-3. إضافة جدول/مقاييس notification_metrics لتتبع النجاح/الفشل والـlatency.
-
-
-4. إضافة نظام إشعارات Push وقنوات إضافية إذا لم تكن مفعّلة.
-
-
-
-ج. أولوية متوسطة (Medium)
-
-1. Caching للفلترة والعدادات (Redis أو in-memory cache).
-
-
-2. واجهة templates ديناميكية + معاينة (preview) مع sandboxed rendering.
-
-
-3. Dashboard للمراقبة (Prometheus + Grafana أو Sentry للـerrors).
-
-
-
-د. تحسينات مستقبلية (Nice-to-have)
-
-1. ML-based scheduling / priority scoring.
-
-
-2. توصيات ذكية (AI) للإشعارات التي يجب إرسالها أو تأجيلها.
-
-
-3. تصدير تقارير PDF/Excel.
-
-
-
-
----
-
-3. تغييرات قاعدة البيانات المقترحة (SQL عملية)
-
-> ملاحظات سريعة: في التقرير ذُكر بعض الأعمدة مفقودة (مثلاً last_attempt_at في notification_queue، وexecuted_by في ai_system_recommendations). أدرجت SQL لتصحيح هذا النوع من المشاكل.
-
-
-
-3.1. إضافة أعمدة ناقصة وإصلاحات سريعة
-
--- 1. إضافة last_attempt_at إن لم يكن موجودًا
-ALTER TABLE notification_queue
-  ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP;
-
--- 2. إضافة executed_by إن لم يكن موجودًا في جدول ai_system_recommendations
-ALTER TABLE ai_system_recommendations
-  ADD COLUMN IF NOT EXISTS executed_by VARCHAR;
-
--- 3. تأكد من وجود عمود retry_count (إن لم يكن)
-ALTER TABLE notification_queue
-  ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0;
-
--- 4. إنشاء جدول مقاييس (history/metrics)
-CREATE TABLE IF NOT EXISTS notification_metrics (
-  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-  notification_id VARCHAR REFERENCES notifications(id) ON DELETE SET NULL,
-  recipient_id VARCHAR,
-  delivery_method VARCHAR,
-  status VARCHAR, -- pending/sent/failed
-  sent_at TIMESTAMP,
-  latency_ms INTEGER,
-  failure_reason TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
-3.2. فهارس لتحسين الأداء (recommended)
-
-CREATE INDEX IF NOT EXISTS idx_notification_queue_recipient_status ON notification_queue(recipient_id, status);
-CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
-CREATE INDEX IF NOT EXISTS idx_notification_read_states_user ON notification_read_states(user_id, notification_id);
-CREATE INDEX IF NOT EXISTS idx_notification_metrics_notification ON notification_metrics(notification_id);
-
-
----
-
-4. إصلاح دوال القوالب — مثال TypeScript عملي
-
-4.1. بنية مبسطة لقوالب الإشعارات
-
-variables: مصفوفة من { name, type, required, example }.
-
-قوالب العنوان والمحتوى باستخدام moustache-like placeholders: {{user_name}}.
-
-
-4.2. TypeScript — وظائف أساسية (مبسطة)
-
-// NotificationTemplateService.ts (مقتطف)
-import Mustache from 'mustache';
-import { z } from 'zod';
-import db from './db'; // فرض وجود طبقة DB
-
-const templateSchema = z.object({
-  name: z.string().min(1),
-  type: z.string(),
-  title_template: z.string().min(1),
-  content_template: z.string().min(1),
-  variables: z.array(z.object({
-    name: z.string(),
-    type: z.string().optional(),
-    required: z.boolean().optional()
-  })).optional(),
-  is_active: z.boolean().optional()
-});
-
-export async function createNotificationTemplate(data: any) {
-  const parsed = templateSchema.parse(data);
-  const res = await db.insert('notification_templates').values(parsed).returning('*');
-  return res;
-}
-
-export async function updateTemplate(id: string, data: any) {
-  const parsed = templateSchema.partial().parse(data);
-  const res = await db.update('notification_templates').set(parsed).where({ id }).returning('*');
-  return res;
-}
-
-export function validateTemplateVariables(templateRecord: any, payloadVars: Record<string, any>) {
-  const missing = (templateRecord.variables || [])
-    .filter((v: any) => v.required)
-    .map((v: any) => v.name)
-    .filter((name: string) => !(name in payloadVars));
-  return { ok: missing.length === 0, missing };
-}
-
-export function renderTemplate(titleTemplate: string, contentTemplate: string, vars: Record<string, any>) {
-  // امنر استخدام Mustache هنا — لا نجري eval لأي كود
-  const title = Mustache.render(titleTemplate, vars);
-  const content = Mustache.render(contentTemplate, vars);
-  return { title, content };
-}
-
-4.3. معيار القبول (Acceptance Criteria)
-
-إنشاء قالب => يظهر في جدول notification_templates.
-
-محاولة إنشاء قالب مفقود المتغيرات المطلوبة => فشل مع رسالة خطأ واضحة بالعربية.
-
-renderTemplate لا يسمح بتنفيذ كود (لا eval) ويُرجع نصًا آمنًا.
-
-
-
----
-
-5. تحسين طابور الإرسال (Queue Processing) — تصميم عملي
-
-5.1. متطلبات
-
-معالجة متوازية (workers) مع ضمان عدم تكرار الإرسال.
-
-retry مع exponential backoff (مثلاً: 1m, 2m, 4m).
-
-dead-letter queue بعد N محاولات.
-
-سجلات مفصّلة في notification_metrics.
-
-
-5.2. مقترح تنفيذ (pseudo-code)
-
-// worker/processNotificationQueue.ts (موجز)
-import db from './db';
-import { sendViaChannel } from './channels';
-import { sleep } from './utils';
-
-async function processQueueItem(item) {
-  try {
-    await db.transaction(async (tx) => {
-      // lock item (optimistic or advisory lock)
-      const lockOk = await lockQueueItem(tx, item.id);
-      if (!lockOk) return;
-
-      // check recipient settings (quiet hours / timezone / methods)
-      const settings = await tx.select('notification_settings').where({ user_id: item.recipient_id }).first();
-
-      if (isInQuietHours(settings)) {
-        await tx.update('notification_queue').set({ status: 'scheduled' }).where({ id: item.id });
-        return;
-      }
-
-      // send
-      const result = await sendViaChannel(item.delivery_method, item);
-      if (result.success) {
-        await tx.update('notification_queue').set({ status: 'sent', sent_at: new Date() }).where({ id: item.id });
-        await tx.insert('notification_metrics').values({ notification_id: item.notification_id, recipient_id: item.recipient_id, status: 'sent', sent_at: new Date(), latency_ms: result.latency });
-      } else {
-        // failure handling
-        const retryCount = item.retry_count + 1;
-        const nextAttempt = computeBackoff(retryCount);
-        const status = retryCount >= MAX_RETRIES ? 'failed' : 'pending';
-        await tx.update('notification_queue').set({ retry_count: retryCount, last_attempt_at: new Date(), scheduled_at: nextAttempt, status }).where({ id: item.id });
-        await tx.insert('notification_metrics').values({ notification_id: item.notification_id, recipient_id: item.recipient_id, status: 'failed', failure_reason: result.error });
-      }
-    });
-  } catch (err) {
-    // structured logging (Sentry/Elastic)
-    console.error('worker error', err);
-    // mark for investigation
-  }
-}
-
-
----
-
-6. تحسين إدارة الأخطاء (Error Handling) & Observability
-
-6.1. نقاط أساسية
-
-استخدم structured logs (JSON) مع fields: requestId, userId, notificationId, workerId.
-
-أرسل الأخطاء الحرجة إلى Sentry (أو similar).
-
-أضف metrics صريحة: notifications_sent_total, notifications_failed_total, queue_latency_seconds.
-
-تفعيل alerting (مثال: إذا فشلت نسبة التسليم > 5% خلال 15 دقيقة → تنبيه).
-
-
-6.2. أمثلة تنبيهات (Suggested alerts)
-
-Delivery success rate < 95% خلال 10 دقائق.
-
-Queue length > threshold (مثلاً 1000 pending).
-
-Error rate في الخدمة > 1% من requests.
-
-
-
----
-
-7. الحماية والأمان (Security)
-
-7.1. نقاط مهمة
-
-تمنع أي تنفيذ للكود من قوالب (use Mustache-like safe rendering).
-
-RLS (Row Level Security) على notifications وnotification_queue بحيث يستطيع المستخدم رؤية إشعاراته فقط.
-
-Rate limiting على إنشاء الإشعارات وإرسالها من واجهات الـAPI.
-
-تحقق من صلاحيات القنوات (API keys) مخزنة في channels.config مشفرة (Vault / KMS).
-
-
-7.2. مثال سياسة RLS (Postgres)
-
--- تفعيل RLS
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-
--- Policy: users can see their notifications or admins can see all
-CREATE POLICY user_can_select ON notifications
-  FOR SELECT
-  USING (created_by = current_setting('app.current_user_id')::varchar OR EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = current_setting('app.current_user_id')::varchar AND ur.role = 'admin'));
-
-
----
-
-8. الاختبارات (Testing & CI)
-
-8.1. ما يجب تنفيذه الآن
-
-Unit tests للخدمات: template service, queue worker (محاكاة القنوات).
-
-Integration tests لنقاط النهاية الأساسية (create, read, markAsRead).
-
-E2E test لمسار: إنشاء إشعار → إضافته إلى الطابور → معالجة → وصول metric sent.
-
-
-8.2. مثال اختبار وحدة (Jest)
-
-// tests/template.spec.ts
-import { validateTemplateVariables, renderTemplate } from '../src/NotificationTemplateService';
-
-test('validate missing variable', () => {
-  const template = { variables: [{ name: 'user_name', required: true }]};
-  const { ok, missing } = validateTemplateVariables(template, {});
-  expect(ok).toBe(false);
-  expect(missing).toContain('user_name');
-});
-
-
----
-
-9. مقاييس وواجهات Dashboard للتشغيل (Monitoring Dashboard)
-
-لوحة تعرض: queue length, success rate, avg latency, top 10 failure reasons.
-
-Heatmap للوقت الأفضل للإرسال (based on notification_metrics read timestamps).
-
-Alerts channel: Slack/Teams + Telegram admin channel.
-
-
-
----
-
-10. ميزات ذكاء اصطناعي (اختيارية قابلة للتنفيذ تدريجيًا)
-
-10.1. أفكار عملية ومجربة
-
-1. Priority Scoring: نموذج بسيط (logistic regression / decision tree) يعطي إحتمال أن المستخدم سيتفاعل (يعتمد على: نوع الإشعار، وقت اليوم، تاريخ تفاعل المستخدم، جهاز المستخدم). يُستخدم لتعديل priority تلقائيًا أو للتأجيل.
-
-
-2. Best Send Time: تجميع تاريخ قراءات المستخدم (من metrics) وإيجاد نافذة زمنية لكل مستخدم حيث يكون معدل القراءة أعلى — ثم جدولة الإشعارات المشتركة في هذه النافذة.
-
-
-3. Anomaly Detection: كشف ارتفاع مفاجئ في فشل القنوات أو تغيرات مفاجئة في معدل القراءة عبر DB أو أداة مثل Prometheus + simple thresholds أو نموذج ARIMA/Prophet لاكتشاف شذوذ.
-
-
-
-10.2. متطلبات بيانات
-
-notification_metrics (تم اقتراحه سابقًا).
-
-سجلات تاريخية لقراءات المستخدمين ووقت الإرسال.
-
-سمات المستخدم (role, timezone, locale, device_type).
-
-
-10.3. معيار قبول للـAI
-
-النموذج التجريبي يجب أن يولّد توصيات وليست قرارات تلقائية في البداية.
-
-يجب وجود A/B test لقياس أثر التوصيات على معدلات الفتح/الاستجابة.
-
-
-
----
-
-11. مهام عملية قابلة للتنفيذ (قائمة تحقق يمكن عملها كـ PRs/Tickets)
-
-1. PR-001: Implement NotificationTemplateService (create/update/validate/render).
-
-Files changed: services/NotificationTemplateService.ts, routes/templates.ts.
-
-Acceptance: all template endpoints pass unit tests.
-
-
-
-2. PR-002: Fix setup-security-notifications.ts and map to notification_settings.
-
-Ensure API calls use new schema and graceful error messages.
-
-
-
-3. PR-003: Queue worker improvements (retry/backoff/dead-letter).
-
-Update notification_queue schema, add metrics insertions.
-
-
-
-4. PR-004: Add transaction management & rollback for create notifications.
-
-Ensure create → queue insert → audit log is atomic.
-
-
-
-5. PR-005: Add logging & monitoring instrumentation (Sentry + Prometheus metrics).
-
-Add alerts and Grafana dashboard skeleton.
-
-
-
-6. PR-006: Add DB indices, migration scripts (the SQL above).
-
-
-7. PR-007: Add unit & integration tests + CI pipeline updates.
-
-
-8. PR-008: Implement basic ML demo (priority scoring) as experimental service.
-
-
-
-
----
-
-12. معايير نجاح نهائية (Definition of Done)
-
-جميع الدوال المفقودة تعمل وتمت تغطيتها بوحدات اختبار.
-
-نسبة نجاح التسليم (delivery success) ≥ النظام السابق (أو ثابت) مع انخفاض الأخطاء والتكرارات.
-
-وجود لوحة مراقبة تعرض مؤشرات الأداء ووجود تنبيهات تعمل عند تجاوز العتبات.
-
-وجود سياسة retry وdead-letter ووثائق تشغيل تشغيلية (Runbook).
-
-وجود RLS وسياسات أمان مخزنة وموثقة.
-
-وجود خطوط اختبار (Unit/Integration/E2E) في CI مع pass rate مقبول.
-
-
-
----
-
-13. ملاحظات ختامية ونصائح تنفيذية
-
-ابدأ بـ PR-001 وPR-003 وPR-004 لأنها تمنع خسائر البيانات وتصلح أكبر ثغرة وظيفية الآن. (بدون تحديد وقت تنفيذ — القرار لك).
-
-حافظ على logs مفصّلة وstructured لأن بدونها أي محاولة إصلاح لاحقة ستكون أشبه بالبحث عن إبرة في قِطْنَة.
-
-إذا تحب، أقدملك الآن مسودة كود كاملة لـ NotificationTemplateService.ts وواحد من الـworkers، أو أجهز لك migration scripts كاملة جاهزة للتشغيل. قل لي أي قطعة تريد أكتبها كاملة فورًا — وأنا حاضر. 😉
-
-
-
----
-
-هل تريد أن أبدأ فورًا بكتابة كود NotificationTemplateService.ts كاملاً مع اختبارات Jest، أم تفضل أن أجهز ملف migration كامل بالـSQL مع تعليمات التشغيل؟
-

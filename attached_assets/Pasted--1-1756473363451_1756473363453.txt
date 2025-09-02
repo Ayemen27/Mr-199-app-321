@@ -1,306 +1,0 @@
-تمام يا عمار — خلّينا نرتّب الأمور على نظافة ونطلعك بحل جاهز من أوّل نقرة. عندك مشكلتين أساسيتين:
-
-1. ما في سكربت db:push في package.json.
-
-
-2. تبغى “نظام مقارنة” بين الجداول المعرَّفة في الكود (Schema/pgTable) والجداول الموجودة فعليًا في قاعدة البيانات.
-
-
-
-أعطيك خطة مختصرة ثم كود جاهز:
-
-
----
-
-1) تفعيل Drizzle Kit والـ db:push (ومجموعة سكربتات مهمة)
-
-1. ثبّت الأدوات (إن لم تكن موجودة):
-
-
-
-npm i -D drizzle-kit tsx
-# لو ناقص:
-npm i drizzle-orm pg dotenv
-
-2. أنشئ ملف drizzle.config.ts في جذر المشروع (أو حدّثه لو موجود) بهذه الصيغة (عدّل المسارات حسب مشروعك):
-
-
-
-// drizzle.config.ts
-import { defineConfig } from "drizzle-kit";
-
-export default defineConfig({
-  schema: "./shared/schema.ts",      // ملف/ملفات الschema
-  out: "./drizzle",                  // مجلد المايجريشنات والسنابشوت
-  dialect: "postgresql",
-  dbCredentials: {
-    url: process.env.DATABASE_URL!,  // ضيف DATABASE_URL في .env
-  },
-});
-
-> صيغة ملف الإعدادات والأوامر المدعومة (generate, migrate, push, pull, check, up) موثقة رسميًا. 
-
-
-
-3. أضِف هذه السكربتات إلى package.json:
-
-
-
-{
-  "scripts": {
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:pull": "drizzle-kit pull",
-    "db:check": "drizzle-kit check",
-    "db:studio": "drizzle-kit studio",
-    "db:compare": "tsx scripts/compare-schema-vs-db.ts"
-  }
-}
-
-push: يدفع الـschema مباشرة لقاعدة البيانات بدون توليد ملفات SQL (مفيد للتجارب السريعة). 
-
-البديل الآمن بالإنتاج: generate ثم migrate لتوليد ملفات SQL وتشغيلها. 
-
-
-بعدها تقدر تجرب:
-
-# يدفع تعريفات الجداول الحالية:
-npm run db:push
-# أو المسار الكلاسيكي:
-npm run db:generate && npm run db:migrate
-
-> إن مشروعك “existing” أو متصل بـ Supabase، بإمكانك استخدام pull/introspect لبناء الـschema تلقائيًا من DB. 
-
-
-
-
----
-
-2) سكربت مقارنة شامل: (الكود ↔ قاعدة البيانات)
-
-الفكرة: نستخرج أسماء الجداول من ملفات الـschema عبر Regex يلقط اسم الجدول من استدعاء pgTable('table_name', …)، ثم نقرأ الجداول من Postgres (pg_tables) ونقارن. لا نقارن “تفاح ببرتقال” — نقارن جداول بجداول 😄.
-
-> ملاحظة: نستخدم Regex على النص بدل استيراد TypeScript، لتفادي مشاكل تشغيل .ts مباشرة عبر Node. الاستعلام على Postgres يتم بـ pg. (إن حبيت تستخدم drizzle و sql\``, برضو متاح ومذكور رسميًا). 
-
-
-
-هيكل الملف: scripts/compare-schema-vs-db.ts
-
-انسخ الكود التالي كما هو:
-
-// scripts/compare-schema-vs-db.ts
-import "dotenv/config";
-import fs from "fs";
-import path from "path";
-import { Client } from "pg";
-
-/**
- * إعدادات بسيطة قابلة للتعديل
- */
-const SCHEMA_GLOB_DIRS = ["shared"]; // مجلدات فيها ملفات الschema
-const TS_FILE_EXTS = [".ts", ".tsx"];
-const EXCLUDE_DIRS = ["node_modules", "drizzle"]; // استبعد مجلدات غير مهمة
-
-/**
- * Regex يلتقط اسم الجدول من أول وسيط لـ pgTable('table_name', {...})
- * يعمل حتى لو فيه مسافات/تعليقات بسيطة
- */
-const PG_TABLE_NAME_REGEX = /pgTable\s*?\(\s*?['"`]([^'"`]+)['"`]\s*?,/g;
-
-function walk(dir: string, files: string[] = []): string[] {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      if (EXCLUDE_DIRS.includes(entry.name)) continue;
-      walk(path.join(dir, entry.name), files);
-    } else if (TS_FILE_EXTS.includes(path.extname(entry.name))) {
-      files.push(path.join(dir, entry.name));
-    }
-  }
-  return files;
-}
-
-function getAllSchemaFiles(): string[] {
-  const results: string[] = [];
-  for (const base of SCHEMA_GLOB_DIRS) {
-    if (fs.existsSync(base)) walk(base, results);
-  }
-  return results;
-}
-
-function extractTableNamesFromCode(files: string[]): Set<string> {
-  const names = new Set<string>();
-  for (const file of files) {
-    const src = fs.readFileSync(file, "utf8");
-    let match: RegExpExecArray | null;
-    while ((match = PG_TABLE_NAME_REGEX.exec(src)) !== null) {
-      names.add(match[1].trim().toLowerCase());
-    }
-  }
-  return names;
-}
-
-async function getDbTables(): Promise<Set<string>> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
-  try {
-    const res = await client.query(
-      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;`
-    );
-    return new Set(res.rows.map(r => String(r.tablename).toLowerCase()));
-  } finally {
-    await client.end();
-  }
-}
-
-function printSet(label: string, set: Set<string>) {
-  console.log(`\n${label} (${set.size}):`);
-  if (!set.size) {
-    console.log("  — لا شيء —");
-    return;
-  }
-  [...set].sort().forEach(n => console.log("  - " + n));
-}
-
-(async () => {
-  try {
-    if (!process.env.DATABASE_URL) {
-      console.error("❌ DATABASE_URL غير موجودة في .env");
-      process.exit(1);
-    }
-
-    // 1) جلب أسماء الجداول من الكود
-    const files = getAllSchemaFiles();
-    const codeTables = extractTableNamesFromCode(files);
-
-    // 2) جلب أسماء الجداول من قاعدة البيانات
-    const dbTables = await getDbTables();
-
-    // 3) المقارنة
-    const onlyInCode = new Set([...codeTables].filter(x => ![...dbTables].includes(x)));
-    const onlyInDb = new Set([...dbTables].filter(x => ![...codeTables].includes(x)));
-    const inBoth = new Set([...codeTables].filter(x => [...dbTables].includes(x)));
-
-    console.log("=== مقارنة الجداول: الكود (pgTable) ↔ قاعدة البيانات ===");
-    printSet("✓ موجود في الكود والقاعدة", inBoth);
-    printSet("• موجود في الكود فقط (لم يُنشأ في القاعدة)", onlyInCode);
-    printSet("• موجود في القاعدة فقط (غير معرف في الكود)", onlyInDb);
-
-    // 4) نصائح تصحيحية سريعة
-    if (onlyInCode.size) {
-      console.log("\n📌 اقتراح: شغّل `npm run db:push` أو `npm run db:generate && npm run db:migrate` لإنشاء الجداول الناقصة.");
-    }
-    if (onlyInDb.size) {
-      console.log("📌 اقتراح: إمّا تعرّف هذه الجداول في الـschema، أو احذفها/أرشفها إن كانت قديمة.");
-    }
-
-    // اخلي CI يفشل لو في اختلافات:
-    if (onlyInCode.size || onlyInDb.size) process.exit(2);
-    else process.exit(0);
-  } catch (err: any) {
-    console.error("خطأ:", err?.message || err);
-    process.exit(1);
-  }
-})();
-
-تشغيل:
-
-# ضيف DATABASE_URL في .env
-echo "DATABASE_URL=postgres://user:pass@host:5432/dbname" >> .env
-
-# نفّذ المقارنة:
-npm run db:compare
-
-
----
-
-3) تشغيل استعلام الجداول (بدون TypeScript loader)
-
-السكربت الذي جرّبته:
-
-node -e "const { db } = require('./db.ts'); ..."
-
-غالبًا سيصطدم بمشكلة استيراد .ts عبر require. الأفضل:
-
-خيار A (سريع): استخدم tsx لتشغيل TypeScript مباشرة:
-
-npm i -D tsx
-npx tsx server/list-tables.ts
-
-واكتب server/list-tables.ts مثل:
-
-import "dotenv/config";
-import { Client } from "pg";
-
-async function main() {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
-  const { rows } = await client.query(
-    `SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;`
-  );
-  console.log("=== جداول قاعدة البيانات الموجودة ===");
-  for (const r of rows) console.log(r.tablename);
-  console.log(`المجموع: ${rows.length} جدول`);
-  await client.end();
-}
-main().catch(e => (console.error("خطأ:", e.message), process.exit(1)));
-
-خيار B (بدون TS): اكتب نفس السكربت بامتداد .js واستخدم Node مباشرة.
-
-
----
-
-4) أوامر مساعدة إضافية
-
-لدفع التغييرات مباشرة (كود → DB):
-
-npm run db:push
-
-> مفيد للتطوير السريع بدون ملفات SQL. 
-
-
-
-المسار المحافظ (إنتاجي):
-
-npm run db:generate && npm run db:migrate
-
-> يولد ملفات SQL ثم يطبقها — الأسلم للتتبع والمراجعة. 
-
-
-
-سحب الـschema من قاعدة بيانات موجودة (DB → كود):
-
-npm run db:pull
-
-> لبناء schema.ts من جداول قائمة. 
-
-
-
-لو حاب تشغّل Studio لاستعراض الـDB و الـschema:
-
-npm run db:studio
-
-> يأتي ضمن Drizzle Kit utilities. 
-
-
-
-
-
----
-
-لماذا هذا الحل “مرتاح”؟
-
-موثّق رسميًا من Drizzle لفكرة push/generate/migrate وملف الإعدادات. 
-
-الاستعلام بـ pg بسيط ومباشر، وتقدر لاحقًا تستبدله بـ Drizzle db.execute(sql\`)` لو ودّك. 
-
-
-لو نفّذت الخطوات أعلاه:
-
-بيصير عندك db:push شغّال.
-
-وعندك نظام مقارنة سريع يطبع لك الفرق بين “المُعرّف في الكود” و”الموجود فعليًا في القاعدة” مع توصيات إصلاح.
-
-
-وإن احتجت نوسّع المقارنة (أعمدة/مفاتيح/فهرسة)، أقدر أزوّدك نسخة “Advanced” تقرأ information_schema.columns وتقارن العمود-بالعمود.
-

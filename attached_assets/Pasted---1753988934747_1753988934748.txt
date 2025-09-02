@@ -1,172 +1,0 @@
-لتحسين تجربة المستخدم عند حدوث أخطاء في حقول الإدخال، يمكنك اتباع الخطوات التالية بشكل عام (سواء كنت تستخدم Vanilla JavaScript، أو إطار عمل مثل React/Vue/Angular):
-
-
----
-
-1. هيكلة الـ HTML/CSS
-
-1. لكل حقل إدخال (<input> أو <textarea>) أضف حاوية تحتوى عليه وعلى رسالة الخطأ:
-
-<div class="form-group" id="group-username">
-  <label for="username">اسم المستخدم</label>
-  <input type="text" id="username" name="username" />
-  <div class="error-message" id="error-username"></div>
-</div>
-
-
-2. أضف في CSS:
-
-.form-group {
-  position: relative;
-  margin-bottom: 1rem;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  transition: border-color 0.2s;
-}
-
-.form-group.error input {
-  border-color: #e74c3c; /* أحمر واضح */
-}
-
-.error-message {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-  min-height: 1em; /* يحجز مكان للرسالة */
-}
-
-
-
-
----
-
-2. التحقق من البيانات (Validation) بالـ JavaScript
-
-document.getElementById('myForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-
-  // مسح الأخطاء القديمة
-  const groups = document.querySelectorAll('.form-group');
-  groups.forEach(g => g.classList.remove('error'));
-  document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-
-  const errors = {};
-
-  // مثال: التحقق من اسم المستخدم ألا يكون فارغًا
-  const username = document.getElementById('username').value.trim();
-  if (!username) {
-    errors.username = 'الرجاء إدخال اسم المستخدم';
-  }
-
-  // مثال: التحقق من البريد
-  const email = document.getElementById('email').value.trim();
-  if (!email) {
-    errors.email = 'الرجاء إدخال بريد إلكتروني';
-  } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-    errors.email = 'صيغة البريد غير صحيحة';
-  }
-
-  // ... إضافة المزيد من الشروط حسب الحقول
-
-  if (Object.keys(errors).length > 0) {
-    // العثور على أول حقل به خطأ للتركيز والتمرير إليه
-    const firstErrorField = Object.keys(errors)[0];
-    const group = document.getElementById(`group-${firstErrorField}`);
-    const input = document.getElementById(firstErrorField);
-    const errorDiv = document.getElementById(`error-${firstErrorField}`);
-
-    // عرض كل الأخطاء
-    for (const field in errors) {
-      document
-        .getElementById(`group-${field}`)
-        .classList.add('error');
-      document.getElementById(`error-${field}`).textContent = errors[field];
-    }
-
-    // التركيز والتمرير
-    input.focus();
-    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // هنا يمكنك إضافة تعليق ظريف قليلًا:
-    console.log('ههه، واضح إنك نسيت تعبي هالحقل 😉');
-    return;
-  }
-
-  // إن لم يكن هناك أخطاء، تابع الإرسال أو المعالجة
-  this.submit();
-});
-
-
----
-
-3. في حالة استخدام React (مثال بـ React Hook Form)
-
-إذا كنت تعمل بـ React، أنصح بمكتبة React Hook Form لأنها خفيفة وسريعة:
-
-import { useForm } from 'react-hook-form';
-
-function MyForm() {
-  const { register, handleSubmit, formState: { errors }, setFocus } = useForm();
-
-  const onSubmit = data => {
-    console.log(data);
-  };
-
-  // عند وجود خطأ، ركّز على أول حقل فيه خطأ
-  React.useEffect(() => {
-    if (errors.username) setFocus('username');
-    else if (errors.email) setFocus('email');
-    // ... وهكذا
-  }, [errors, setFocus]);
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className={`form-group ${errors.username ? 'error' : ''}`}>
-        <label>اسم المستخدم</label>
-        <input {...register('username', { required: 'اسم المستخدم مطلوب' })} />
-        <div className="error-message">{errors.username?.message}</div>
-      </div>
-
-      <div className={`form-group ${errors.email ? 'error' : ''}`}>
-        <label>البريد الإلكتروني</label>
-        <input
-          {...register('email', {
-            required: 'البريد مطلوب',
-            pattern: { value: /^\S+@\S+\.\S+$/, message: 'البريد غير صالح' }
-          })}
-        />
-        <div className="error-message">{errors.email?.message}</div>
-      </div>
-
-      <button type="submit">إرسال</button>
-    </form>
-  );
-}
-
-وستعمل نفس قواعد CSS المذكورة أعلاه لضبط الإطار الأحمر وإظهار الرسائل.
-
-
----
-
-نصائح إضافية
-
-1. توحد الألوان: استخدم لونًا واحدًا مثل #e74c3c لجميع الأخطاء، حتى يتعرف عليه المستخدم بسرعة.
-
-
-2. نص قصير وواضح: اجعل رسالة الخطأ مختصرة («مطلوب»، «غير صالح»، «أقصى طول 50 حرف»).
-
-
-3. التجربة الأولى: يمكنك إظهار الأخطاء فور ترك الحقل (onblur أو onChange مع تأخير) لا تنتظر حتى الضغط على “إرسال”.
-
-
-4. لمسة دعابية: لا تبالغ في الفكاهة في رسالة الخطأ داخل واجهة المستخدم، يكفي تعليق في الكونسول أو رسالة خفيفة جدًا مثل «أووه، نسيت تحط شيء هنا!»
-
-
-
-بهذا الشكل تضمن أن المستخدم يفهم الخطأ بسرعة، ويُرشد مباشرة لكيفية إصلاحه، مع واجهة نظيفة واحترافية (وتلميحة دعابية بسيطة في الكونسول لما يضغط Submit وفاتته حاجة 😉).
-

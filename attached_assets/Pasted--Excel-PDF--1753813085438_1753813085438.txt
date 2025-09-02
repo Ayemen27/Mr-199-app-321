@@ -1,194 +1,0 @@
-لإنشاء كشف حساب عامل في تطبيق حسابات احترافي مع ميزات الطباعة والتصدير إلى Excel وPDF، اتبع الخطوات التالية، مع شرح لكل جزء من النظام:
-
-
----
-
-✅ المخرجات النهائية المطلوبة
-
-جدول كشف شبيه بالصورة المرفقة.
-
-الطباعة مباشرة من الهاتف أو الكمبيوتر.
-
-التصدير إلى Excel وPDF بنفس التنسيق.
-
-قراءة البيانات من قاعدة بيانات (مثل SQLite أو MySQL).
-
-
-
----
-
-🔧 1. إعداد قاعدة البيانات
-
-مثال على تصميم جدول قاعدة البيانات (work_records):
-
-CREATE TABLE work_records (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    worker_name TEXT,
-    national_id TEXT,
-    job_title TEXT,
-    daily_wage INTEGER,
-    work_date DATE,
-    hours_worked INTEGER DEFAULT 0,
-    days_worked INTEGER DEFAULT 0,
-    amount_due INTEGER DEFAULT 0,
-    amount_received INTEGER DEFAULT 0,
-    project_name TEXT,
-    transfer_number TEXT,
-    notes TEXT
-);
-
-
----
-
-🧠 2. منطق تجميع البيانات (Backend Logic)
-
-اجلب البيانات حسب اسم العامل والفترة:
-
-SELECT * FROM work_records
-WHERE worker_name = 'موسى عبدالحكيم'
-AND work_date BETWEEN '2025-06-22' AND '2025-07-14';
-
-ثم احسب:
-
-المبلغ المستحق = الأيام × الأجر اليومي
-
-المبلغ المتبقي = المبلغ المستحق - المبلغ المستلم
-
-
-
----
-
-🖥️ 3. الواجهة (Frontend / App Screen)
-
-🧩 تصميم شاشة التقرير:
-
-حقل لاختيار اسم العامل.
-
-اختيار الفترة الزمنية (من تاريخ / إلى تاريخ).
-
-زر عرض التقرير.
-
-زر تصدير PDF / Excel.
-
-زر طباعة.
-
-
-📋 عرض الجدول بتنسيق احترافي:
-
-استخدم مكتبة مثل:
-
-المنصة	مكتبة الطباعة / التصدير
-
-React Native	react-native-pdf, xlsx, react-native-print
-Flutter	syncfusion_flutter_pdf, excel, printing
-Web (HTML/JS)	jsPDF, SheetJS (xlsx), DataTables
-Android Native	PDFDocument, Apache POI
-
-
-
----
-
-📤 4. إنشاء PDF وExcel
-
-✅ PDF باستخدام jsPDF أو pdfMake:
-
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-const generatePDF = (data) => {
-  const doc = new jsPDF('p', 'mm', 'a4');
-
-  doc.setFontSize(14);
-  doc.text('كشف حساب العامل', 105, 15, null, null, 'center');
-
-  doc.autoTable({
-    head: [['م', 'الاسم', 'التاريخ', 'الأجر اليومي', 'أيام العمل', 'ساعات العمل', 'المبلغ المستحق', 'المبلغ المستلم', 'المتبقي', 'ملاحظات']],
-    body: data.map((row, index) => [
-      index + 1,
-      row.worker_name,
-      row.work_date,
-      row.daily_wage,
-      row.days_worked,
-      row.hours_worked,
-      row.amount_due,
-      row.amount_received,
-      row.amount_due - row.amount_received,
-      row.notes || '',
-    ]),
-    startY: 30,
-    styles: { font: 'arabic', halign: 'center' }
-  });
-
-  doc.save('كشف_حساب_العامل.pdf');
-};
-
-
----
-
-✅ Excel باستخدام SheetJS (JavaScript):
-
-import * as XLSX from 'xlsx';
-
-const exportToExcel = (data) => {
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "كشف العامل");
-  XLSX.writeFile(workbook, "كشف_حساب_العامل.xlsx");
-};
-
-
----
-
-🖨️ 5. الطباعة
-
-في الويب: window.print().
-
-في React Native: react-native-print.
-
-في Flutter: printing package.
-
-
-
----
-
-🧾 6. مثال على تنسيق البيانات من الكود:
-
-[
-  {
-    worker_name: "موسى عبدالحكيم",
-    national_id: "xxxxxxxx",
-    job_title: "عامل غذاء",
-    daily_wage: 7000,
-    work_date: "2025-06-22",
-    days_worked: 1,
-    hours_worked: 8,
-    amount_due: 7000,
-    amount_received: 0,
-    notes: "",
-    project_name: "مشروع آبار التحيتا",
-    transfer_number: "732366543"
-  },
-  ...
-]
-
-
----
-
-🔚 7. اقتراح إضافات احترافية:
-
-الميزة	الوصف
-
-🔎 فلترة متقدمة	حسب المشروع أو نوع الوظيفة أو رقم التحويل
-📆 تقويم ذكي	لاختيار التواريخ بسهولة
-📱 دعم الموبايل	واجهة تتكيف مع الهاتف والكمبيوتر
-📤 تصدير مباشر من التطبيق	زر تصدير بجانب التقرير
-🔐 حماية PDF	إمكانية إضافة توقيع أو ختم
-
-
-
----
-
-إذا كنت تشتغل على React أو Flutter أو Native Android، أقدر أجهز لك الكود المناسب كامل حسب المنصة، فقط حدد لي نوع التطبيق أو التقنية اللي تستخدمها.
-
-هل تريدني أبدأ بصيغة React Native أو Flutter أو Web؟
-

@@ -1,161 +1,0 @@
-import React, { useEffect, useState } from 'react';  /**  * ToolDetailsDrawer.tsx  * مكوّن React (TypeScript) يعرض تفاصيل أداة؛ يتضمن تبويبات Overview | Movements | Maintenance  * ويحتوي على الأزرار الأساسية: Transfer, Return, Consume, Schedule Maintenance, Print  * يعتمد على TailwindCSS في التصميم (mobile-first).  *  * ملاحظات تنفيذية:  * - استدعاءات API موضوعة كمثال باستخدام fetch. في مشروع حقيقي استعمل axios أو fetch wrapper مع auth headers.  * - كل عملية حساسة تستخدم idempotencyKey لتجنُّب تكرار العمليات عند إعادة الإرسال (mobile offline retries).  * - كل تغيّر يستخدم optimistic UI حيث مناسب، ويتعامل مع أخطاء rollback.  */  type UUID = string;  type LocationType = 'warehouse' | 'project' | 'external' | 'none';  type Tool = {   id: UUID;   name: string;   sku?: string;   status: string;   is_tool: boolean;   is_consumable: boolean;   purchase_price?: number;   acquisition_date?: string;   metadata?: any;   image_urls?: string[]; };  type StockItem = {   id: UUID;   tool_id: UUID;   location_type: LocationType;   location_id?: UUID | null;   quantity: number; };  type Movement = {   id: UUID;   tool_id: UUID;   from_type?: LocationType;   from_id?: UUID | null;   to_type?: LocationType;   to_id?: UUID | null;   quantity: number;   movement_type: string;   performed_by?: UUID;   performed_at: string;   notes?: string; };  // --- Helper: API wrapper (basic) --- async function callApi(path: string, opts: RequestInit = {}) {   const base = '/api'; // اضبط إن لزم   const res = await fetch(base + path, {     headers: { 'Content-Type': 'application/json' },     credentials: 'include',     ...opts,   });   if (!res.ok) {     const text = await res.text();     throw new Error(text || res.statusText);   }   // بعض الـ endpoints قد ترجع 204   if (res.status === 204) return null;   return res.json(); }  // --- Utility --- function uid() {   // idempotency key helper   return 'key_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }  // --- Props --- type Props = {   toolId: UUID | null;   open: boolean;   onClose: () => void;   currentLocation?: { type: LocationType; id?: UUID | null } | null; // الموقع الذي يعرض منه المستخدم القائمة (مثل المشروع)   onUpdate?: () => void; // callback لإعلام الصفحة الأم بتحديثات };  export default function ToolDetailsDrawer({ toolId, open, onClose, currentLocation, onUpdate }: Props) {   const [tool, setTool] = useState(null);   const [stocks, setStocks] = useState([]);   const [movements, setMovements] = useState([]);   const [loading, setLoading] = useState(false);   const [activeTab, setActiveTab] = useState<'overview' | 'movements' | 'maintenance'>('overview');    // Modals state   const [showTransfer, setShowTransfer] = useState(false);   const [showReturn, setShowReturn] = useState(false);   const [showConsume, setShowConsume] = useState(false);   const [showMaintenance, setShowMaintenance] = useState(false);    // Transfer form state   const [transferToType, setTransferToType] = useState('project');   const [transferToId, setTransferToId] = useState(null);   const [transferQty, setTransferQty] = useState(1);   const [transferNotes, setTransferNotes] = useState('');    // Return form state   const [returnToWarehouseId, setReturnToWarehouseId] = useState(null);   const [returnNotes, setReturnNotes] = useState('');    // Consume form state   const [consumeQty, setConsumeQty] = useState(1);   const [consumeReason, setConsumeReason] = useState('');    // Maintenance form   const [maintenanceNotes, setMaintenanceNotes] = useState('');   const [maintenanceNextDue, setMaintenanceNextDue] = useState(null);   const [maintenanceCost, setMaintenanceCost] = useState(null);    // Errors   const [error, setError] = useState(null);    // Load details when toolId or open changes   useEffect(() => {     if (!open || !toolId) return;     setLoading(true);     setError(null);     (async () => {       try {         const data = await callApi(`/tools/${toolId}`);         setTool(data.tool ?? data);         setStocks(data.stock_by_location ?? data.stocks ?? []);         // fetch movements separately         const mv = await callApi(`/tools/${toolId}/movements?limit=50`);         setMovements(mv || []);       } catch (e: any) {         setError(e.message || 'خطأ في جلب بيانات الأداة');       } finally {         setLoading(false);       }     })();   }, [toolId, open]);    // Helper to update stock locally and notify parent   function applyLocalStockUpdate(newStocks: StockItem[]) {     setStocks(newStocks);     if (onUpdate) onUpdate();   }    // --- Actions: Transfer ---   async function handleConfirmTransfer() {     if (!tool) return;     setError(null);     const idempotencyKey = uid();     const payload = {       to_type: transferToType,       to_id: transferToId,       quantity: transferQty,       movement_type: 'transfer',       performed_by: null, // server will infer from session       notes: transferNotes,       idempotency_key: idempotencyKey,     };      // Optimistic UI: adjust local stocks     const fromEntry = stocks.find(s => s.location_type === (currentLocation?.type ?? 'project') && s.location_id === (currentLocation?.id ?? null));     const destKey = `${transferToType}:${transferToId}`;     const newStocks = stocks.map(s => ({ ...s }));      try {       // check availability locally       if (!fromEntry || fromEntry.quantity < transferQty) {         throw new Error(`الكمية غير كافية (المتوفر: ${fromEntry ? fromEntry.quantity : 0})`);       }       // optimistic change       newStocks.forEach(s => {         if (s.id === fromEntry.id) s.quantity = s.quantity - transferQty;       });       // if dest exists, increase otherwise push       const dest = newStocks.find(s => s.location_type === transferToType && s.location_id === transferToId);       if (dest) dest.quantity += transferQty;       else newStocks.push({ id: uid(), tool_id: tool.id, location_type: transferToType, location_id: transferToId, quantity: transferQty });        applyLocalStockUpdate(newStocks);        // call API       await callApi(`/tools/${tool.id}/transfer`, {         method: 'POST',         body: JSON.stringify(payload),       });        // fetch latest movements       const mv = await callApi(`/tools/${tool.id}/movements?limit=20`);       setMovements(mv || movements);        setShowTransfer(false);     } catch (e: any) {       // rollback optimistic       setError(e.message || 'فشل النقل');       // refetch stocks from server to ensure consistency       try {         const data = await callApi(`/tools/${tool?.id}`);         setStocks(data.stock_by_location ?? data.stocks ?? []);       } catch (_) {}     }   }    // --- Actions: Return ---   async function handleConfirmReturn() {     if (!tool) return;     setError(null);     const payload = {       to_type: 'warehouse',       to_id: returnToWarehouseId,       quantity: 1, // default for unique tool; in UI يمكن تعديل       movement_type: 'return',       notes: returnNotes,       idempotency_key: uid(),     };     try {       // call API       await callApi(`/tools/${tool.id}/return`, { method: 'POST', body: JSON.stringify(payload) });       // refresh       const data = await callApi(`/tools/${tool.id}`);       setStocks(data.stock_by_location ?? data.stocks ?? []);       const mv = await callApi(`/tools/${tool.id}/movements?limit=20`);       setMovements(mv || movements);       setShowReturn(false);     } catch (e: any) {       setError(e.message || 'فشل الإرجاع');     }   }    // --- Actions: Consume ---   async function handleConsume() {     if (!tool) return;     setError(null);     const payload = {       quantity: consumeQty,       reason: consumeReason,       movement_type: 'consume',       idempotency_key: uid(),     };     try {       // optimistic adjust local       const source = stocks[0] ?? null;       const newStocks = stocks.map(s => ({ ...s }));       if (source) {         if (source.quantity < consumeQty) throw new Error(`الكمية غير كافية (المتوفر: ${source.quantity})`);         newStocks[0].quantity = newStocks[0].quantity - consumeQty;         applyLocalStockUpdate(newStocks);       }       await callApi(`/tools/${tool.id}/consume`, { method: 'POST', body: JSON.stringify(payload) });       const data = await callApi(`/tools/${tool.id}`);       setStocks(data.stock_by_location ?? data.stocks ?? []);       const mv = await callApi(`/tools/${tool.id}/movements?limit=20`);       setMovements(mv || movements);       setShowConsume(false);     } catch (e: any) {       setError(e.message || 'فشل العملية');       try {         const data = await callApi(`/tools/${tool?.id}`);         setStocks(data.stock_by_location ?? data.stocks ?? []);       } catch (_) {}     }   }    // --- Actions: Schedule/Log Maintenance ---   async function handleScheduleMaintenance() {     if (!tool) return;     const payload = {       notes: maintenanceNotes,       next_due_date: maintenanceNextDue,       cost: maintenanceCost,       idempotency_key: uid(),     };     try {       await callApi(`/tools/${tool.id}/maintenance`, { method: 'POST', body: JSON.stringify(payload) });       // refresh maintenance tab by refetching movements or a dedicated maintenance endpoint       const mt = await callApi(`/tools/${tool.id}/maintenance_logs`);       // إذا أردنا: دمج في movements أو وضع حالة       setShowMaintenance(false);     } catch (e: any) {       setError(e.message || 'فشل تسجيل الصيانة');     }   }    // --- Print / Export ---   async function handlePrintInventory() {     if (!tool) return;     // فتح رابط الـ PDF في تبويب جديد     window.open(`/api/reports/tool-inventory?toolId=${tool.id}`, '_blank');   }    // --- Render helpers ---   function OverviewTab() {     if (!tool) return 
-لا توجد بيانات للأداة.
-;     return (       
-         
-           
-             {tool.image_urls && tool.image_urls.length > 0 ? (               {tool.name}             ) : (               
-صورة
-             )}           
-           
-             
-### {tool.name}
-             
-SKU: {tool.sku ?? '-'}
-             
-الحالة: {tool.status}
-             
-سعر الشراء: {tool.purchase_price ?? '-'} 
-             
-موقع الأدوات (stock):
-             
-               {stocks.map(s => (                 
--                    
-{s.location_type}{s.location_id ? ` - ${s.location_id}` : ''}
-                   
-{s.quantity}
-                 
-               ))}             
-
-           
-         
-          
-            setShowTransfer(true)} className="px-3 py-2 bg-blue-600 text-white rounded">نقل            setShowReturn(true)} className="px-3 py-2 bg-green-600 text-white rounded">إرجاع            setShowConsume(true)} className="px-3 py-2 bg-red-600 text-white rounded">استهلاك/فقدان            setShowMaintenance(true)} className="px-3 py-2 bg-yellow-500 text-black rounded">صيانة           طباعة كشف         
-       
-     );   }    function MovementsTab() {     return (       
-         {movements.length === 0 ? (           
-لا توجد حركات حتى الآن.
-         ) : (           
-             {movements.map(m => (               
--                  
-                   
-{new Date(m.performed_at).toLocaleString()}
-                   
-{m.movement_type}
-                 
-                 
-من: {m.from_type ?? '-'} {m.from_id ? `(${m.from_id})` : ''} → إلى: {m.to_type ?? '-'} {m.to_id ? `(${m.to_id})` : ''}
-                 
-كمية: {m.quantity} · ملاحظة: {m.notes ?? '-'}
-               
-             ))}           
-
-         )}       
-     );   }    function MaintenanceTab() {     return (       
-         
-سجل الصيانة:
-         {/* في تطبيق حقيقي نعرض بيانات من endpoint مخصص */}         
-لا توجد سجلات صيانة للعرض حالياً.
-       
-     );   }    // --- Drawer UI ---   if (!open) return null;    return (     
-       {/* backdrop */}       
-        
-         
-           
-             إغلاق             
-## تفاصيل الأداة
-           
-           
-             طباعة           
-         
-          {loading ? (           
-جارٍ التحميل...
-         ) : error ? (           
-{error}
-         ) : (           
-             
-               
-                  setActiveTab('overview')} className={`px-3 py-2 ${activeTab === 'overview' ? 'border-b-2 border-blue-600' : ''}`}>نظرة عامة                  setActiveTab('movements')} className={`px-3 py-2 ${activeTab === 'movements' ? 'border-b-2 border-blue-600' : ''}`}>سجل الحركات                  setActiveTab('maintenance')} className={`px-3 py-2 ${activeTab === 'maintenance' ? 'border-b-2 border-blue-600' : ''}`}>صيانة               
-                
-                 {activeTab === 'overview' && }                 {activeTab === 'movements' && }                 {activeTab === 'maintenance' && }               
-             
-           
-         )}          
-معلومات إضافية: عمليات التعديل تُسجل في السجل (audit) تلقائياً.
-       
-        {/* Modals: Transfer */}       {showTransfer && (         
-           
- setShowTransfer(false)} />           
-             
-### نقل الأداة
-             
-               الوجهة               
-                  setTransferToType(e.target.value as LocationType)} className="border rounded p-2 flex-1">                   مشروع                   مخزن                   خارج                                   setTransferToId(e.target.value)} className="border rounded p-2 w-48" />               
-                الكمية                setTransferQty(Number(e.target.value))} className="border rounded p-2 w-32" />                ملاحظة                setTransferNotes(e.target.value)} className="border rounded p-2 w-full" />                <div className="flex gap-2 justify-end mt-3">                 <button onClick={() => setShowTransfer(false)} className="px-3 py-2 border rounded">إلغاء</button>                 <button onClick={handleConfirmTransfer} className="px-3 py-2 bg-blue-600 text-white rounded">تأكيد النقل</button>               </div>             </div>           </div>         </div>       )}        {/* Return Modal */}       {showReturn && (         <div className="fixed inset-0 z-60 flex items-end md:items-center justify-center p-4">           <div className="absolute inset-0 bg-black/30" onClick={() => setShowReturn(false)} />           <div className="relative bg-white w-full max-w-xl rounded shadow p-4">             <h3 className="text-lg font-medium">إرجاع الأداة</h3>             <div className="mt-3 space-y-2">               <label className="block text-sm">إلى مخزن (id)</label>               <input placeholder="warehouse id" value={returnToWarehouseId ?? ''} onChange={e => setReturnToWarehouseId(e.target.value)} className="border rounded p-2 w-full" />                <label className="block text-sm">ملاحظة</label>               <textarea rows={2} value={returnNotes} onChange={e => setReturnNotes(e.target.value)} className="border rounded p-2 w-full" />                <div className="flex gap-2 justify-end mt-3">                 <button onClick={() => setShowReturn(false)} className="px-3 py-2 border rounded">إلغاء</button>                 <button onClick={handleConfirmReturn} className="px-3 py-2 bg-green-600 text-white rounded">تأكيد الإرجاع</button>               </div>             </div>           </div>         </div>       )}        {/* Consume Modal */}       {showConsume && (         <div className="fixed inset-0 z-60 flex items-end md:items-center justify-center p-4">           <div className="absolute inset-0 bg-black/30" onClick={() => setShowConsume(false)} />           <div className="relative bg-white w-full max-w-md rounded shadow p-4">             <h3 className="text-lg font-medium">استهلاك / فقدان</h3>             <div className="mt-3 space-y-2">               <label className="block text-sm">الكمية</label>               <input type="number" min={1} value={consumeQty} onChange={e => setConsumeQty(Number(e.target.value))} className="border rounded p-2 w-32" />                <label className="block text-sm">السبب / ملاحظة</label>               <textarea rows={2} value={consumeReason} onChange={e => setConsumeReason(e.target.value)} className="border rounded p-2 w-full" />                <div className="flex gap-2 justify-end mt-3">                 <button onClick={() => setShowConsume(false)} className="px-3 py-2 border rounded">إلغاء</button>                 <button onClick={handleConsume} className="px-3 py-2 bg-red-600 text-white rounded">تأكيد الاستهلاك</button>               </div>             </div>           </div>         </div>       )}        {/* Maintenance Modal */}       {showMaintenance && (         
-           
- setShowMaintenance(false)} />           
-             
-### تسجيل / جدولة صيانة
-             
-               ملاحظة                setMaintenanceNotes(e.target.value)} className="border rounded p-2 w-full" />                التاريخ التالي للصيانة                setMaintenanceNextDue(e.target.value)} className="border rounded p-2" />                التكلفة (اختياري)                setMaintenanceCost(Number(e.target.value))} className="border rounded p-2 w-40" />                
-                  setShowMaintenance(false)} className="px-3 py-2 border rounded">إلغاء                 حفظ الصيانة               
-             
-           
-         
-       )}      
-   ); } 
-تمام — جهزت لك مكوّن React كامل باسم **ToolDetailsDrawer.tsx** (مع تعليقات بالعربي، تفعيل Tailwind، واستدعاءات API مع منطق optimistic updates و idempotency). يمكنك رؤية الملف الآن على اللوحة الجانبية — اسمه: **Tool Details Drawer**.
- 
-هل تريد أضيف نسخة TypeScript أكثر تشدُّدًا (مع واجهات مفصّلة)، أو أصنع أيضًا مكوّن `TransferList` منفصل وملف اختبارات E2E جاهز لفريق الـQA؟
-
-
-تمام ✅
-خلينا نضيف صفحة المعدات والأدوات في تطبيقك مع ربطها بالمشاريع. الصفحة ستسمح لك:
-
-📦 إضافة المعدات (الاسم + الرقم التسلسلي أو الكود + الكمية + ملاحظات).
-
-🔗 ربط المعدات بمشروع محدد عند نقلها.
-
-📋 عرض المعدات التي تم إرسالها للمشروع مع حالة (موجودة / تم إرجاعها).
-
-🔍 البحث أو التصفية حسب المشروع أو حالة الأداة.
-
-
-الخطوات:
-
-1. إنشاء جدول جديد في قاعدة البيانات باسم مثلاً equipments يحتوي على:
-
-id (مفتاح رئيسي)
-
-name (اسم الأداة)
-
-code (الرقم التسلسلي أو رقم تعريف)
-
-quantity (العدد)
-
-notes (ملاحظات)
-
-status (موجودة، مستخدمة، تم إرجاعها)
-
-project_id (لربط الأداة بالمشروع)
-
-
-
-2. إنشاء صفحة واجهة لعرض وإدارة المعدات:
-
-زر إضافة معدات جديدة.
-
-قائمة بجميع المعدات المرتبطة بمشروع محدد.
-
-أزرار (تعديل – حذف – تغيير الحالة).
-
-
-
-3. عند تحديد مشروع → يظهر خيار "إضافة معدات" وتحديد الكمية.
-
-
-
-
----
-
-تحب أكتب لك كود الجدول في قاعدة البيانات + API + صفحة React جاهزة عشان تدمجها في تطبيقك؟
-
