@@ -2371,61 +2371,6 @@ app.post('/api/supplier-payments', async (req, res) => {
 
 // ============ مسارات التقارير المتقدمة ============
 
-// تقرير المصروفات اليومية
-app.get('/api/reports/daily-expenses/:projectId/:date', async (req, res) => {
-  try {
-    const { projectId, date } = req.params;
-    
-    // جلب جميع البيانات لليوم المحدد
-    const [attendanceResult, purchasesResult, transportationResult] = await Promise.all([
-      supabaseAdmin
-        .from('worker_attendance')
-        .select(`
-          *,
-          worker:workers(name, type)
-        `)
-        .eq('project_id', projectId)
-        .eq('date', date),
-      
-      supabaseAdmin
-        .from('material_purchases')
-        .select(`
-          *,
-          supplier:suppliers(name)
-        `)
-        .eq('project_id', projectId)
-        .eq('purchase_date', date),
-      
-      supabaseAdmin
-        .from('transportation_expenses')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('expense_date', date)
-    ]);
-
-    if (attendanceResult.error || purchasesResult.error || transportationResult.error) {
-      console.error('خطأ في جلب بيانات التقرير');
-      return res.status(500).json({ message: 'خطأ في جلب بيانات التقرير' });
-    }
-
-    const report = {
-      attendance: attendanceResult.data || [],
-      purchases: purchasesResult.data || [],
-      transportation: transportationResult.data || [],
-      summary: {
-        totalWages: attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage), 0) || 0,
-        totalPurchases: purchasesResult.data?.reduce((sum: number, p: any) => sum + parseFloat(p.total_amount), 0) || 0,
-        totalTransportation: transportationResult.data?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0
-      }
-    };
-
-    res.json(report);
-  } catch (error) {
-    console.error('خطأ في تقرير المصروفات اليومية:', error);
-    res.status(500).json({ message: 'خطأ في تقرير المصروفات اليومية' });
-  }
-});
-
 // تقرير ملخص المشروع
 app.get('/api/reports/project-summary/:projectId', async (req, res) => {
   try {
@@ -2524,69 +2469,6 @@ app.get('/api/workers/:workerId/balance/:projectId', async (req, res) => {
   }
 });
 
-// جلب كشف حساب عامل
-app.get('/api/workers/:workerId/account-statement', async (req, res) => {
-  try {
-    const { workerId } = req.params;
-    const { projectId, dateFrom, dateTo } = req.query;
-    
-    // جلب حضور العامل
-    let attendanceQuery = supabaseAdmin
-      .from('worker_attendance')
-      .select(`
-        *,
-        project:projects(name)
-      `)
-      .eq('worker_id', workerId);
-    
-    if (projectId) attendanceQuery = attendanceQuery.eq('project_id', projectId);
-    if (dateFrom) attendanceQuery = attendanceQuery.gte('date', dateFrom);
-    if (dateTo) attendanceQuery = attendanceQuery.lte('date', dateTo);
-    
-    // جلب تحويلات العامل
-    let transfersQuery = supabaseAdmin
-      .from('worker_transfers')
-      .select(`
-        *,
-        project:projects(name)
-      `)
-      .eq('worker_id', workerId);
-      
-    if (projectId) transfersQuery = transfersQuery.eq('project_id', projectId);
-    if (dateFrom) transfersQuery = transfersQuery.gte('transfer_date', dateFrom);
-    if (dateTo) transfersQuery = transfersQuery.lte('transfer_date', dateTo);
-    
-    const [attendanceResult, transfersResult] = await Promise.all([
-      attendanceQuery.order('date', { ascending: false }),
-      transfersQuery.order('transfer_date', { ascending: false })
-    ]);
-    
-    if (attendanceResult.error || transfersResult.error) {
-      console.error('خطأ في جلب بيانات العامل');
-      return res.status(500).json({ message: 'خطأ في جلب بيانات العامل' });
-    }
-    
-    const totalEarned = attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.actual_wage), 0) || 0;
-    const totalPaid = attendanceResult.data?.reduce((sum: number, a: any) => sum + parseFloat(a.paid_amount), 0) || 0;
-    const totalTransfers = transfersResult.data?.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0) || 0;
-    
-    const statement = {
-      attendance: attendanceResult.data || [],
-      transfers: transfersResult.data || [],
-      summary: {
-        totalEarned,
-        totalPaid,
-        totalTransfers,
-        balance: totalEarned - totalPaid - totalTransfers
-      }
-    };
-
-    res.json(statement);
-  } catch (error) {
-    console.error('خطأ في كشف حساب العامل:', error);
-    res.status(500).json({ message: 'خطأ في كشف حساب العامل' });
-  }
-});
 
 // ============ مسارات AI System وSmart Errors ============
 
