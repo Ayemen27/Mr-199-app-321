@@ -1065,7 +1065,7 @@ app.post('/api/workers', async (req, res) => {
   }
 });
 
-// تحديث عامل
+// تحديث عامل (PUT - تحديث كامل)
 app.put('/api/workers/:id', async (req, res) => {
   try {
     const validation = workerSchema.partial().safeParse(req.body);
@@ -1096,6 +1096,53 @@ app.put('/api/workers/:id', async (req, res) => {
       return res.status(500).json({ message: 'خطأ في تحديث العامل' });
     }
 
+    res.json(updatedWorker);
+  } catch (error) {
+    console.error('خطأ في تحديث العامل:', error);
+    res.status(500).json({ message: 'خطأ في تحديث العامل' });
+  }
+});
+
+// تحديث عامل (PATCH - تحديث جزئي)
+app.patch('/api/workers/:id', async (req, res) => {
+  try {
+    console.log(`🔄 تحديث جزئي للعامل ${req.params.id}:`, req.body);
+    
+    const validation = workerSchema.partial().safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        message: 'بيانات غير صالحة',
+        errors: validation.error.errors
+      });
+    }
+
+    const updateData: any = {};
+    if (validation.data.name !== undefined) updateData.name = validation.data.name;
+    if (validation.data.type !== undefined) updateData.type = validation.data.type;
+    if (validation.data.dailyWage !== undefined) updateData.daily_wage = validation.data.dailyWage;
+    // is_active يتم التحكم فيه من خلال مسارات أخرى
+
+    // التحقق من وجود بيانات للتحديث
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: 'لا توجد بيانات للتحديث' });
+    }
+
+    const { data: updatedWorker, error } = await supabaseAdmin
+      .from('workers')
+      .update(updateData)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ message: 'العامل غير موجود' });
+      }
+      console.error('خطأ في تحديث العامل:', error);
+      return res.status(500).json({ message: 'خطأ في تحديث العامل' });
+    }
+
+    console.log('✅ تم تحديث العامل بنجاح:', updatedWorker);
     res.json(updatedWorker);
   } catch (error) {
     console.error('خطأ في تحديث العامل:', error);
