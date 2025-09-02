@@ -446,7 +446,6 @@ app.use((req, res, next) => {
 
 // تطبيق middleware المصادقة على المسارات المحمية
 const protectedRoutes = [
-  '/api/projects',
   '/api/workers',
   '/api/fund-transfers',
   '/api/worker-attendance',
@@ -475,7 +474,9 @@ app.use((req, res, next) => {
     '/api/smart-errors/',
     '/api/health',
     '/api/status',
-    '/api/version'
+    '/api/version',
+    '/api/projects',
+    '/api/projects/with-stats'
   ];
   
   const isPublicReadOnly = publicReadOnlyPaths.some(path => req.path.startsWith(path)) && req.method === 'GET';
