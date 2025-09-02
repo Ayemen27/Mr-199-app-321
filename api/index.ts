@@ -6909,25 +6909,50 @@ app.get('/api/reports/workers-settlement', authenticateToken, async (req, res) =
 
 // ====== مسارات الإشعارات الأساسية ======
 
-// جلب حالة القراءة للمستخدم
-app.get('/api/notifications/:userId/read-state', authenticateToken, async (req, res) => {
+// جلب إحصائيات حالة القراءة للمستخدم
+app.get('/api/notifications/:userId/read-stats', authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
-    console.log(`📖 جلب حالة القراءة للمستخدم: ${userId}`);
+    console.log(`📖 جلب إحصائيات حالة القراءة للمستخدم: ${userId}`);
     
-    const readStates = {
+    // جلب الإحصائيات من قاعدة البيانات الفعلية
+    const { data: readStates, error } = await supabaseAdmin
+      .from('notification_read_states')
+      .select('is_read')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('خطأ في جلب حالات القراءة:', error);
+      return res.status(500).json({ message: 'خطأ في جلب حالات القراءة من قاعدة البيانات' });
+    }
+
+    const totalNotifications = (readStates || []).length;
+    const readNotifications = (readStates || []).filter((state: any) => state.is_read).length;
+    const unreadNotifications = totalNotifications - readNotifications;
+    const readPercentage = totalNotifications > 0 ? Math.round((readNotifications / totalNotifications) * 100) : 0;
+
+    // جلب آخر وقت قراءة
+    const { data: lastReadData } = await supabaseAdmin
+      .from('notification_read_states')
+      .select('read_at')
+      .eq('user_id', userId)
+      .eq('is_read', true)
+      .order('read_at', { ascending: false })
+      .limit(1);
+
+    const readStats = {
       userId,
-      totalNotifications: 15,
-      readNotifications: 8,
-      unreadNotifications: 7,
-      lastReadAt: new Date().toISOString(),
-      readPercentage: 53.3
+      totalNotifications,
+      readNotifications,
+      unreadNotifications,
+      lastReadAt: safeFormatDate(lastReadData?.[0]?.read_at, '') || null,
+      readPercentage
     };
     
-    res.json(readStates);
+    res.json(readStats);
   } catch (error) {
-    console.error('خطأ في جلب حالة القراءة:', error);
-    res.status(500).json({ message: 'خطأ في جلب حالة القراءة' });
+    console.error('خطأ في جلب إحصائيات القراءة:', error);
+    res.status(500).json({ message: 'خطأ في جلب إحصائيات القراءة' });
   }
 });
 

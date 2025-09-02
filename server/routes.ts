@@ -4161,7 +4161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes لنظام إدارة الإشعارات
   // =====================================================
 
-  // Notification Read States - قراءة عامة
+  // فحص حالة قراءة إشعار معين - قراءة عامة
   app.get("/api/notifications/:userId/read-state", async (req, res) => {
     try {
       const { notificationId, notificationType } = req.query;
@@ -4180,6 +4180,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error checking notification read state:', error);
       res.status(500).json({ message: "خطأ في فحص حالة قراءة الإشعار" });
+    }
+  });
+
+  // جلب إحصائيات حالة القراءة للمستخدم - قراءة عامة
+  app.get("/api/notifications/:userId/read-stats", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      console.log(`📖 جلب إحصائيات حالة القراءة للمستخدم: ${userId}`);
+      
+      // محاكاة الإحصائيات (يمكن تطويرها لاحقاً لتستخدم قاعدة البيانات الفعلية)
+      const readStats = {
+        userId,
+        totalNotifications: 12,
+        readNotifications: 8,
+        unreadNotifications: 4,
+        lastReadAt: new Date().toISOString(),
+        readPercentage: 67
+      };
+      
+      res.json(readStats);
+    } catch (error) {
+      console.error('خطأ في جلب إحصائيات القراءة:', error);
+      res.status(500).json({ message: "خطأ في جلب إحصائيات القراءة" });
     }
   });
 
