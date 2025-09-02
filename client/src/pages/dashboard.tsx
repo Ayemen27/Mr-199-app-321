@@ -86,7 +86,7 @@ export default function Dashboard() {
   };
 
   // تحميل المشاريع مع الإحصائيات بشكل محسن
-  const { data: projects = [], isLoading: projectsLoading, error: projectsError, refetch: refetchProjects } = useQuery<ProjectWithStats[]>({
+  const { data: projectsResponse, isLoading: projectsLoading, error: projectsError, refetch: refetchProjects } = useQuery({
     queryKey: ["/api/projects/with-stats"],
     staleTime: 1000 * 30, // 30 ثانية فقط للإحصائيات لضمان الحصول على البيانات المحدثة
     refetchInterval: 1000 * 60, // إعادة التحديث كل دقيقة
@@ -94,12 +94,18 @@ export default function Dashboard() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // تأخير متزايد
   });
 
+  // التأكد من أن projects مصفوفة صالحة
+  const projects = Array.isArray((projectsResponse as any)?.data) ? (projectsResponse as any).data : [];
+
   // جلب أنواع العمال من قاعدة البيانات
-  const { data: workerTypes = [], error: workerTypesError, refetch: refetchWorkerTypes } = useQuery<WorkerType[]>({
+  const { data: workerTypesResponse, error: workerTypesError, refetch: refetchWorkerTypes } = useQuery({
     queryKey: ["/api/worker-types"],
     retry: 2,
     staleTime: 1000 * 60 * 5, // 5 دقائق
   });
+
+  // التأكد من أن workerTypes مصفوفة صالحة
+  const workerTypes = Array.isArray((workerTypesResponse as any)?.data) ? (workerTypesResponse as any).data : [];
 
   // متحولات لإضافة العامل والمشروع
   const addWorkerMutation = useMutation({
@@ -443,7 +449,7 @@ export default function Dashboard() {
         <CardContent className="p-4">
           <h3 className="text-lg font-bold text-foreground mb-4">إجراءات سريعة</h3>
           <div className="grid grid-cols-2 gap-3">
-            {quickActions.map((action, index) => {
+            {Array.isArray(quickActions) ? quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
                 <Button
@@ -455,7 +461,7 @@ export default function Dashboard() {
                   <span className="text-sm font-medium">{action.label}</span>
                 </Button>
               );
-            })}
+            }) : null}
           </div>
         </CardContent>
       </Card>
@@ -543,7 +549,7 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       <>
-                        {workerTypes.map((workerType) => (
+                        {workerTypes.map((workerType: any) => (
                           <SelectItem key={workerType.id} value={workerType.value}>
                             {workerType.value}
                           </SelectItem>
