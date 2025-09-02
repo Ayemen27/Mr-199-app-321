@@ -147,10 +147,17 @@ const envInitResult = initializeStrictEnvironment();
 
 // ====== إعداد قاعدة البيانات ======
 
-// استخدام قاعدة البيانات المحلية إذا كانت متوفرة، وإلا Supabase
-const useLocalDatabase = !!(process.env.DATABASE_URL && 
+// في بيئة الإنتاج، استخدم Supabase دائماً
+// في البيئة المحلية، استخدم قاعدة البيانات المحلية إذا كانت متوفرة
+const isProduction = process.env.NODE_ENV === 'production';
+const hasSupabaseConfig = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+const hasLocalDatabase = !!(process.env.DATABASE_URL && 
   process.env.DATABASE_URL.includes('postgresql://') && 
   !process.env.DATABASE_URL.includes('supabase'));
+
+// استخدم Supabase في الإنتاج أو إذا كانت إعدادات Supabase متوفرة
+// استخدم قاعدة البيانات المحلية فقط في التطوير وإذا لم تكن Supabase متوفرة
+const useLocalDatabase = !isProduction && hasLocalDatabase && !hasSupabaseConfig;
 
 let supabaseUrl: string;
 let supabaseAnonKey: string | undefined;
@@ -276,6 +283,30 @@ function isValidDate(dateValue: any): boolean {
     return !isNaN(date.getTime());
   } catch {
     return false;
+  }
+}
+
+// دالة آمنة لمقارنة التواريخ في الترتيب
+function safeDateCompare(dateA: any, dateB: any): number {
+  try {
+    const safeA = safeFormatDate(dateA);
+    const safeB = safeFormatDate(dateB);
+    
+    if (!safeA && !safeB) return 0;
+    if (!safeA) return 1;
+    if (!safeB) return -1;
+    
+    const timeA = new Date(safeA).getTime();
+    const timeB = new Date(safeB).getTime();
+    
+    if (isNaN(timeA) && isNaN(timeB)) return 0;
+    if (isNaN(timeA)) return 1;
+    if (isNaN(timeB)) return -1;
+    
+    return timeB - timeA; // الترتيب من الأحدث للأقدم
+  } catch (error) {
+    console.warn('خطأ في مقارنة التواريخ:', error);
+    return 0;
   }
 }
 
@@ -6409,7 +6440,7 @@ app.get('/api/admin/notifications/user-activity', authenticateToken, async (req,
       // آخر نشاط للمستخدم
       const lastReadState = (readStates || [])
         .filter((state: any) => state.read_at)
-        .sort((a: any, b: any) => new Date(b.read_at).getTime() - new Date(a.read_at).getTime())[0];
+        .sort((a: any, b: any) => safeDateCompare(a.read_at, b.read_at))[0];
 
       return {
         userId: user.id,
@@ -6600,34 +6631,6 @@ app.delete('/api/admin/notifications/:notificationId', authenticateToken, async 
 
 // ====== مسارات التقارير المتقدمة ======
 
-// تقرير المصروفات اليومية
-app.get('/api/reports/daily-expenses/:projectId/:date', authenticateToken, async (req, res) => {
-  try {
-    const { projectId, date } = req.params;
-    
-    console.log(`📊 تقرير المصروفات اليومية للمشروع ${projectId} في تاريخ ${date}`);
-    
-    const expenses = [
-      { type: 'مواد', amount: 15000, description: 'أسمنت ورمل' },
-      { type: 'عمالة', amount: 8000, description: 'أجور يومية' },
-      { type: 'معدات', amount: 3500, description: 'تأجير آلات' },
-      { type: 'نقل', amount: 1200, description: 'نقل مواد' }
-    ];
-    
-    const total = expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0);
-    
-    res.json({
-      projectId,
-      date,
-      expenses,
-      total,
-      currency: 'SAR'
-    });
-  } catch (error) {
-    console.error('خطأ في تقرير المصروفات اليومية:', error);
-    res.status(500).json({ message: 'خطأ في جلب تقرير المصروفات' });
-  }
-});
 
 // تقرير مشتريات المواد
 app.get('/api/reports/material-purchases/:projectId', authenticateToken, async (req, res) => {
