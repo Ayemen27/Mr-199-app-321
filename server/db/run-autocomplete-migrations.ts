@@ -108,16 +108,6 @@ export async function runAutocompleteIndexMigration(): Promise<void> {
   }
 }
 
-// تشغيل الهجرة إذا تم استدعاء الملف مباشرة
-// تحقق من أن الملف يتم تشغيله مباشرة وليس من خلال import
-if (import.meta.url === `file://${process.argv[1]}` && process.argv[1].includes('run-autocomplete-migrations')) {
-  runAutocompleteIndexMigration()
-    .then(() => {
-      console.log('✅ تم تشغيل الهجرة بنجاح');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('❌ فشل تشغيل الهجرة:', error);
-      process.exit(1);
-    });
-}
+// ملاحظة: تم إزالة process.exit() لمنع إنهاء التطبيق عند الاستيراد
+// إذا كنت تريد تشغيل الهجرة مباشرة، استخدم:
+// npm run migration:autocomplete أو tsx server/db/run-autocomplete-migrations.ts
