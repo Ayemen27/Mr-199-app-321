@@ -41,7 +41,7 @@ export function EquipmentMovementHistoryDialog({
 
   const getProjectName = (projectId: string | null) => {
     if (!projectId) return "غير محدد";
-    const project = projects.find(p => p.id === projectId);
+    const project = Array.isArray(projects) ? projects.find(p => p.id === projectId) : undefined;
     return project ? project.name : "مشروع غير معروف";
   };
 

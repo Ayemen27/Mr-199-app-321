@@ -221,7 +221,7 @@ export default function ProjectTransactionsSimple() {
       // إظهار جميع سجلات الحضور حتى لو كان المبلغ المدفوع 0
       if (date) {
         // البحث عن العامل باستخدام workerId
-        const worker = workersArray.find((w: any) => w.id === attendance.workerId);
+        const worker = Array.isArray(workersArray) ? workersArray.find((w: any) => w.id === attendance.workerId) : undefined;
         const workerName = worker?.name || attendance.workerName || attendance.worker?.name || attendance.name || 'غير محدد';
         const workDays = attendance.workDays ? ` (${attendance.workDays} يوم)` : '';
         const dailyWage = attendance.dailyWage ? ` - أجر يومي: ${formatCurrency(parseFloat(attendance.dailyWage))}` : '';
@@ -317,7 +317,7 @@ export default function ProjectTransactionsSimple() {
 
       if (date && !isNaN(amount) && amount > 0) {
         // البحث عن العامل باستخدام workerId
-        const worker = workersArray.find((w: any) => w.id === transfer.workerId);
+        const worker = Array.isArray(workersArray) ? workersArray.find((w: any) => w.id === transfer.workerId) : undefined;
         const workerName = worker?.name || transfer.workerName || 'عامل غير معروف';
         const recipientName = transfer.recipientName ? ` - المستلم: ${transfer.recipientName}` : '';
         const transferMethod = transfer.transferMethod === 'hawaleh' ? 'حولة' : 
@@ -390,7 +390,7 @@ export default function ProjectTransactionsSimple() {
     };
   }, [filteredTransactions]);
 
-  const selectedProjectName = projects.find(p => p.id === selectedProject)?.name || '';
+  const selectedProjectName = Array.isArray(projects) ? projects.find(p => p.id === selectedProject)?.name || '' : '';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4" dir="rtl">

@@ -22,7 +22,7 @@ export default function FastDashboard() {
     staleTime: 1000 * 60 * 30, // 30 دقيقة
   });
 
-  const selectedProject = projects.find(p => p.id === selectedProjectId);
+  const selectedProject = Array.isArray(projects) ? projects.find(p => p.id === selectedProjectId) : undefined;
 
   const quickActions = [
     {

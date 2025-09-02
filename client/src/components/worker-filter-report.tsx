@@ -28,6 +28,7 @@ import {
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import '@/styles/excel-print-styles.css';
+import { safeFind, ensureArray } from '@/lib/array-utils';
 
 // واجهات البيانات المحدثة
 interface Project {
@@ -137,7 +138,7 @@ export default function WorkerFilterReport() {
       
       // تحويل البيانات إلى تنسيق ملخص العمال
       const summaryData: WorkerSummary[] = workersData.map((workerData: any) => {
-        const worker = workers.find(w => w.id === workerData.worker_id);
+        const worker = safeFind(workers, w => w.id === workerData.worker_id);
         
         // استخدام البيانات من API بدلاً من حسابها يدوياً - مع إصلاح حساب الأيام
         const totalWorkDays = Number(workerData.total_work_days) || 0;
@@ -150,7 +151,7 @@ export default function WorkerFilterReport() {
         // الحصول على اسم المشروع
         let projectName = 'جميع المشاريع';
         if (projectIds.length === 1) {
-          const project = projects.find(p => p.id === projectIds[0]);
+          const project = safeFind(projects, p => p.id === projectIds[0]);
           projectName = project?.name || 'مشروع محدد';
         }
 

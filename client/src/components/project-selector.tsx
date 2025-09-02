@@ -33,11 +33,11 @@ export default function ProjectSelector({
     },
   });
 
-  const selectedProject = projects.find(p => p.id === selectedProjectId);
+  const selectedProject = Array.isArray(projects) ? projects.find(p => p.id === selectedProjectId) : undefined;
   
   // دالة معالجة تغيير المشروع مع تمرير اسم المشروع
   const handleProjectChange = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
+    const project = Array.isArray(projects) ? projects.find(p => p.id === projectId) : undefined;
 
     onProjectChange(projectId, project?.name);
   };

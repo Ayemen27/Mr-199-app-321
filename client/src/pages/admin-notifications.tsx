@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Bell, BellRing, Clock, Delete, Edit, Eye, RefreshCw, Send, Settings, Shield, User, Users, TrendingUp, Activity, Zap, Target, Crown, UserCheck } from 'lucide-react';
+import { safeFind, ensureArray } from '@/lib/array-utils';
 
 // أنواع البيانات
 interface AdminNotification {
@@ -243,7 +244,7 @@ export default function AdminNotificationsPage() {
 
   // جلب اسم المستخدم من بياناته
   const getUserName = (userId: string) => {
-    const user = userActivityData?.userStats?.find((u: UserActivity) => u.userId === userId);
+    const user = safeFind(userActivityData?.userStats, (u: UserActivity) => u.userId === userId);
     return user?.userName || userId.slice(0, 8) + '...';
   };
 
