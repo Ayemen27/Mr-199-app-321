@@ -1,0 +1,162 @@
+ممتاز — خلينا نفكّك المشكلة بوضوح وبخطوات عملية. الملخص السريع أولاً: التطبيق يعمل محليًا لأنك على الأرجح تعمل على نسخة مبنية أو ببيئة مختلفة، أما Vercel فيعيد بناء المشروع من الصفر في بيئة إنتاجية (pnpm@10، TypeScript، node) فتعطي أخطاء أثناء البناء أو يؤدي نقص إعدادات/مكتبات/متغيرات إلى تعطّل دوال الـ Serverless عند التشغيل → FUNCTION_INVOCATION_FAILED 500.
+
+أهم الأسباب المحتملة (مستمدة من اللوج)
+
+1. أخطاء TypeScript في api/index.ts (مثلاً: object literal به خاصيتين بنفس الاسم، وCannot find name 'requireAuth') — هذه تمنع البناء أو تترك وظائف ناقصة.
+
+
+2. اختلاف بيئة البناء: Vercel يستخدم pnpm@10 وTypeScript محلي؛ لو بيئتك المحلية مختلفة (node / pnpm / tsconfig) قد لا تلتقط أخطاء البناء.
+
+
+3. سكربتات بناء مرفوضة/مهملة: سجل Vercel يظهر Ignored build scripts: bcrypt, core-js, esbuild, puppeteer. → بعض الحزم تحتاج سكربت بناء أو ثنائيات native، وإذا لم تُسمح ستفشل وظائف تعتمد عليها وقت التشغيل.
+
+
+4. متغيرات بيئة ناقصة على Vercel (مثل مفاتيح JWT أو Supabase أو DB URL) — غيابها يسبب استثناءات عند استدعاء الدوال serverless.
+
+
+5. حزم native أو كبيرة (puppeteer, bcrypt, esbuild) قد لا تعمل أو تحتاج إعدادات خاصة على بيئة serverless؛ قد يؤدي ذلك لخطأ وقت التنفيذ حتى لو البيلد اكتمل.
+
+
+
+
+---
+
+خطوات تشخيص سريعة وعمليات إصلاح (نفّذها بالترتيب)
+
+1 — أعد بناء المشروع محليًا بنفس وضع Vercel
+
+تأكد أنك تستخدم نفس إصدارات pnpm/Node/TypeScript:
+
+node --version
+pnpm --version
+
+ثم:
+
+pnpm install
+pnpm run build
+
+إذا فشل pnpm run build ستحصل على نفس أخطاء Vercel — أصلحها محليًا أولًا (TS1117 و TS2304 الموجودة سابقًا).
+
+
+2 — ابحث أصل أخطاء TypeScript في api/index.ts
+
+اطبع الأسطر حول الأخطاء:
+
+nl -ba api/index.ts | sed -n '6100,6410p'
+
+أصلح: تكرار خصائص في object literal (أزل الخاصية المكررة أو أعد تسميتها).
+
+أصلح requireAuth: تأكد أنه مستورَد أو مُعرف:
+
+
+// مثال استيراد
+import { requireAuth } from './middleware/auth';
+// أو تأكد من أن اسمه لم يتغير
+
+3 — تأكد من أنك تبني نفس النتيجة التي سيستخدمها Vercel
+
+بعد pnpm run build شغّل الخادم المبني محليًا (كما يعمل على Vercel):
+
+node dist/index.js
+# أو
+node dist/index.mjs
+
+راقب الأخطاء، إذا ظهر استثناء عند الإقلاع أو عند استدعاء endpoint -> أصلحه قبل النشر.
+
+
+4 — تحقق من متغيرات البيئة على Vercel
+
+اذهب إلى Dashboard → Project → Settings → Environment Variables، وتأكد من وجود:
+
+DATABASE_URL / SUPABASE_URL / SUPABASE_KEY
+
+JWT_SECRET أو مفاتيح المصادقة
+
+أي متغيرات خاصة بالإشعارات أو المفاتيح السرية بدونها الدوال ستنهار وقت التشغيل (500).
+
+
+5 — تعامل مع الحزم التي تحتاج سكربت بناء أو ثنائيات native
+
+سجل Vercel أظهر: Ignored build scripts: bcrypt, core-js, esbuild, puppeteer. Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+خيارات:
+
+استبدل الحزم native (مثل bcrypt) بـبدائل pure-JS (bcryptjs) لتجنب مشاكل البناء.
+
+أو نفّذ pnpm approve-builds محليًا لتوافق ما يجب السماح له بالبناء، ثم ادفع التغييرات (راجع توثيق pnpm/CI).
+
+بالنسبة لـ puppeteer على serverless: عادة تحتاج نسخة Chromium مناسبة أو استعمال حلول متخصصة (مثل playwright-aws-lambda أو تشغيل هذه الوظائف في خدمة منفصلة وُلدعم تشغيل متصفح).
+
+
+
+6 — راجع الاعتمادات الكبيرة والـ bundling
+
+التحذير أثناء build: بعض chunks أكبر من 500KB — قد يعني أن حزم مثل exceljs أو مكتبات كبيرة تُضمن في الباندل. استخدم code-splitting أو manualChunks لتقليل حجم دوال الـ serverless إن لزم.
+
+
+7 — راجع سجلات التشغيل الحقيقية على Vercel
+
+افتح Vercel Dashboard → Deployments → اختر الـ Deployment المتعطّل → Logs.
+
+أو استخدم CLI:
+
+
+vercel logs <deployment-url> --since 10m   # مثال
+
+راقب stack trace عند FUNCTION_INVOCATION_FAILED — ستحصل على رسالة خطأ وقت التشغيل (مثلاً: missing env var, cannot find module, runtime exception).
+
+
+
+---
+
+خطة عمل مقترحة للإصلاح (أولوية خطوة بخطوة)
+
+1. محليًا: شغّل pnpm install && pnpm run build ثم node dist/index.js — أصلح أي خطأ يظهر.
+
+
+2. حل مشاكل TypeScript في api/index.ts (duplicate property + requireAuth import).
+
+
+3. تحقق من env vars في Vercel (أدخل جميع المفاتيح المطلوبة).
+
+
+4. تعامل مع build scripts: إما استبدال الحزم native أو السماح ببنائها عبر pnpm approve-builds.
+
+
+5. نشر تجريبي: بعد الإصلاح، ادفع وقم بنشر على Vercel، راقب السجلات مباشرة وتأكد أن الدوال تعمل.
+
+
+6. إن لم تحلّ: أعطني الـ stack trace الكامل من Vercel logs عند وقت الخطأ — سأحلله لك وأعطيك تعديلًا جاهزًا للملف/الكود.
+
+
+
+
+---
+
+أوامر مفيدة احتياطية (لتشغيل محلي وفحص)
+
+# تثبيت ونفسية البناء
+pnpm install --frozen-lockfile
+pnpm run build
+
+# عرض الأسطر في ملف TS حول مكان الخطأ
+nl -ba api/index.ts | sed -n '6100,6410p'
+
+# تشغيل الخادم من مجلد dist (محاكاة إنتاج)
+node dist/index.js
+
+# عرض سجلات Vercel (CLI)
+vercel logs <deployment-url> --since 10m
+
+
+---
+
+إذا تريد، أقدر أعمل معك خطوة بخطوة الآن:
+
+إما أطلب منك مخرجات nl -ba api/index.ts | sed -n '6100,6410p' لأصلح السطور المعطوبة مباشرة،
+
+أو تطلب مني توليد مسودة تصحيحية (patch) لإصلاح requireAuth والخاصية المكررة، أو أقدّم ملف .env.example الذي يجب رفعه إلى Vercel.
+
+
+أي خيار تفضّل أبدأ به؟
+
