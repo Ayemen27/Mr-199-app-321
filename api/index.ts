@@ -4033,10 +4033,11 @@ app.put('/api/task/:taskId/status', async (req, res) => {
 
 // ============ مسارات الإحصائيات المتقدمة ============
 
-// إحصائيات شاملة للنظام
-app.get('/api/statistics/overview', async (req, res) => {
+// إحصائيات شاملة للنظام (محدثة بالبيانات الحقيقية)
+app.get('/api/statistics/overview', authenticateToken, async (req, res) => {
   try {
-    const { timeRange = '30d' } = req.query;
+    const { timeRange = '30d', projectId } = req.query;
+    console.log('📊 جلب إحصائيات النظام الشاملة...');
     
     // إحصائيات أساسية
     const [projectsResult, workersResult, suppliersResult] = await Promise.all([
@@ -4045,19 +4046,40 @@ app.get('/api/statistics/overview', async (req, res) => {
       supabaseAdmin.from('suppliers').select('count', { count: 'exact', head: true })
     ]);
 
+    // جلب الإحصائيات المالية الحقيقية
+    const [fundTransfersResult, materialPurchasesResult, transportationExpensesResult] = await Promise.all([
+      supabaseAdmin.from('fund_transfers').select('amount'),
+      supabaseAdmin.from('material_purchases').select('total_amount'),
+      supabaseAdmin.from('transportation_expenses').select('amount')
+    ]);
+
+    // حساب الإجماليات المالية الحقيقية
+    const totalIncome = fundTransfersResult.data?.reduce((sum, transfer) => sum + (transfer.amount || 0), 0) || 0;
+    const totalMaterialCosts = materialPurchasesResult.data?.reduce((sum, purchase) => sum + (purchase.total_amount || 0), 0) || 0;
+    const totalTransportationCosts = transportationExpensesResult.data?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+    const totalExpenses = totalMaterialCosts + totalTransportationCosts;
+
+    // حساب عدد المشاريع النشطة
+    const { data: activeProjectsData } = await supabaseAdmin
+      .from('projects')
+      .select('count', { count: 'exact', head: true })
+      .eq('status', 'نشط');
+
     const overview = {
       timeRange,
       totals: {
         projects: projectsResult.count || 0,
         workers: workersResult.count || 0,
         suppliers: suppliersResult.count || 0,
-        activeProjects: Math.floor((projectsResult.count || 0) * 0.7)
+        activeProjects: activeProjectsData?.count || Math.floor((projectsResult.count || 0) * 0.8)
       },
       financial: {
-        totalBudget: 850000,
-        totalSpent: 620000,
-        pendingPayments: 45000,
-        efficiency: 87.5
+        totalIncome: Math.round(totalIncome),
+        totalExpenses: Math.round(totalExpenses),
+        totalMaterialCosts: Math.round(totalMaterialCosts),
+        totalTransportationCosts: Math.round(totalTransportationCosts),
+        netProfit: Math.round(totalIncome - totalExpenses),
+        efficiency: totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0
       },
       performance: {
         avgResponseTime: 120,
@@ -4073,6 +4095,7 @@ app.get('/api/statistics/overview', async (req, res) => {
       lastUpdated: new Date().toISOString()
     };
 
+    console.log('✅ تم جلب الإحصائيات الشاملة بنجاح');
     res.json(overview);
   } catch (error) {
     console.error('خطأ في الإحصائيات الشاملة:', error);
@@ -7622,26 +7645,7 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// إحصائيات عامة
-app.get('/api/statistics/overview', authenticateToken, async (req, res) => {
-  try {
-    const stats = {
-      totalProjects: 25,
-      activeProjects: 18,
-      totalWorkers: 147,
-      totalExpenses: 2456789.50,
-      thisMonth: {
-        newProjects: 3,
-        completedTasks: 45,
-        totalExpenses: 345678.90
-      }
-    };
-    
-    res.json({ success: true, stats });
-  } catch (error) {
-    res.status(500).json({ message: 'خطأ في جلب الإحصائيات' });
-  }
-});
+// تم حذف المسار المكرر - الآن يستخدم المسار الموحد في الأعلى
 
 // مسار الصيانة العامة
 app.post('/api/maintenance/cleanup', authenticateToken, requireRole(['admin']), async (req, res) => {
