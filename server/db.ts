@@ -25,17 +25,19 @@ function createDatabaseUrl(): string {
       return "postgresql://postgres.wibtasmyusxfqxxqekks:Ay**--772283228@aws-0-us-east-1.pooler.supabase.com:6543/postgres";
     }
     
-    // في بيئة Vercel، استخدم متغيرات Supabase من Vercel
+    // في بيئة Vercel، حاول استخدام متغيرات Supabase إذا كانت متوفرة
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
-    if (!supabaseUrl || !serviceKey) {
-      throw new Error('متغيرات Supabase غير متاحة في بيئة الإنتاج. تأكد من تكامل Supabase مع Vercel.');
+    if (supabaseUrl && serviceKey) {
+      // تحويل URL لتنسيق PostgreSQL
+      const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
+      return `postgresql://postgres.${projectRef}:${serviceKey}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`;
     }
     
-    // تحويل URL لتنسيق PostgreSQL
-    const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
-    return `postgresql://postgres.${projectRef}:${serviceKey}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`;
+    // استخدام القيمة الثابتة كبديل إذا لم تكن متغيرات البيئة متوفرة
+    console.log('⚠️ لم يتم العثور على متغيرات Supabase، استخدام القيمة الثابتة...');
+    return "postgresql://postgres.wibtasmyusxfqxxqekks:Ay**--772283228@aws-0-us-east-1.pooler.supabase.com:6543/postgres";
   } else {
     // في بيئة التطوير، استخدم القيمة الثابتة المعروفة
     return "postgresql://postgres.wibtasmyusxfqxxqekks:Ay**--772283228@aws-0-us-east-1.pooler.supabase.com:6543/postgres";
