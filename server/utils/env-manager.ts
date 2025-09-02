@@ -82,88 +82,61 @@ class EnvironmentManager {
   }
 
   /**
-   * فحص وإنشاء المتغيرات المفقودة تلقائياً
+   * فحص المتغيرات المطلوبة (بدون إنشاء تلقائي)
    */
-  async ensureEnvironmentVariables(): Promise<{
-    created: string[];
+  async validateEnvironmentVariables(): Promise<{
     existing: string[];
     missing: string[];
-    status: 'success' | 'partial' | 'failed';
+    status: 'success' | 'failed';
+    errors: string[];
   }> {
     try {
-      console.log('🔧 بدء فحص وإنشاء متغيرات البيئة التلقائية...');
+      console.log('🔍 فحص متغيرات البيئة المطلوبة...');
       
       const existing: string[] = [];
-      const created: string[] = [];
       const missing: string[] = [];
-      const newEnvLines: string[] = [];
-
-      // قراءة ملف .env إن وجد
-      let existingEnvContent = '';
-      if (fs.existsSync(this.envPath)) {
-        existingEnvContent = fs.readFileSync(this.envPath, 'utf8');
-      }
+      const errors: string[] = [];
 
       // فحص كل متغير مطلوب
       for (const variable of this.requiredVariables) {
         const currentValue = process.env[variable.key];
-        const existsInFile = existingEnvContent.includes(`${variable.key}=`);
 
-        if (currentValue || existsInFile) {
+        if (currentValue && currentValue.length > 0) {
           existing.push(variable.key);
           console.log(`✅ متغير موجود: ${variable.key}`);
-        } else if (variable.generator) {
-          // إنشاء قيمة جديدة
-          const newValue = variable.generator();
-          process.env[variable.key] = newValue;
-          newEnvLines.push(`# ${variable.description}`);
-          newEnvLines.push(`${variable.key}=${newValue}`);
-          newEnvLines.push('');
-          created.push(variable.key);
-          console.log(`🔑 تم إنشاء متغير جديد: ${variable.key}`);
-        } else if (variable.defaultValue) {
-          // استخدام القيمة الافتراضية
-          process.env[variable.key] = variable.defaultValue;
-          newEnvLines.push(`# ${variable.description}`);
-          newEnvLines.push(`${variable.key}=${variable.defaultValue}`);
-          newEnvLines.push('');
-          created.push(variable.key);
-          console.log(`📝 تم تعيين قيمة افتراضية: ${variable.key}`);
         } else if (variable.required) {
           missing.push(variable.key);
-          console.log(`❌ متغير مطلوب مفقود: ${variable.key}`);
+          errors.push(`❌ متغير مطلوب مفقود: ${variable.key} (${variable.description})`);
+          console.error(`❌ متغير مطلوب مفقود: ${variable.key} - ${variable.description}`);
+        } else {
+          console.warn(`⚠️ متغير اختياري مفقود: ${variable.key} - ${variable.description}`);
         }
       }
 
-      // حفظ المتغيرات الجديدة في ملف .env
-      if (newEnvLines.length > 0) {
-        const header = [
-          '# ========================================',
-          '# متغيرات البيئة - تم إنشاؤها تلقائياً',
-          `# تاريخ الإنشاء: ${new Date().toLocaleString('ar-SA')}`,
-          '# ========================================',
-          ''
-        ];
+      const status = missing.length === 0 ? 'success' : 'failed';
 
-        const fullContent = existingEnvContent + 
-          (existingEnvContent ? '\n\n' : '') + 
-          header.join('\n') + 
-          newEnvLines.join('\n');
-
-        fs.writeFileSync(this.envPath, fullContent, 'utf8');
-        console.log(`💾 تم حفظ ${created.length} متغير جديد في ملف .env`);
+      if (missing.length > 0) {
+        console.error('🚫 ======================================');
+        console.error('🚫 متغيرات البيئة المطلوبة مفقودة!');
+        console.error('🚫 ======================================');
+        errors.forEach(error => console.error(error));
+        console.error('🚫 ======================================');
+        console.error('💡 لحل هذه المشكلة:');
+        console.error('💡 1. أضف المتغيرات المفقودة في ملف .env');
+        console.error('💡 2. أو أضفها في Environment Variables');
+        console.error('💡 3. تأكد من أن جميع القيم صحيحة وليست فارغة');
+        console.error('🚫 ======================================');
+      } else {
+        console.log('✅ جميع متغيرات البيئة المطلوبة موجودة');
       }
-
-      const status = missing.length === 0 ? 'success' : 
-                    created.length > 0 ? 'partial' : 'failed';
 
       console.log(`✅ انتهى فحص متغيرات البيئة - الحالة: ${status}`);
       
-      return { created, existing, missing, status };
+      return { existing, missing, status, errors };
       
     } catch (error) {
       console.error('❌ خطأ في إدارة متغيرات البيئة:', error);
-      return { created: [], existing: [], missing: [], status: 'failed' };
+      return { existing: [], missing: [], status: 'failed', errors: [] };
     }
   }
 
@@ -351,7 +324,7 @@ export const envManager = EnvironmentManager.getInstance();
 
 // دالة مساعدة للتهيئة السريعة
 export async function initializeEnvironment() {
-  return await envManager.ensureEnvironmentVariables();
+  return await envManager.validateEnvironmentVariables();
 }
 
 // دالة فحص سريع

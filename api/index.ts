@@ -73,66 +73,77 @@ function setupErrorReporting(app: any) {
 
 // ====== نظام إدارة متغيرات البيئة التلقائي (مدمج) ======
 
-// إنشاء مفاتيح آمنة تلقائياً إذا كانت مفقودة
-function ensureSecretKeys() {
+// فحص وجود المفاتيح المطلوبة (بدون إنشاء تلقائي)
+function validateRequiredSecrets() {
   const requiredSecrets = [
-    { key: 'JWT_ACCESS_SECRET', description: 'مفتاح JWT للمصادقة' },
-    { key: 'JWT_REFRESH_SECRET', description: 'مفتاح JWT للتحديث' },
-    { key: 'ENCRYPTION_KEY', description: 'مفتاح تشفير البيانات' },
-    { key: 'SESSION_SECRET', description: 'مفتاح تشفير الجلسات' }
+    { key: 'JWT_ACCESS_SECRET', description: 'مفتاح JWT للمصادقة', required: true },
+    { key: 'JWT_REFRESH_SECRET', description: 'مفتاح JWT للتحديث', required: true },
+    { key: 'ENCRYPTION_KEY', description: 'مفتاح تشفير البيانات', required: true },
+    { key: 'SUPABASE_URL', description: 'رابط قاعدة بيانات Supabase', required: true },
+    { key: 'SUPABASE_ANON_KEY', description: 'مفتاح Supabase العام', required: false },
+    { key: 'SUPABASE_SERVICE_ROLE_KEY', description: 'مفتاح Supabase الخدمي', required: true }
   ];
 
-  const created: string[] = [];
   const existing: string[] = [];
   const missing: string[] = [];
+  const errors: string[] = [];
 
   for (const secret of requiredSecrets) {
-    if (process.env[secret.key]) {
+    if (process.env[secret.key] && process.env[secret.key]!.length > 0) {
       existing.push(secret.key);
+      console.log(`✅ متغير موجود: ${secret.key}`);
+    } else if (secret.required) {
+      missing.push(secret.key);
+      errors.push(`❌ متغير مطلوب مفقود: ${secret.key} (${secret.description})`);
+      console.error(`❌ متغير مطلوب مفقود: ${secret.key} - ${secret.description}`);
     } else {
-      try {
-        // إنشاء مفتاح آمن
-        const secureKey = crypto.randomBytes(32).toString('hex');
-        process.env[secret.key] = secureKey;
-        created.push(secret.key);
-        console.log(`🔐 تم إنشاء ${secret.key} تلقائياً`);
-      } catch (error) {
-        missing.push(secret.key);
-        console.warn(`⚠️ فشل في إنشاء ${secret.key}`);
-      }
+      console.warn(`⚠️ متغير اختياري مفقود: ${secret.key}`);
     }
   }
 
-  return { created, existing, missing };
+  return { existing, missing, errors, hasAllRequired: missing.length === 0 };
 }
 
-// دالة التهيئة التلقائية المدمجة
-function initializeAutomaticEnvironment() {
+// دالة فحص البيئة الصارمة (بدون إنشاء تلقائي)
+function initializeStrictEnvironment() {
   try {
-    console.log('🔧 فحص وتهيئة متغيرات البيئة تلقائياً...');
+    console.log('🔍 فحص متغيرات البيئة المطلوبة...');
     
-    const envResult = ensureSecretKeys();
+    const envResult = validateRequiredSecrets();
     
-    console.log(`✅ تم إنشاء ${envResult.created.length} متغير جديد`);
-    console.log(`✅ موجود مسبقاً ${envResult.existing.length} متغير`);
+    console.log(`✅ موجود: ${envResult.existing.length} متغير`);
     
-    if (envResult.missing.length > 0) {
-      console.warn(`⚠️  متغيرات مفقودة: ${envResult.missing.join(', ')}`);
+    if (!envResult.hasAllRequired) {
+      console.error('🚫 ======================================');
+      console.error('🚫 خطأ: متغيرات البيئة المطلوبة مفقودة!');
+      console.error('🚫 ======================================');
+      
+      envResult.errors.forEach(error => console.error(error));
+      
+      console.error('🚫 ======================================');
+      console.error('💡 لحل هذه المشكلة:');
+      console.error('💡 1. أضف المتغيرات المفقودة في ملف .env');
+      console.error('💡 2. أو أضفها في Environment Variables (Vercel/Replit)');
+      console.error('💡 3. تأكد من أن جميع القيم صحيحة وليست فارغة');
+      console.error('🚫 ======================================');
+      
+      // إيقاف التطبيق إذا كانت المتغيرات الأساسية مفقودة
+      throw new Error(`متغيرات البيئة المطلوبة مفقودة: ${envResult.missing.join(', ')}`);
     }
     
-    console.log('🎯 حالة النظام: تم التحسين والجاهزية');
-    console.log('✅ تم تفعيل نظام إدارة متغيرات البيئة التلقائي');
+    console.log('✅ جميع متغيرات البيئة المطلوبة موجودة');
+    console.log('🎯 النظام جاهز للعمل');
     
     return envResult;
   } catch (error) {
-    console.warn('⚠️ تحذير: فشل في التهيئة التلقائية، سيتم المتابعة بالإعدادات الافتراضية');
-    console.warn('السبب:', error instanceof Error ? error.message : String(error));
-    return { created: [], existing: [], missing: [] };
+    console.error('❌ فشل في تهيئة البيئة:', error instanceof Error ? error.message : String(error));
+    console.error('🚫 لن يتم تشغيل التطبيق بدون المتغيرات المطلوبة');
+    throw error; // إيقاف التطبيق
   }
 }
 
-// تشغيل التهيئة التلقائية
-const envInitResult = initializeAutomaticEnvironment();
+// تشغيل الفحص الصارم للبيئة
+const envInitResult = initializeStrictEnvironment();
 
 // ====== إعداد قاعدة البيانات ======
 
@@ -5695,7 +5706,7 @@ app.get('/api/env/generate-key', async (req, res) => {
 app.post('/api/env/reinitialize', async (req, res) => {
   try {
     console.log('🚀 بدء إعادة التهيئة بناءً على طلب المستخدم...');
-    const result = initializeAutomaticEnvironment();
+    const result = initializeStrictEnvironment();
     
     res.json({
       success: true,
@@ -8043,7 +8054,7 @@ app.get('/api/env/generate-key', async (req, res) => {
 app.post('/api/env/reinitialize', async (req, res) => {
   try {
     console.log('🚀 بدء إعادة التهيئة بناءً على طلب المستخدم...');
-    const result = initializeAutomaticEnvironment();
+    const result = initializeStrictEnvironment();
     
     res.json({
       success: true,
