@@ -61,11 +61,11 @@ async function runComprehensiveTest() {
     const notification = await notificationService.createNotification({
       type: 'test',
       title: 'اختبار النظام المحدث',
-      message: 'هذا إشعار اختباري للنظام المحدث مع جميع التحسينات',
+      body: 'هذا إشعار اختباري للنظام المحدث مع جميع التحسينات',
       recipients: ['test-user'],
       priority: 2,
       projectId: undefined,
-      metadata: { testRun: true }
+      payload: { testRun: true }
     });
     console.log("✅ تم إنشاء الإشعار:", notification.id);
 

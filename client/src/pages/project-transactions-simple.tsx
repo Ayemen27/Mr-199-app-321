@@ -493,7 +493,7 @@ export default function ProjectTransactionsSimple() {
                   color: "amber",
                 }
               ]} 
-              columns={1}
+              columns={2}
             />
 
             {/* جدول العمليات */}
