@@ -110,8 +110,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (data.success) {
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('accessToken', data.tokens.accessToken);
-      localStorage.setItem('refreshToken', data.tokens.refreshToken);
+      
+      // معالجة كلاً من tokens.accessToken و token (للتوافق مع Vercel)
+      if (data.tokens && data.tokens.accessToken) {
+        localStorage.setItem('accessToken', data.tokens.accessToken);
+        localStorage.setItem('refreshToken', data.tokens.refreshToken || '');
+      } else if (data.token) {
+        localStorage.setItem('accessToken', data.token);
+        localStorage.setItem('refreshToken', data.refreshToken || '');
+      }
+      
       queryClient.invalidateQueries();
     } else {
       throw new Error(data.message);

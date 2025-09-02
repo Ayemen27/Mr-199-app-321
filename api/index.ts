@@ -269,7 +269,10 @@ app.post('/api/auth/login', (req, res) => {
       email: 'admin@example.com',
       role: 'admin'
     },
-    token: 'dummy-token-for-production'
+    tokens: {
+      accessToken: 'dummy-access-token-for-production',
+      refreshToken: 'dummy-refresh-token-for-production'
+    }
   });
 });
 
@@ -343,7 +346,10 @@ app.post('/api/auth/login', (req, res) => {
       email: 'admin@example.com',
       role: 'admin'
     },
-    token: 'dummy-token-for-production'
+    tokens: {
+      accessToken: 'dummy-access-token-for-production',
+      refreshToken: 'dummy-refresh-token-for-production'
+    }
   });
 });
 
