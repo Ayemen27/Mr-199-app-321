@@ -1,0 +1,163 @@
+تمام يا بطل—حلّلت لك ملف السجل اللي أرسلته “logs_result (19).json” تحليلًا عميقًا وطلّعت المؤشرات الأساسية ومواضع الخلل.
+
+الخلاصة السريعة (من السجل):
+
+توزيع الحالات: -1 (146 طلب)، 200 (29)، 404 (11)، 400 (4).
+(-1 تعني أن الطلب لم يصل لحالة استجابة نهائية — غالبًا انقطع/اتلغى قبل ما يكتمل).
+
+مسارات متأثرة:
+
+404 على: /api/projects
+
+400 على: PATCH /api/workers/{id}
+
+طلبات كثيرة -1 على: /api/auth/login, /api/autocomplete, /api/projects, /api/projects/with-stats, /api/worker-types
+
+
+الوظيفة التي تُستدعى في Vercel تظهر كـ /api/index لمعظم الطلبات، وهذا يوحي إمّا:
+
+1. عندك دالة واحدة تستقبل كل /api/* وتعمل dispatch داخلي، لكن المسارات غير متطابقة مع ما يرسله الـ frontend (بدليل 404 على /api/projects)،
+
+
+2. أو أنك في التطوير على Replit تستخدم خادم Express مخصص بمسارات مثل /api/projects… بينما في Vercel لا يعمل app.listen() ولا يُتاح الخادم المخصص؛ لازم تكون API Routes/Route Handlers خاصة بـ Next.js أو Functions مستقلة.
+
+
+
+
+ما الذي يفسّر الأعطال؟
+
+1. عدم وجود مسارات API الحقيقية في الإنتاج (Vercel) بنفس طريقة التطوير (Replit).
+
+
+2. Misrouting/Rewrites: كل شيء يروح لـ /api/index بدون توجيه صحيح لـ /api/projects, /api/worker-types, … وهذا يسبب 404.
+
+
+3. طلبات PATCH 400: عادةً فشل validation أو body parsing (JSON) في بيئة السيرفر (تأكد من req.json()/bodyParser والإرسال بـ Content-Type: application/json).
+
+
+4. طلبات -1: كثير منها تكون ملغاة من المتصفح (تبديل صفحة/إعادة رندر/عدم تمرير CORS/Preflight) أو قطع اتصال قبل اكتمال الاستجابة. لو في CORS ناقص، المتصفح قد يلغي الطلبات بعد preflight.
+
+
+
+
+---
+
+خطة الإصلاح السريعة (مرتبة من الأهم):
+
+1. ثبّت مسارات API بشكل صريح في Vercel/Next.js
+إن كنت على Next.js App Router:
+
+app/api/projects/route.ts (لـ GET)
+
+app/api/projects/with-stats/route.ts (لـ GET)
+
+app/api/worker-types/route.ts (لـ GET)
+
+app/api/workers/[id]/route.ts (لـ PATCH/GET…)
+
+
+أمثلة سريعة:
+
+// app/api/projects/route.ts
+import { NextResponse } from "next/server";
+export async function GET() {
+  // TODO: استرجاع المشاريع من DB
+  return NextResponse.json({ ok: true, projects: [] });
+}
+
+// app/api/workers/[id]/route.ts
+import { NextResponse } from "next/server";
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  const body = await req.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  // TODO: تحديث العامل params.id
+  return NextResponse.json({ ok: true });
+}
+
+لو كنت مصرّ على دالة واحدة (/api/index) تعمل “dispatch” داخلي، أضف rewrite صحيح (في next.config.js) وتأكد أن الدالة تقرأ المسار الفعلي:
+
+// next.config.js
+module.exports = {
+  async rewrites() {
+    return [
+      { source: "/api/:path*", destination: "/api/index?path=:path*" },
+    ];
+  },
+};
+
+وداخل /api/index اعمل route matching لـ projects, worker-types, workers/:id… إلخ.
+
+
+2. CORS & Preflight (يقلّل حالات -1):
+
+ردّ على OPTIONS لكل مسار API بسرعة.
+
+أضف رؤوس:
+Access-Control-Allow-Origin (ضبطها على الدومين الفعلي)،
+Access-Control-Allow-Methods: GET,POST,PATCH,OPTIONS,
+Access-Control-Allow-Headers: Content-Type, Authorization. مثال بسيط داخل Route Handler:
+
+
+// utils/cors.ts
+import { NextResponse } from "next/server";
+export function cors(res: NextResponse) {
+  res.headers.set("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN || "*");
+  res.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return res;
+}
+// في كل route:
+export async function OPTIONS() {
+  return cors(new NextResponse(null, { status: 204 }));
+}
+
+
+3. Body parsing لـ PATCH/POST:
+
+تأكد أن الواجهة ترسل Content-Type: application/json وتستدعي await req.json() في السيرفر.
+
+لو عندك Zod/Valibot/… افحص الأخطاء؛ 400 المتكررة غالبًا من الـ schema.
+
+
+
+4. توحيد بيئة Node والبناء:
+
+في package.json:
+
+{ "engines": { "node": "20.x" } }
+
+إن كان المشروع ESM فاحرص على "type": "module" أو عدّل الاستيراد/التصدير بما يتوافق (تجنّب تعارض ESM/CJS الذي كان ظاهرًا عندك سابقًا في shared/schema.ts).
+
+لا تشغّل app.listen() على Vercel؛ فقط صدّر handlers.
+
+
+
+5. واجهتك الأمامية:
+
+امنع النداءات المكررة/السريعة جدًا (debounce) وادعم AbortController عند تغيير الصفحة أو البحث التلقائي—هذا يقلّل الإلغاءات (-1).
+
+تأكد من المسارات التي تستدعيها مطابقة حرفيًا (حالة الأحرف مهمة في Linux).
+
+
+
+
+
+---
+
+ماذا جهّزت لك الآن؟
+
+أرفقت لك جداول تفاعلية تعرض:
+
+توزيع الأكواد، أكثر المسارات طلبًا، أداء الدوال،
+
+قائمة 404/400،
+
+وقائمة كبيرة من الطلبات الملغاة (-1) لتراها بنفسك.
+
+
+وكذلك ملف تشخيص مختصر فيه أعلى الملاحظات:
+Download التشخيص
+
+
+إذا نفّذت النقاط (1) و(2) غالبًا ستختفي 404 ويفلّ عدد -1 بشكل واضح. لو تحب، أقدر أحوّل أي مسار من مساراتك الحالية إلى Route Handlers كاملة بحسب مخطط الـ DB عندك؛ بس قلّي أي Endpoint نبدأ به.
+

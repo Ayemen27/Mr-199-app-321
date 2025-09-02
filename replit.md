@@ -41,7 +41,16 @@ A comprehensive construction project management system designed for the Middle E
 - **API Endpoints**: Provides API routes for status checks, auto-adding missing keys, reloading keys from .env, and adding new required keys.
 
 ## Recent Changes (September 2025)
-- **CRITICAL: حل مشكلة عدم ظهور المحتوى في التطبيق المنشور (2 سبتمبر)**:
+- **CRITICAL VERCEL DEPLOYMENT FIX: إصلاح مشاكل API في بيئة الإنتاج (2 سبتمبر)**:
+  - **إصلاح توجيه Vercel**: حل مشكلة عدم وصول طلبات API للمعالجات الصحيحة
+    - إضافة استخراج المسار من query parameters في `/api/index.ts`  
+    - تحديث `vercel.json` لإضافة rewrites وتمرير المسار كparam
+    - إصلاح رؤوس CORS المحسنة مع معالجة OPTIONS preflight
+  - **إضافة مسار المشاريع المفقود**: إضافة `GET /api/projects` الأساسي للتوافق
+  - **تحسين معالجة JSON**: إضافة معالجة أخطاء JSON محسنة لحل مشاكل 400 errors
+  - **تحسين الأمان**: إضافة التحقق من صحة JSON قبل المعالجة
+  - **نتيجة**: حل مشاكل 404 (-1 requests) و400 errors في بيئة الإنتاج
+- **CRITICAL: حل مشكلة عدم ظهور المحتوى في التطبيق المنشور (سابقاً)**:
   - **إصلاح مشكلة عدم عرض المشاريع**: تم إزالة قيود المصادقة عن `/api/projects` للقراءة العامة
   - **إصلاح آلية إخفاء صفحة التحميل**: تم تحديث السكريپت ليتعامل مع إعادة التوجيه وتحميل React بشكل صحيح
   - **حل أخطاء TypeScript للنشر**: إصلاح جميع أخطاء الـ type safety في ملف api/index.ts:

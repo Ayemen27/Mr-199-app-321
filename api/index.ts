@@ -429,7 +429,26 @@ const requireRole = (roles: string[]) => {
   };
 };
 
-app.use(express.json({ limit: '50mb' }));
+// معالجة JSON محسنة مع تعامل أفضل مع الأخطاء
+app.use(express.json({ 
+  limit: '50mb',
+  verify: (req: any, res: any, buf) => {
+    try {
+      JSON.parse(buf.toString());
+    } catch (e) {
+      console.error('خطأ في تحليل JSON:', e);
+      if (res.status && res.json) {
+        res.status(400).json({
+          success: false,
+          message: 'تنسيق JSON غير صالح',
+          error: 'يرجى التأكد من صحة بنية البيانات المرسلة'
+        });
+      }
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
+
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // إضافة CORS headers
@@ -827,6 +846,43 @@ app.post('/api/auth/logout', authenticateToken, async (req: any, res) => {
 });
 
 // ============ مسارات المشاريع ============
+
+// جلب جميع المشاريع (مسار أساسي للتوافق)
+app.get('/api/projects', async (req, res) => {
+  try {
+    console.log('📂 جلب قائمة المشاريع الأساسية');
+    
+    const { data: projects, error } = await supabaseAdmin
+      .from('projects')
+      .select(`
+        id,
+        name,
+        status,
+        imageUrl: image_url,
+        createdAt: created_at
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('خطأ في جلب المشاريع:', error);
+      return res.status(500).json({ 
+        success: false,
+        message: 'خطأ في جلب المشاريع' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: projects || []
+    });
+  } catch (error) {
+    console.error('خطأ في جلب المشاريع:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'خطأ في جلب المشاريع' 
+    });
+  }
+});
 
 // جلب المشاريع مع الإحصائيات
 app.get('/api/projects/with-stats', async (req, res) => {
@@ -8417,5 +8473,27 @@ app.all('/api/*', (req, res) => {
 })();
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
+  // إصلاح توجيه Vercel - استخراج المسار من query parameters
+  if (req.url && req.query.path) {
+    // إعادة بناء المسار الصحيح
+    const originalUrl = req.url;
+    const pathParam = Array.isArray(req.query.path) ? req.query.path.join('/') : req.query.path;
+    req.url = `/api/${pathParam}`;
+    
+    console.log(`[Vercel Routing] أصلي: ${originalUrl} → محول: ${req.url}`);
+  }
+  
+  // إضافة رؤوس CORS محسنة
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 ساعة
+  
+  // التعامل مع طلبات OPTIONS (preflight)
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  
   return app(req as any, res as any);
 }
