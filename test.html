@@ -205,6 +205,8 @@
         opacity: 1;
       }
     </style>
+    <script type="module" crossorigin src="/assets/index-DzHiasgm.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Baqqj_BT.css">
   </head>
   <body>
     <!-- صفحة التحميل الفورية -->
@@ -230,55 +232,24 @@
     </div>
 
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
     
     <!-- إخفاء صفحة التحميل عند اكتمال التحميل -->
     <script>
-      // دالة إخفاء صفحة التحميل
-      function hideLoader() {
-        const loader = document.getElementById('initial-loader');
-        const root = document.getElementById('root');
-        
-        if (loader && loader.style.display !== 'none') {
-          console.log('🎯 إخفاء صفحة التحميل...');
-          loader.classList.add('fade-out');
-          setTimeout(() => {
-            loader.style.display = 'none';
-            root.classList.add('loaded');
-          }, 500);
-        }
-      }
-
       // إخفاء صفحة التحميل عندما يصبح المحتوى جاهزاً
       window.addEventListener('load', () => {
-        console.log('📦 تم تحميل النافذة، بدء العد التنازلي...');
-        setTimeout(hideLoader, 1200);
+        setTimeout(() => {
+          const loader = document.getElementById('initial-loader');
+          const root = document.getElementById('root');
+          
+          if (loader) {
+            loader.classList.add('fade-out');
+            setTimeout(() => {
+              loader.style.display = 'none';
+              root.classList.add('loaded');
+            }, 500);
+          }
+        }, 800); // إظهار التحميل لمدة ثانية إضافية للتأثير
       });
-
-      // إخفاء عند ظهور محتوى React
-      let checkCount = 0;
-      const maxChecks = 50; // فحص لمدة 10 ثوانِ تقريباً
-      
-      function checkForContent() {
-        checkCount++;
-        const root = document.getElementById('root');
-        
-        if (root && root.children.length > 0) {
-          console.log(`✅ تم العثور على محتوى React (محاولة ${checkCount})`);
-          setTimeout(hideLoader, 300);
-          return;
-        }
-        
-        if (checkCount < maxChecks) {
-          setTimeout(checkForContent, 200);
-        } else {
-          console.log('⏱️ انتهت مهلة الانتظار، إخفاء صفحة التحميل');
-          hideLoader();
-        }
-      }
-
-      // بدء الفحص الدوري
-      setTimeout(checkForContent, 500);
     </script>
     
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
