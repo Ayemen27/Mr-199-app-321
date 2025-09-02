@@ -23,6 +23,14 @@ export default function ProjectSelector({
 }: ProjectSelectorProps) {
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    queryFn: async () => {
+      // استخدام fetch مباشر بدون مصادقة للمشاريع
+      const response = await fetch('/api/projects');
+      if (!response.ok) {
+        throw new Error('فشل في جلب المشاريع');
+      }
+      return response.json();
+    },
   });
 
   const selectedProject = projects.find(p => p.id === selectedProjectId);
