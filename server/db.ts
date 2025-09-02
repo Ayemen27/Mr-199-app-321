@@ -4,6 +4,7 @@ import ws from "ws";
 import * as schema from "@shared/schema";
 import { DatabaseSecurityGuard } from './database-security';
 import { DatabaseRestrictionGuard } from './database-restrictions';
+import { getDatabaseUrl } from './services/SmartSecretsManager';
 
 // Configure WebSocket for Neon/Supabase serverless connection
 neonConfig.webSocketConstructor = ws;
@@ -13,11 +14,31 @@ neonConfig.webSocketConstructor = ws;
 // ⚠️ التطبيق يستخدم فقط قاعدة بيانات Supabase PostgreSQL السحابية
 // ⚠️ أي محاولة لاستخدام DATABASE_URL المحلي سيؤدي إلى فشل النظام
 
-const SUPABASE_DATABASE_URL = "postgresql://postgres.wibtasmyusxfqxxqekks:Ay**--772283228@aws-0-us-east-1.pooler.supabase.com:6543/postgres";
+// إنشاء رابط قاعدة البيانات بناءً على البيئة
+function createDatabaseUrl(): string {
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+  
+  if (isProduction) {
+    // في بيئة الإنتاج، استخدم متغيرات Supabase من Vercel
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !serviceKey) {
+      throw new Error('متغيرات Supabase غير متاحة في بيئة الإنتاج. تأكد من تكامل Supabase مع Vercel.');
+    }
+    
+    // تحويل URL لتنسيق PostgreSQL
+    const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
+    return `postgresql://postgres.${projectRef}:${serviceKey}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`;
+  } else {
+    // في بيئة التطوير، استخدم القيمة الثابتة المعروفة
+    return "postgresql://postgres.wibtasmyusxfqxxqekks:Ay**--772283228@aws-0-us-east-1.pooler.supabase.com:6543/postgres";
+  }
+}
 
 // ⛔ حماية صارمة ضد استخدام قواعد البيانات المحلية
 // ✅ الاتصال الوحيد المسموح: Supabase Cloud Database
-const connectionString = SUPABASE_DATABASE_URL;
+const connectionString = createDatabaseUrl();
 
 // ⚠️ تفعيل نظام الحماية المتقدم والموانع الصارمة
 DatabaseSecurityGuard.monitorEnvironmentVariables();

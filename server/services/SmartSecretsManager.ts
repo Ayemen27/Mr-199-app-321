@@ -39,6 +39,24 @@ export class SmartSecretsManager {
       description: 'مفتاح التشفير العام',
       generateSecure: true,
       length: 128
+    },
+    {
+      name: 'SUPABASE_URL',
+      description: 'رابط قاعدة بيانات Supabase',
+      generateSecure: false,
+      defaultValue: 'https://your-project.supabase.co'
+    },
+    {
+      name: 'SUPABASE_ANON_KEY',
+      description: 'مفتاح Supabase العام',
+      generateSecure: false,
+      defaultValue: 'your-anon-key'
+    },
+    {
+      name: 'SUPABASE_SERVICE_ROLE_KEY',
+      description: 'مفتاح Supabase الخدمي',
+      generateSecure: false,
+      defaultValue: 'your-service-role-key'
     }
   ];
 
@@ -201,6 +219,16 @@ export class SmartSecretsManager {
         if (secretConfig.generateSecure) {
           value = this.generateSecureKey(secretConfig.length || 64);
           console.log(`🔐 تم إنشاء مفتاح آمن جديد: ${secretName}`);
+        } else if (secretConfig.defaultValue && secretConfig.name.includes('SUPABASE')) {
+          // للمتغيرات Supabase، تحقق من وجود قيم حقيقية في .env أولاً
+          if (envFileVars[secretName] && !envFileVars[secretName].includes('your-')) {
+            value = envFileVars[secretName];
+            console.log(`📋 تم استخدام القيمة الموجودة: ${secretName}`);
+          } else {
+            console.log(`⚠️ تحذير: ${secretName} يحتاج قيمة حقيقية من Supabase`);
+            console.log(`💡 قم بنسخ القيمة الصحيحة من لوحة تحكم Supabase`);
+            value = secretConfig.defaultValue;
+          }
         } else if (secretConfig.defaultValue) {
           value = secretConfig.defaultValue;
           console.log(`📝 تم استخدام القيمة الافتراضية: ${secretName}`);
@@ -340,6 +368,13 @@ export class SmartSecretsManager {
     try {
       console.log('🔄 تهيئة نظام المفاتيح السرية عند بدء التشغيل...');
       
+      // تحقق من البيئة (Production/Development)
+      const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+      if (isProd) {
+        console.log('🌐 النشر على Vercel - سيتم استخدام متغيرات البيئة من Vercel');
+        return this.validateProductionEnvironment();
+      }
+      
       const result = await this.autoManageSecrets();
       
       if (result.success) {
@@ -354,7 +389,48 @@ export class SmartSecretsManager {
       return false;
     }
   }
+
+  /**
+   * فحص متغيرات البيئة في الإنتاج (Vercel)
+   */
+  private validateProductionEnvironment(): boolean {
+    const requiredForProduction = [
+      'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY',
+      'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'ENCRYPTION_KEY'
+    ];
+    
+    const missing: string[] = [];
+    for (const key of requiredForProduction) {
+      if (!process.env[key]) {
+        missing.push(key);
+      }
+    }
+    
+    if (missing.length === 0) {
+      console.log('✅ جميع المتغيرات البيئية متاحة في بيئة الإنتاج');
+      return true;
+    } else {
+      console.error(`❌ متغيرات مفقودة في بيئة الإنتاج: ${missing.join(', ')}`);
+      console.error('💡 تأكد من تكامل Supabase مع Vercel وإعدادات المتغيرات البيئية');
+      return false;
+    }
+  }
 }
 
 // تصدير مثيل واحد للاستخدام العام
 export const smartSecretsManager = SmartSecretsManager.getInstance();
+
+// إضافة دالة مساعدة للحصول على رابط قاعدة البيانات
+export function getDatabaseUrl(): string {
+  // في بيئة الإنتاج، استخدم SUPABASE_URL المدمجة
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+    const url = process.env.SUPABASE_URL;
+    if (!url) {
+      throw new Error('SUPABASE_URL غير موجودة في متغيرات البيئة');
+    }
+    return url.replace('https://', 'postgresql://postgres:').replace('.supabase.co', '.supabase.co:6543/postgres');
+  }
+  
+  // في بيئة التطوير، استخدم القيم من .env
+  return process.env.SUPABASE_URL || 'https://wibtasmyusxfqxxqekks.supabase.co';
+}

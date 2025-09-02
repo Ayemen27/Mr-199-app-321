@@ -1197,9 +1197,6 @@ export default function AISystemDashboard() {
                         <div className="flex items-center gap-2">
                           <Badge variant={(detectedErrorsData?.detectedErrors?.length || 0) > 0 ? "destructive" : "secondary"} className="text-xs">
                             {detectedErrorsData?.detectedErrors?.length || 0}
-                            {errorStats?.totalErrors && errorStats.totalErrors > (detectedErrorsData?.detectedErrors?.length || 0) && (
-                              <span className="text-xs opacity-70"> / {errorStats.totalErrors}</span>
-                            )}
                           </Badge>
                           {(detectedErrorsData?.detectedErrors?.length || 0) > 0 && (
                             <Button
@@ -1222,34 +1219,23 @@ export default function AISystemDashboard() {
                               <Loader2 className="w-4 h-4 animate-spin text-blue-500 mr-2" />
                               <span className="text-sm text-gray-600">جاري تحليل المشاكل...</span>
                             </div>
-                          ) : detectedErrorsData?.detectedErrors?.length > 0 ? (
+                          ) : (detectedErrorsData?.detectedErrors?.length || 0) > 0 ? (
                             <div className="space-y-2">
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs font-medium text-red-800">
-                                    المشاكل المكتشفة ({detectedErrorsData.detectedErrors.length})
-                                    {errorStats?.totalErrors && errorStats.totalErrors > detectedErrorsData.detectedErrors.length && (
-                                      <span className="text-xs opacity-70 mr-1">من أصل {errorStats.totalErrors}</span>
-                                    )}
+                                    المشاكل المكتشفة ({detectedErrorsData?.detectedErrors?.length || 0})
                                   </span>
                                   <Badge variant="outline" className="text-xs">
                                     آخر تحديث: منذ {Math.floor(Math.random() * 10)} دقائق
                                   </Badge>
                                 </div>
                                 
-                                {errorStats?.totalErrors && errorStats.totalErrors > detectedErrorsData.detectedErrors.length && (
-                                  <div className="flex items-start gap-1 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-                                    <Info className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" />
-                                    <span className="text-blue-800">
-                                      يتم عرض المشاكل النشطة فقط. العدد الإجمالي ({errorStats.totalErrors}) يشمل المشاكل المحلولة والمؤرشفة.
-                                    </span>
-                                  </div>
-                                )}
                               </div>
                               
                               <ScrollArea className="max-h-64">
                                 <div className="space-y-2">
-                                  {detectedErrorsData.detectedErrors.slice(0, 8).map((error: any, index: number) => (
+                                  {detectedErrorsData?.detectedErrors?.slice(0, 8).map((error: any, index: number) => (
                                     <div key={error.id || index} className="bg-red-50 border border-red-200 rounded-lg p-3">
                                       {/* Header */}
                                       <div className="flex items-start justify-between mb-2">
@@ -1294,10 +1280,10 @@ export default function AISystemDashboard() {
                                     </div>
                                   ))}
                                   
-                                  {detectedErrorsData.detectedErrors.length > 8 && (
+                                  {(detectedErrorsData?.detectedErrors?.length || 0) > 8 && (
                                     <div className="text-center p-2">
                                       <Badge variant="secondary" className="text-xs">
-                                        +{detectedErrorsData.detectedErrors.length - 8} مشكلة إضافية
+                                        +{(detectedErrorsData?.detectedErrors?.length || 0) - 8} مشكلة إضافية
                                       </Badge>
                                     </div>
                                   )}
@@ -1309,8 +1295,8 @@ export default function AISystemDashboard() {
                                 <div className="text-xs text-red-600">
                                   <span className="font-medium">الإجراءات المقترحة:</span>
                                   <div className="mt-1 space-y-1">
-                                    <div>• فحص {detectedErrorsData.detectedErrors.filter((e: any) => e.severity === 'critical').length} مشكلة حرجة</div>
-                                    <div>• مراجعة {detectedErrorsData.detectedErrors.filter((e: any) => e.tableName).length} جدول متأثر</div>
+                                    <div>• فحص {detectedErrorsData?.detectedErrors?.filter((e: any) => e.severity === 'critical').length || 0} مشكلة حرجة</div>
+                                    <div>• مراجعة {detectedErrorsData?.detectedErrors?.filter((e: any) => e.tableName).length || 0} جدول متأثر</div>
                                     <div>• تحسين الأداء العام لقاعدة البيانات</div>
                                   </div>
                                 </div>
