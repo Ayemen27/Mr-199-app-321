@@ -19,7 +19,13 @@ function createDatabaseUrl(): string {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
   
   if (isProduction) {
-    // في بيئة الإنتاج، استخدم متغيرات Supabase من Vercel
+    // في بيئة الإنتاج المحلية، حاول تحميل متغيرات البيئة من النظام الذكي
+    if (!process.env.VERCEL) {
+      // في Replit production mode، استخدم القيمة الثابتة المعروفة
+      return "postgresql://postgres.wibtasmyusxfqxxqekks:Ay**--772283228@aws-0-us-east-1.pooler.supabase.com:6543/postgres";
+    }
+    
+    // في بيئة Vercel، استخدم متغيرات Supabase من Vercel
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     

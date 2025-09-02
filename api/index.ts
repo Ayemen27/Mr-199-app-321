@@ -15,6 +15,62 @@ const __dirname = path.dirname(__filename);
 // ====== تهيئة متغيرات البيئة التلقائية ======
 console.log('🚀 بدء تهيئة نظام إدارة المشاريع الإنشائية...');
 
+// ====== نظام مراقبة الأخطاء المتقدم ======
+interface ErrorLog {
+  timestamp: string;
+  error: string;
+  context: string;
+  environment: string;
+  url?: string;
+  method?: string;
+  userId?: string;
+}
+
+const errorLogs: ErrorLog[] = [];
+
+function logError(error: any, context: string, req?: any) {
+  const errorLog: ErrorLog = {
+    timestamp: new Date().toISOString(),
+    error: error instanceof Error ? error.message : String(error),
+    context,
+    environment: process.env.NODE_ENV || 'development',
+    url: req?.url,
+    method: req?.method,
+    userId: req?.user?.userId
+  };
+  
+  errorLogs.push(errorLog);
+  console.error(`[${context}] ${errorLog.error}`, {
+    url: errorLog.url,
+    method: errorLog.method,
+    userId: errorLog.userId,
+    environment: errorLog.environment
+  });
+  
+  // الاحتفاظ بآخر 100 خطأ فقط
+  if (errorLogs.length > 100) {
+    errorLogs.shift();
+  }
+}
+
+// مسار لجلب تقرير الأخطاء (للمطورين فقط)
+function setupErrorReporting(app: any) {
+  app.get('/api/debug/errors', (req: any, res: any) => {
+    res.json({
+      success: true,
+      errors: errorLogs.slice(-20), // آخر 20 خطأ
+      count: errorLogs.length,
+      environment: process.env.NODE_ENV,
+      secrets_status: {
+        JWT_ACCESS_SECRET: !!process.env.JWT_ACCESS_SECRET,
+        JWT_REFRESH_SECRET: !!process.env.JWT_REFRESH_SECRET,
+        SUPABASE_URL: !!process.env.SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      }
+    });
+  });
+}
+
 // ====== نظام إدارة متغيرات البيئة التلقائي (مدمج) ======
 
 // إنشاء مفاتيح آمنة تلقائياً إذا كانت مفقودة
@@ -127,8 +183,20 @@ if (useLocalDatabase) {
   supabase = supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : supabaseAdmin;
 }
 
-// إعدادات المصادقة
-const JWT_SECRET = process.env.JWT_ACCESS_SECRET || 'construction-app-jwt-secret-2025';
+// إعدادات المصادقة - استخدام المتغيرات من Vercel
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+
+// التحقق من وجود المتغيرات الضرورية
+if (!JWT_ACCESS_SECRET) {
+  console.error('❌ JWT_ACCESS_SECRET غير موجود في متغيرات البيئة');
+}
+if (!JWT_REFRESH_SECRET) {
+  console.error('❌ JWT_REFRESH_SECRET غير موجود في متغيرات البيئة');
+}
+
+const JWT_SECRET = JWT_ACCESS_SECRET || 'construction-app-jwt-secret-2025';
 const SALT_ROUNDS = 12;
 
 // مخططات التحقق الأساسية
@@ -390,14 +458,24 @@ app.post('/api/auth/login', async (req, res) => {
 
     console.log('✅ كلمة المرور صحيحة');
 
-    // إنشاء JWT token
-    const token = jwt.sign(
+    // إنشاء JWT tokens
+    const accessToken = jwt.sign(
       { 
         userId: user.id, 
         email: user.email, 
         role: user.role || 'user'
       },
       JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+    
+    const refreshToken = jwt.sign(
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role || 'user'
+      },
+      JWT_REFRESH_SECRET || JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -412,11 +490,15 @@ app.post('/api/auth/login', async (req, res) => {
         name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
         role: user.role
       },
-      token
+      tokens: {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      }
     });
 
   } catch (error) {
-    console.error('❌ خطأ في تسجيل الدخول:', error);
+    logError(error, 'AUTH_LOGIN', req);
     res.status(500).json({
       success: false,
       message: 'حدث خطأ داخلي في الخادم'
@@ -495,14 +577,24 @@ app.post('/api/auth/register', async (req, res) => {
 
     console.log('✅ تم إنشاء المستخدم بنجاح:', newUser.id);
 
-    // إنشاء JWT token
-    const token = jwt.sign(
+    // إنشاء JWT tokens
+    const accessToken = jwt.sign(
       { 
         userId: newUser.id, 
         email: newUser.email, 
         role: newUser.role 
       },
       JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+    
+    const refreshToken = jwt.sign(
+      { 
+        userId: newUser.id, 
+        email: newUser.email, 
+        role: newUser.role 
+      },
+      JWT_REFRESH_SECRET || JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -517,11 +609,104 @@ app.post('/api/auth/register', async (req, res) => {
         name: `${newUser.first_name || ''} ${newUser.last_name || ''}`.trim(),
         role: newUser.role
       },
-      token
+      tokens: {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      }
     });
 
   } catch (error) {
     console.error('❌ خطأ في التسجيل:', error);
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ داخلي في الخادم'
+    });
+  }
+});
+
+// التحقق من معلومات المستخدم الحالي
+app.get('/api/auth/me', authenticateToken, async (req: any, res) => {
+  try {
+    res.json({
+      success: true,
+      user: {
+        id: req.user.userId,
+        email: req.user.email,
+        name: req.user.name || req.user.email,
+        role: req.user.role || 'user',
+        mfaEnabled: false
+      }
+    });
+  } catch (error) {
+    console.error('خطأ في جلب معلومات المستخدم:', error);
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ داخلي في الخادم'
+    });
+  }
+});
+
+// تجديد الرمز المميز
+app.post('/api/auth/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'رمز التجديد مطلوب'
+      });
+    }
+
+    // التحقق من صحة refresh token
+    try {
+      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET || JWT_SECRET) as any;
+      
+      // إنشاء access token جديد
+      const newAccessToken = jwt.sign(
+        { 
+          userId: decoded.userId, 
+          email: decoded.email, 
+          role: decoded.role 
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.json({
+        success: true,
+        tokens: {
+          accessToken: newAccessToken,
+          refreshToken: refreshToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      });
+    } catch (verifyError) {
+      return res.status(401).json({
+        success: false,
+        message: 'رمز التجديد غير صالح'
+      });
+    }
+
+  } catch (error) {
+    console.error('خطأ في تجديد الرمز:', error);
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ داخلي في الخادم'
+    });
+  }
+});
+
+// تسجيل الخروج
+app.post('/api/auth/logout', authenticateToken, async (req: any, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'تم تسجيل الخروج بنجاح'
+    });
+  } catch (error) {
+    console.error('خطأ في تسجيل الخروج:', error);
     res.status(500).json({
       success: false,
       message: 'حدث خطأ داخلي في الخادم'
@@ -7971,6 +8156,33 @@ app.get('/api/smart-secrets/status', async (req, res) => {
   }
 });
 
+// تطبيق نظام تتبع الأخطاء
+setupErrorReporting(app);
+
+// إضافة معالج أخطاء شامل
+app.use((error: any, req: any, res: any, next: any) => {
+  logError(error, 'EXPRESS_ERROR_HANDLER', req);
+  
+  if (!res.headersSent) {
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ داخلي في الخادم',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// معالج 404 لطلبات API غير الموجودة
+app.all('/api/*', (req, res) => {
+  logError(`API route not found: ${req.path}`, 'API_404', req);
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint غير موجود',
+    path: req.path,
+    method: req.method
+  });
+});
+
 // تهيئة الأنظمة عند بدء التشغيل
 (async () => {
   try {
@@ -7979,7 +8191,7 @@ app.get('/api/smart-secrets/status', async (req, res) => {
     await notificationSystemManager.start();
     console.log('✅ جميع الأنظمة المتقدمة جاهزة وتعمل');
   } catch (error) {
-    console.error('❌ خطأ في تهيئة الأنظمة المتقدمة:', error);
+    logError(error, 'SYSTEM_INITIALIZATION');
   }
 })();
 
