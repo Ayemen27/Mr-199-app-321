@@ -50,7 +50,7 @@ export default function ProjectSelector({
             <SelectValue placeholder="اختر المشروع..." />
           </SelectTrigger>
           <SelectContent>
-            {projects.map((project) => (
+            {Array.isArray(projects) ? projects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
@@ -60,7 +60,7 @@ export default function ProjectSelector({
                   </Badge>
                 </div>
               </SelectItem>
-            ))}
+            )) : null}
           </SelectContent>
         </Select>
       </div>
@@ -105,7 +105,7 @@ export default function ProjectSelector({
                 </div>
               </SelectTrigger>
               <SelectContent className="bg-white border-2 border-gray-200 shadow-2xl rounded-xl">
-                {projects.map((project) => (
+                {Array.isArray(projects) ? projects.map((project) => (
                   <SelectItem 
                     key={project.id} 
                     value={project.id}
@@ -136,7 +136,7 @@ export default function ProjectSelector({
                       </div>
                     </div>
                   </SelectItem>
-                ))}
+                )) : null}
               </SelectContent>
             </Select>
 
@@ -178,11 +178,11 @@ export default function ProjectSelector({
             <SelectValue placeholder="اختر المشروع..." />
           </SelectTrigger>
           <SelectContent>
-            {projects.map((project) => (
+            {Array.isArray(projects) ? projects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
                 {project.name}
               </SelectItem>
-            ))}
+            )) : null}
           </SelectContent>
         </Select>
       </CardContent>

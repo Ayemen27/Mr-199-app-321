@@ -551,7 +551,7 @@ export default function ProjectsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
+          {Array.isArray(projects) ? projects.map((project) => (
             <Card key={project.id} className="relative overflow-hidden hover:shadow-lg transition-shadow">
               {/* Project Image */}
               {project.imageUrl ? (
@@ -715,7 +715,7 @@ export default function ProjectsPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )) : null}
         </div>
       )}
 

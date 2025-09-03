@@ -502,14 +502,14 @@ export default function WorkerAttendance() {
         </div>
       ) : (
         <div className="space-y-3">
-          {workers.map((worker) => (
+          {Array.isArray(workers) ? workers.map((worker) => (
             <EnhancedWorkerCard
               key={worker.id}
               worker={worker}
               attendance={attendanceData[worker.id] || { isPresent: false }}
               onAttendanceChange={(attendance) => handleAttendanceChange(worker.id, attendance)}
             />
-          ))}
+          )) : null}
         </div>
       )}
 

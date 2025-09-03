@@ -465,11 +465,11 @@ export default function Dashboard() {
                     <SelectValue placeholder="اختر نوع العامل..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {workerTypes.map((workerType) => (
+                    {Array.isArray(workerTypes) ? workerTypes.map((workerType) => (
                       <SelectItem key={workerType.id} value={workerType.value}>
                         {workerType.value}
                       </SelectItem>
-                    ))}
+                    )) : null}
                     {workerTypes.length === 0 && (
                       <>
                         <SelectItem value="معلم">معلم</SelectItem>

@@ -930,11 +930,11 @@ export function EquipmentManagement() {
             <SelectContent>
               <SelectItem value="all">جميع المواقع</SelectItem>
               <SelectItem value="warehouse">المستودع</SelectItem>
-              {projects.map((project: any) => (
+              {Array.isArray(projects) ? projects.map((project: any) => (
                 <SelectItem key={project.id} value={project.id}>
                   {project.name}
                 </SelectItem>
-              ))}
+              )) : null}
             </SelectContent>
           </Select>
         </div>
@@ -1009,11 +1009,11 @@ export function EquipmentManagement() {
                   <SelectContent>
                     <SelectItem value="all">جميع المشاريع</SelectItem>
                     <SelectItem value="warehouse">المستودع</SelectItem>
-                    {projects.map((project: any) => (
+                    {Array.isArray(projects) ? projects.map((project: any) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}
                       </SelectItem>
-                    ))}
+                    )) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -1175,7 +1175,7 @@ export function EquipmentManagement() {
             </Button>
           </Card>
         ) : (
-          equipment.map((item: Equipment) => (
+          Array.isArray(equipment) ? equipment.map((item: Equipment) => (
             <Card 
               key={item.id}
               className="bg-white dark:bg-gray-800 hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"

@@ -540,11 +540,11 @@ export default function WorkerAccountsPage() {
                     <SelectValue placeholder="اختر العامل" />
                   </SelectTrigger>
                   <SelectContent>
-                    {workers.map((worker) => (
+                    {Array.isArray(workers) ? workers.map((worker) => (
                       <SelectItem key={worker.id} value={worker.id}>
                         {worker.name} ({worker.type})
                       </SelectItem>
-                    ))}
+                    )) : null}
                   </SelectContent>
                 </Select>
               </div>
