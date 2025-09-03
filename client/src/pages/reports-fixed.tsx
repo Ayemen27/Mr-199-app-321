@@ -42,7 +42,7 @@ const reportCategories = [
   { id: "operations", name: "تقارير تشغيلية", icon: FileText, color: "text-gray-600" }
 ];
 
-export default function ReportsFixed(): JSX.Element {
+export default function ReportsFixed() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [dateFrom, setDateFrom] = useState("");

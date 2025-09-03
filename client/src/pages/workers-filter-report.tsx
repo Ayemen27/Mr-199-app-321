@@ -54,7 +54,7 @@ interface FilteredWorkerData {
   };
 }
 
-export default function WorkersFilterReport(): JSX.Element {
+export default function WorkersFilterReport() {
   const [filters, setFilters] = useState<FilterCriteria>({
     workerIds: [],
     workerTypes: [],

@@ -19,7 +19,7 @@ interface DailyExpenseData {
   total: number;
 }
 
-export default function ExcelStyleDailyExpenses(): JSX.Element {
+export default function ExcelStyleDailyExpenses() {
   const [selectedDate, setSelectedDate] = useState(getCurrentDate());
   const { selectedProjectId, projects } = useSelectedProject();
   

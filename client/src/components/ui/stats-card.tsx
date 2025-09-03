@@ -5,8 +5,10 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   icon: LucideIcon;
-  color?: "blue" | "green" | "orange" | "red" | "purple" | "teal" | "indigo" | "emerald" | "amber";
+  color?: "blue" | "green" | "orange" | "red" | "purple" | "teal" | "indigo" | "emerald" | "amber" | "gray";
   formatter?: (value: number) => string;
+  format?: string;
+  trend?: { value: number; isPositive: boolean };
   className?: string;
   "data-testid"?: string;
 }
@@ -74,6 +76,13 @@ const colorVariants = {
     bg: "bg-amber-50 dark:bg-amber-900/20",
     iconBg: "bg-amber-100 dark:bg-amber-900/30",
     iconColor: "text-amber-600 dark:text-amber-400"
+  },
+  gray: {
+    border: "border-l-gray-500",
+    text: "text-gray-600",
+    bg: "bg-gray-50 dark:bg-gray-900/20",
+    iconBg: "bg-gray-100 dark:bg-gray-900/30",
+    iconColor: "text-gray-600 dark:text-gray-400"
   }
 };
 

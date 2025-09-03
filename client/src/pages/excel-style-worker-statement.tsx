@@ -35,7 +35,7 @@ interface WorkerStatementData {
   };
 }
 
-export default function ExcelStyleWorkerStatement(): JSX.Element {
+export default function ExcelStyleWorkerStatement() {
   const [selectedWorkerId, setSelectedWorkerId] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState(getCurrentDate());

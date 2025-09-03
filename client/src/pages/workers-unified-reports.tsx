@@ -56,7 +56,7 @@ interface UnifiedReportFilters {
   reportType: 'summary' | 'detailed' | 'attendance' | 'financial';
 }
 
-export default function WorkersUnifiedReports(): JSX.Element {
+export default function WorkersUnifiedReports() {
   const [filters, setFilters] = useState<UnifiedReportFilters>({
     workerIds: [],
     workerTypes: [],

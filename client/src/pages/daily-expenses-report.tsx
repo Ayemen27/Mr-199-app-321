@@ -19,7 +19,7 @@ interface DailyExpense {
   projectId: string;
 }
 
-export default function DailyExpensesReport(): JSX.Element {
+export default function DailyExpensesReport() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");

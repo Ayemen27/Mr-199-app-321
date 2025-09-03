@@ -33,7 +33,7 @@ interface UnifiedWorkerData {
   }>;
 }
 
-export default function UnifiedWorkerReports(): JSX.Element {
+export default function UnifiedWorkerReports() {
   const [selectedWorkerId, setSelectedWorkerId] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState(getCurrentDate());
