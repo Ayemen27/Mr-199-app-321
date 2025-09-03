@@ -1259,7 +1259,7 @@ export function EquipmentManagement() {
                 </div>
               </div>
             </Card>
-          ))
+          )) : null
         )}
       </div>
 
