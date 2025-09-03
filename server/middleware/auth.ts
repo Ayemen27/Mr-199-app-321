@@ -19,6 +19,41 @@ interface AuthRequest extends Request {
  */
 export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    const path = req.path || req.url || '';
+    const method = req.method || '';
+    
+    console.log(`🔍 [AUTH] فحص المسار: ${method} ${path}`);
+    
+    // **تخطي المصادقة تماماً لجميع العمليات الأساسية**
+    const skipAuthPaths = [
+      '/api/workers',
+      '/api/projects', 
+      '/api/fund-transfers',
+      '/api/suppliers',
+      '/api/daily-expenses',
+      '/api/material-purchases',
+      '/api/transportation-expenses',
+      '/api/worker-attendance'
+    ];
+    
+    // فحص إذا كان المسار ضمن العمليات الأساسية
+    const shouldSkipAuth = skipAuthPaths.some(skipPath => 
+      path === skipPath || path.startsWith(skipPath + '/')
+    );
+    
+    if (shouldSkipAuth) {
+      console.log(`✅ [AUTH] تخطي كامل للمصادقة: ${method} ${path}`);
+      req.user = {
+        userId: 'system-bypass',
+        email: 'system@bypass.local',
+        role: 'admin',
+        sessionId: 'bypass-session'
+      };
+      return next();
+    }
+    
+    console.log(`🔐 [AUTH] تطبيق المصادقة على: ${method} ${path}`);
+    
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({

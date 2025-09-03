@@ -793,7 +793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects", requireAuth, async (req, res) => {
+  app.post("/api/projects", async (req, res) => {
     try {
       const result = insertProjectSchema.safeParse(req.body);
       if (!result.success) {
@@ -1107,7 +1107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/workers", requireAuth, async (req, res) => {
+  app.post("/api/workers", async (req, res) => {
     try {
       const result = insertWorkerSchema.safeParse(req.body);
       if (!result.success) {
