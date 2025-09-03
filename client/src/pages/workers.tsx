@@ -249,7 +249,7 @@ export default function WorkersPage() {
     },
   });
 
-  const filteredWorkers = workers.filter(worker => {
+  const filteredWorkers = Array.isArray(workers) ? workers.filter(worker => {
     const matchesSearch = worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          worker.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || 
@@ -258,13 +258,13 @@ export default function WorkersPage() {
     const matchesType = typeFilter === 'all' || worker.type === typeFilter;
     
     return matchesSearch && matchesStatus && matchesType;
-  });
+  }) : [];
 
   const stats = {
-    total: workers.length,
-    active: workers.filter(w => w.isActive).length,
-    inactive: workers.filter(w => !w.isActive).length,
-    avgWage: workers.length > 0 ? workers.reduce((sum, w) => sum + parseFloat(w.dailyWage), 0) / workers.length : 0
+    total: Array.isArray(workers) ? workers.length : 0,
+    active: Array.isArray(workers) ? workers.filter(w => w.isActive).length : 0,
+    inactive: Array.isArray(workers) ? workers.filter(w => !w.isActive).length : 0,
+    avgWage: Array.isArray(workers) && workers.length > 0 ? workers.reduce((sum, w) => sum + parseFloat(w.dailyWage), 0) / workers.length : 0
   };
 
 

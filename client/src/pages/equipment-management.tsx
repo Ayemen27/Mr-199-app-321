@@ -233,6 +233,7 @@ export function EquipmentManagement() {
 
   // Functions for Equipment Reports
   const getFilteredEquipmentForReport = () => {
+    if (!Array.isArray(equipment)) return [];
     return equipment.filter((item: Equipment) => {
       const matchesProject = reportProjectFilter === "all" || 
         (reportProjectFilter === "warehouse" && !item.currentProjectId) ||
@@ -951,21 +952,21 @@ export function EquipmentManagement() {
         />
         <StatsCard
           title="نشطة"
-          value={equipment.filter((e: Equipment) => e.status === 'active').length}
+          value={Array.isArray(equipment) ? equipment.filter((e: Equipment) => e.status === 'active').length : 0}
           icon={Activity}
           className="border-r-4 border-r-green-500 bg-gradient-to-r from-green-50 to-white dark:from-green-950 dark:to-gray-900"
           data-testid="stats-active-equipment"
         />
         <StatsCard
           title="في الصيانة"
-          value={equipment.filter((e: Equipment) => e.status === 'maintenance').length}
+          value={Array.isArray(equipment) ? equipment.filter((e: Equipment) => e.status === 'maintenance').length : 0}
           icon={Settings}
           className="border-r-4 border-r-yellow-500 bg-gradient-to-r from-yellow-50 to-white dark:from-yellow-950 dark:to-gray-900"
           data-testid="stats-maintenance-equipment"
         />
         <StatsCard
           title="خارج الخدمة"
-          value={equipment.filter((e: Equipment) => e.status === 'out_of_service').length}
+          value={Array.isArray(equipment) ? equipment.filter((e: Equipment) => e.status === 'out_of_service').length : 0}
           icon={Truck}
           className="border-r-4 border-r-red-500 bg-gradient-to-r from-red-50 to-white dark:from-red-950 dark:to-gray-900"
           data-testid="stats-out-of-service-equipment"

@@ -219,12 +219,12 @@ export default function MaterialPurchase() {
   });
 
   // Get unique material names, categories, units, and suppliers
-  const materialNames = materials.map(m => m.name);
-  const materialCategories = Array.from(new Set(materials.map(m => m.category)));
-  const materialUnits = Array.from(new Set(materials.map(m => m.unit)));
+  const materialNames = Array.isArray(materials) ? materials.map(m => m.name) : [];
+  const materialCategories = Array.isArray(materials) ? Array.from(new Set(materials.map(m => m.category))) : [];
+  const materialUnits = Array.isArray(materials) ? Array.from(new Set(materials.map(m => m.unit))) : [];
   
   // الموردين النشطين من قاعدة البيانات
-  const activeSuppliers = suppliers.filter(supplier => supplier.isActive);
+  const activeSuppliers = Array.isArray(suppliers) ? suppliers.filter(supplier => supplier.isActive) : [];
 
   const addMaterialPurchaseMutation = useMutation({
     mutationFn: async (data: any) => {

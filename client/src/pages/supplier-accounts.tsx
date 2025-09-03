@@ -89,9 +89,9 @@ export default function SupplierAccountsPage() {
   });
 
   // فلترة الموردين حسب البحث
-  const filteredSuppliers = suppliers.filter(supplier =>
+  const filteredSuppliers = Array.isArray(suppliers) ? suppliers.filter(supplier =>
     supplier.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   // جلب بيانات المشتريات للمورد المحدد
   const { data: purchases = [], isLoading: isLoadingPurchases } = useQuery<MaterialPurchase[]>({
@@ -244,7 +244,7 @@ export default function SupplierAccountsPage() {
     totalDebt: globalStats?.totalDebt || "0",
     totalPaid: globalStats?.totalPaid || "0",
     remainingDebt: selectedSupplierId ? (supplierStats?.remainingDebt || "0") : (globalStats?.remainingDebt || "0"),
-    activeSuppliers: globalStats?.activeSuppliers || suppliers.filter(s => parseFloat(s.totalDebt) > 0).length,
+    activeSuppliers: globalStats?.activeSuppliers || (Array.isArray(suppliers) ? suppliers.filter(s => parseFloat(s.totalDebt) > 0).length : 0),
     totalPurchases: purchases.length
   };
 

@@ -133,7 +133,7 @@ export default function WorkerAttendance() {
 
   // Edit Attendance Function
   const handleEditAttendance = (record: any) => {
-    const worker = workers.find(w => w.id === record.workerId);
+    const worker = Array.isArray(workers) ? workers.find(w => w.id === record.workerId) : null;
     if (worker) {
       const newAttendanceData = { ...attendanceData };
       newAttendanceData[record.workerId] = {
