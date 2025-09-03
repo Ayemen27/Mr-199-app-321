@@ -64,8 +64,17 @@ export default function WorkerMiscExpenses({ projectId, selectedDate }: WorkerMi
   const { data: todayMiscExpenses = [] } = useQuery<WorkerMiscExpense[]>({
     queryKey: ["/api/worker-misc-expenses", projectId, selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/worker-misc-expenses?projectId=${projectId}&date=${selectedDate}`, "GET");
-      return Array.isArray(response) ? response as WorkerMiscExpense[] : [];
+      try {
+        const response = await apiRequest(`/api/worker-misc-expenses?projectId=${projectId}&date=${selectedDate}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as WorkerMiscExpense[];
+        }
+        return Array.isArray(response) ? response as WorkerMiscExpense[] : [];
+      } catch (error) {
+        console.error("Error fetching worker misc expenses:", error);
+        return [];
+      }
     },
     enabled: !!projectId,
   });
@@ -180,7 +189,10 @@ export default function WorkerMiscExpenses({ projectId, selectedDate }: WorkerMi
     setEditingMiscId(expense.id);
   };
 
-  const totalMiscExpenses = todayMiscExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+  // حساب إجمالي النثريات مع معالجة آمنة
+  const totalMiscExpenses = Array.isArray(todayMiscExpenses) 
+    ? todayMiscExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0)
+    : 0;
 
   return (
     <Card className="mb-3">
@@ -218,8 +230,8 @@ export default function WorkerMiscExpenses({ projectId, selectedDate }: WorkerMi
           </div>
           
           {/* Show existing misc expenses */}
-          {todayMiscExpenses.map((expense, index) => (
-            <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
+          {Array.isArray(todayMiscExpenses) && todayMiscExpenses.map((expense, index) => (
+            <div key={expense.id || index} className="flex justify-between items-center p-2 bg-muted rounded">
               <span className="text-sm flex-1">{expense.description}</span>
               <div className="flex items-center gap-2">
                 <span className="font-medium arabic-numbers">{formatCurrency(expense.amount)}</span>
@@ -246,7 +258,7 @@ export default function WorkerMiscExpenses({ projectId, selectedDate }: WorkerMi
             </div>
           ))}
           
-          {todayMiscExpenses.length > 0 && (
+          {Array.isArray(todayMiscExpenses) && todayMiscExpenses.length > 0 && (
             <div className="text-left mt-2 pt-2 border-t">
               <span className="text-sm text-muted-foreground">إجمالي النثريات: </span>
               <span className="font-bold text-purple-600 arabic-numbers">

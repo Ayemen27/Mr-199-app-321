@@ -24,12 +24,22 @@ export default function ProjectSelector({
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
     queryFn: async () => {
-      // استخدام fetch مباشر بدون مصادقة للمشاريع
-      const response = await fetch('/api/projects');
-      if (!response.ok) {
-        throw new Error('فشل في جلب المشاريع');
+      try {
+        // استخدام fetch مباشر بدون مصادقة للمشاريع
+        const response = await fetch('/api/projects');
+        if (!response.ok) {
+          throw new Error('فشل في جلب المشاريع');
+        }
+        const data = await response.json();
+        // معالجة الهيكل المتداخل للاستجابة
+        if (data && data.data && Array.isArray(data.data)) {
+          return data.data as Project[];
+        }
+        return Array.isArray(data) ? data as Project[] : [];
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        return [];
       }
-      return response.json();
     },
   });
 
