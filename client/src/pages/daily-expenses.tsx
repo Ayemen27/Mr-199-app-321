@@ -154,9 +154,25 @@ export default function DailyExpenses() {
     enabled: !!selectedProjectId,
   });
 
-  // جلب معلومات المواد
+  // جلب معلومات المواد مع معالجة آمنة للأخطاء
   const { data: materials = [] } = useQuery({
     queryKey: ["/api/materials"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/materials", "GET");
+        // التأكد من أن النتيجة مصفوفة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        // إذا لم تكن مصفوفة، أرجع مصفوفة فارغة
+        return [];
+      } catch (error) {
+        console.warn('⚠️ لم يتمكن من جلب المواد، استخدام قائمة فارغة:', error);
+        return [];
+      }
+    },
+    staleTime: 300000, // 5 دقائق
+    gcTime: 600000, // 10 دقائق
   });
 
   const { data: todayWorkerTransfers = [], refetch: refetchWorkerTransfers } = useQuery({
@@ -1115,7 +1131,7 @@ export default function DailyExpenses() {
           ) : (
             <div className="space-y-2 mb-3">
               {todayMaterialPurchases.map((purchase, index) => {
-                const material = purchase.material || (materials as any[])?.find((m: any) => m.id === purchase.materialId);
+                const material = purchase.material || (Array.isArray(materials) ? materials.find((m: any) => m.id === purchase.materialId) : null);
                 return (
                 <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
                   <div className="text-sm flex-1">

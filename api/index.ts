@@ -351,6 +351,56 @@ app.get('/api/projects/:id/daily-summary/:date', (req, res) => {
   });
 });
 
+// ====== مسار المواد المفقود ======
+app.get('/api/materials', async (req, res) => {
+  try {
+    console.log('📦 طلب جلب المواد');
+    
+    if (!supabase) {
+      return res.status(200).json({ 
+        success: true, 
+        message: 'قاعدة البيانات غير متصلة، إرجاع قائمة فارغة',
+        data: [],
+        count: 0
+      });
+    }
+
+    // محاولة جلب المواد من قاعدة البيانات
+    const { data, error } = await supabase
+      .from('materials') 
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.log('⚠️ جدول المواد غير موجود، إرجاع قائمة فارغة');
+      return res.status(200).json({ 
+        success: true, 
+        message: 'جدول المواد غير متاح حالياً',
+        data: [],
+        count: 0
+      });
+    }
+
+    // إرجاع البيانات أو قائمة فارغة
+    const materials = Array.isArray(data) ? data : [];
+    console.log(`✅ تم جلب ${materials.length} مادة`);
+    
+    res.status(200).json({
+      success: true,
+      data: materials,
+      count: materials.length
+    });
+  } catch (error) {
+    console.error('❌ خطأ عام في مسار المواد:', error);
+    res.status(200).json({
+      success: true,
+      message: 'خطأ في الخادم، إرجاع قائمة فارغة',
+      data: [],
+      count: 0
+    });
+  }
+});
+
 // ====== معالج الأخطاء العام ======
 app.use((error: any, req: any, res: any, next: any) => {
   console.error('💥 خطأ في الخادم:', error);

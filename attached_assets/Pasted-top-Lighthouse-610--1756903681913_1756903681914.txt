@@ -1,0 +1,221 @@
+top
+
+المصادر
+
+العناصر
+
+وحدة التحكم
+
+الشبكة
+
+قادر .
+
+الأمان الذاكرة التطبيق
+
+Lighthouse >>
+
+610
+
+المستويات التلقائية
+
+10 - مشاكل 10
+
+Authprovider) بيانات المستخدم API: {success: true, user:}{{
+
+]AuthProvider[ المستخدم تم التحقق بنجاح : admin@example.com
+
+index-CDow-7BA.js:606
+
+]AuthProvider[ انتهاء تهيئة المصادقة isLoading false
+
+index-CDow-7BA.js:606
+
+]ProtectedRoute فحص الحماية
+
+index-CDow-78A.js:896
+
+(isLoading: false, isAuthenticated: true, userEmail: admin@example.com', timestamp: 2025-09-03712:46:51.8772')
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى للمستخدم : admin@example.com
+
+index-CDow-7BA.15:896
+
+... إخفاء صفحة التحميل .
+
+245 (فهرين )
+
+]QueryClient[ البيانات المستلمة : /api/worker-types (success: true, data: Array(11), count: 11)
+
+index-CDow-7BA.js:37
+
+]QueryClient[ استخراج data data من API response
+
+index-CDow-7BA.js:57
+
+]QueryClient[ البيانات المستلمة : /api/projects/with-stats
+
+index-CDow-7BA.15:57
+
+(success: true, data: Array(5), count: 5)
+
+]QueryClient[ استخراج data.data من API response
+
+index-CDow-78A.js:57
+
+]ProtectedRoute[ فحص الحماية
+
+index-CDow-7BA.js:896
+
+(isLoading: false, isAuthenticated: true, userEmail: admin@example.com', timestamp: '
+
+2025-09-03712:46:55.4812)
+
+]ProtectedRoute[ مصادق عليه إظهار المحتوى المستخدم : admin@example.com
+
+index-CDow-7BA.15:896
+
+A soft navigation has been detected: https://construction-management-loti3k0ge-mr-199.vercel.a pp/daily-expenses
+
+index-CDow-7BA.js:48
+
+]App. Router تحميل Router... 2025-09-03T12:46:56.0112
+
+index-CDow-7BA.js:896
+
+[App. Router Router 2025-09-03T12:46:56.0152
+
+index-CDow-7BA.js:896
+
+]ErrorBoundary( تم النقاط حط : TypeError: x.filter is not a function
+
+hook.15:608
+
+at ns (index-CDow-78A.js:606:257924) at Rv (index-CDow-7BA.js:48:34174)
+
+at ky (index-CDow-7BA.js:48:62074)
+
+at Ok (index-CDow-78A.js:48:72534)
+
+at a4 (index-CDow-78A.15:48:106483)
+
+at MB (index-CDow-78A.15:48:105545)
+
+og (index-CDow-78A.J5:48:105375)
+
+(index-CDow-78A.15:48:102147) at e4
+
+at vw (index-CDow-78A.15:48:113955)
+
+at Of (index-CDow-78A.js:48:112545)
+
+Router... 2025-09-03T12:46:56.0222 ]App. Router تحميل
+
+]App.Router تحميل Router 2025-09-03T12:46:56.0252
+
+index-CDow-78A.15:896
+
+index-CDow-78A.js:896
+
+]ErrorBoundary( الم النقاط خط TypeError: x.filter is not a function
+
+hook.is:608
+
+at ns (index-CDow-7BA.js:606:257924)
+
+at Rv (index-CDow-78A.js:48:34174) at ky (index-CDow-7BA.js:48:62074)
+
+Dk (index-CDow-78A.js:48:72534)
+
+at a4 (index-CDow-7BA.js:48:106483)
+
+at Me (index-CDow-7BA.15:48:105545)
+
+at og (index-CDow-78A.js:48:105375)
+
+at e4 (index CDow-7BA.js:48:102495)
+
+at vw (index-CDow-7BA.js:48:113955)
+
+at of (index-CDow-78A.js:48:112545)
+
+TypeError: x.filter is not a function
+
+at ns (index-CDow-70A.js:606:257924)
+
+at Rv (index-CDow-78A.15:48:34174)
+
+at ky (index-CDow-7BA.js:48:62074) at Dk (index-CDow-78A.15:48:72534)
+
+at a4
+
+(index-CDow-7BA.15:48:106483) a4 at MB (Index-CDow-78A.15:48:105545)
+
+at og (index-CDow 78A.js:48:105375)
+
+at e4 (index-CDow-78A.js:48:102495)
+
+at vw (index-CDow-7BA.15:48:113955)
+
+Df (index-CDow-78A.15:48:112545)
+
+X [Error Boundary( تفاصيل الخطأ: TypeError: x.filter is not a function
+
+ns (index-CDow-78A.js:606:257924)
+
+at Rv (index-CDow-78A.15:48:34174)
+
+at ky (index-CDow-7BA.js:48:62074)
+
+at Dk (index-CDow-78A.js:48:72534) at a4 (Index-CDow-78A.15:48:106483)
+
+hook.js:608
+
+hook.js:608
+
+at MB (index-CDow-70A.js:48:105545)
+
+at og (index-CDow-78A.js:48:105375) at e4 (index-CDow-7BA.15:48:102495)
+
+at vw (index-CDow-7BA.js:48:113955)
+
+at of (index-CDow-7BA.15:48:112545)
+
+{ ymous)'
+
+componentStack: 'In at ns (https://construction-management-1qt13k-CDow-7BA.Js:896:212341) ก
+
+at rne (canon
+
+at
+
+at
+
+[Error Boundary) Stack trace: TypeError: x.filter is not a function
+
+hook.js:608
+
+ms (https://construction-management-1qti3k0qe-mr-199.vercel.app/assets/index-CDow-7BA.js:606:257924)
+
+Rv (https://construction-management-iqt13k0qe-mr-199.vercel.app/assets/index-CDow-7BA.15:48:34174)
+
+at ky (https://construction-management-1qt13k0qe-mr-199.vercel.app/assets/index-CDow-78A.15:48:62074) at Dk (https://construction-management-1gti3koge-mr-199.vercel.app/assets/index-CDow-78A.js:48:72534)
+
+at a4 ( https://construction-management-iqti3koge-mr-199.vercel.app/assets/index-CDow-78A.js:48:100483)
+
+at MB (https://construction-management-19113k0ge-mr-199.vercel.app/assets/index-CDow-7BA.15:48:105545)
+
+at og (https://construction-management-1q113k0qe-mr-199.vercel.app/assets/index-CDow-78A.js:48:105375) at e4 (https://construction-management-1qti3koge-mr-199.vercel.app/assets/index-CDow-7BA.js:48:102495)
+
+at ww (https://construction-management-iqt13k0qe-mr-199.vercel.app/assets/index-CDow-78A.15:48:113955) at of (https://construction-management-1g113k0ge-mr-199.vercel.app/assets/index-CDow-78A.js:48:112545)
+
+GET https://construction-management-loti3k0ue-mr-199.vercel.app/api/materials 404
+
+]QueryClient[ البيانات المستلمة : /api/workers (success: true, data: Array(18), count: 18(
+
+]QueryClient[ استخراج data.data من API response
+
+index-CDow-78A.js:57
+
+index-CDow-7BA.15:57
+
+index-CDow-7BA.js:57
