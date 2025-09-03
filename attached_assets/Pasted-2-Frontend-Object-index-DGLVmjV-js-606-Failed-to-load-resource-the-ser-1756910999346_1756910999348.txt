@@ -1,0 +1,685 @@
+2 بيانات المشروع المحدد في Frontend: Object
+
+index-DGLVmjV-.js:606
+
+Failed to load resource: the server responded with a status of 404 () api/projects/333502b..ummary/2025-09-03:1
+
+]ProtectedRoute[ فحص الحماية : Object
+
+index-DGLVmJV-.js:896
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example.com
+
+index-DGLVmjv.js:896
+
+A soft navigation has been detected: https://construction-management-n5bvg19wo-mr-199.vercel.a index-DGLVmjV-.js:48 po/daily-expenses
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/333502b...ummary/2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404()
+
+api/worker-misc-expe..9&date=2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/333502b...alance/2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/333502b.dateTo=2025-09-03:1
+
+Error fetching worker nisc expenses: Error : المسار غير موجود
+
+at 13 (index-DGLVmJV.js:37:43837)
+
+at async 1 (index-DGLVmJV-.js:57:45086)
+
+at async me (index-DGLVm1V-15:57:45271) at async queryFn (index-DGLVmJV.js:606:281721)
+
+Error fetching previous balance: Error : المسار غير موجود
+
+at 13 (index-DGLVmjV.js:37:43837)
+
+at async 1 (index-DGLVmJV-.js:57:45086) at async me (index-DGLVmJV-.js:57:45271)
+
+at async queryFn (index-DGLVmJV-.15:606:291361)
+
+hook.js:608
+
+hook.js:608
+
+Error fetching material purchases: Error : المسار غير موجود
+
+hook.js:608
+
+at 13 (index-DGLVmjV-.js:57:43837) at async i (index-DGLVmjv-.js:57:45086)
+
+at async me (index-DGLVmjy.js:37:45271) at async queryFn (index-DGLVmJV-.js:606:289054)
+
+Failed to load resource: the server responded with a status of 404 () api/projects/333502b...s?date-2025-09-03:1
+
+Error fetching fund transfers: Еггог: المسار غير
+
+hook.js:608
+
+at 13 (index-DGLVmJV-.js:57:43837)
+
+at async i (index-DGLVmjV-.js:57:45086) at async me (index-DGLVmjy.js:37:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:290979)
+
+Failed to load resource: the server responded with a status of 404() api/worker-transfers..98date-2025-09-03:1
+
+Error fetching worker transfers: Error : المسار غیر موجود
+
+hook.js:608
+
+at 13 (index-DGLVmJV-.js:57:43837)
+
+at async i (index-DGLVmJV-ja:57:45086)
+
+at async me (index-DGLVmjV-.js:57:45271) at async queryFn (index-DGLVmJV-.js:606:289707)
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/project-fund-tra...s?date-2025-09-03:1
+
+Error fetching project transfers: Error : المسار غير موجود
+
+hook.js:608
+
+at 13 (index-DGLVmjV-.js:57:43837)
+
+at async i (index-DGLVmjV.js:57:45086)
+
+at async me (index-DGLVmjV-.js:57:45271) at async queryFn. (index-DGLVmjV-.js:606:290251)
+
+Failed to load resource: the server responded with a status of 404 () api/projects/333502b.s?date=2025-09-03:1
+
+Error fetching transportation expenses: Error : المسار غير موجود
+
+hook.js:608
+
+at 13 (index-DGLVmjV.js:37:43837)
+
+at async i (index-DGLVmjV.js:37:45086) at async me (index-DGLVmJV-.js:57:45271)
+
+at async queryFn (index-DGLVmjV.js:606:288711)
+
+transfer Types - حولة بنكية حفظ قيمة الإكمال التلقاني
+
+تسليم يدوي = transfer Types : تم حفظ قيمة الإكمال التلقائي
+
+شيك transferTypes قيمة الإكمال التلقائي
+
+صراف الى - transfertypes : تم حفظ قيمة الإكمال التلقاني
+
+قيمة الإكمال التلقائي له تحویل داخلی - transfer Types : تم
+
+تقدية - transfer Types : تم حفظ قيمة الإكمال التلقائي .
+
+index-DGLVmJV-.js:606
+
+index-DGLVmjv-.js:606
+
+index-DGLVm1V-.js:606
+
+index-DGLVmJV-.js:606
+
+index-DGLVmjV-.js:606
+
+index-DGLVmJV-.js:606
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147..dateTo-2025-09-03:1
+
+Error fetching material purchases: Error : المسار غير موجود
+
+at 13 (index-DGLVm1V-.15:57:43837)
+
+at async 1 (index-DGLVmJV-.js:57:45086)
+
+at async me (index-DGLVmjv-.js:37:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:289054)
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/project-fund-tra...s?date-2025-09-03:1
+
+Error fetching project transfers: Error : المسار غیر موجود
+
+hook.js:608
+
+at 13 (index-DGLVmjVjs:57:43837)
+
+at async i (index-DGLVmjV-.js:37:45086)
+
+at async me (index DGLVmJV.js:37:45271)
+
+at async queryFn (index-DGLVmJV-15:606:290251)
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147..s?date-2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404() api/worker-transfers..2&date-2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147...s?date-2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147.alance/2025-09-03-1
+
+Failed to load resource: the server responded with a status of 404 () api/worker-misc-expe..2&date=2025-09-03:1
+
+Error fetching transportation expenses : Error : المسار غير موجود
+
+at 13 (index-DGLVm1V-15:57:43837)
+
+at async 1 (index-DGLVmJV-15:57:45086) at async me (index-DGLVmjV.js:37:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:288711)
+
+Error fetching worker transfers: Error : العسار غير موجود at 13 (index-DGLVmJV-.js:57:43837)
+
+at async i (index-DGLVmJV-.js:57:45086) at async me (index-DGLVmjy.js:37:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:289707)
+
+Error fetching fund transfers: Error : المسار غير موجود
+
+at 13 (index-DGLVmjv-.js:57:43837)
+
+at async i (index-DGLVmjV.js:37:45086)
+
+at async me (index-DGLVmjv-.js:57:45271) at async queryFn (index-DGLVjV-.js:606:290979)
+
+Error fetching previous balance: Error: المسار غير موجود
+
+at 13 (index-DGLVmJV-.js:57:43837) at async 1 (index-DGLVm1V-.15:57:45086)
+
+hook.js:608
+
+hook.js:608
+
+hook.js:608
+
+hook.js:608
+at 13 (index-DGLVmJV-.15:57:43837)
+
+at async i (index-DGLVmjV-.js:57:45086)
+
+at async me (index-DGLVmJV-15:57:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:291361)
+
+Error fetching worker nisc expenses: Error : الصار غير موجود
+
+at async i (index DGLVmjV.js:37:45086) (index-DGLY
+
+at 13 (index-DGLVmjVj5:57:43837)
+
+async me (index-DGLVjV-.js:57:45271) s-57-452711
+
+at async queryFn (index-DGLVmjv-.js:606:281721)
+
+Lighthouse >>
+
+المستويات التلقائية
+
+7013
+
+17 314 مشكلة
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/worker-misc-expe..2&date=2025-07-28:1
+
+Error fetching worker misc expenses: Error : المسار عبر موجود
+
+hook.js:608
+
+at 13 (index-GLVmjyjs:37:43837)
+
+at async i (index-DGLVmJV-15:57:45086)
+
+at async me (index-DGLVmJV-.js:57:45271)
+
+at async queryin (index-DGLYmj00:281721:دزل(
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/worker-transfers..2&date=2025-07-28:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/oroiect-fund-tra...s?date=2025-07-28:1
+
+Error fetching worker transfers: Error : المسار غیر موجود
+
+at 13 (index-DGLVmjV.js:37:43837)
+
+index-DGL V at async me (index-DGL VnjV.js: 57:45271)
+
+at async 1 (index-DGLVmJV-.js:57:45086)
+
+at async queryFn (index-DGLVmjV.js:606:289707)
+
+hook.js:608
+
+Failed to load resource; the server responded with a status of 404 ()
+
+api/projects/4dd9147.alance/2025-07-28:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/4dd9147..s?date=2025-07-28:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/4dd9147..datelo-2025-07-28:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/4dd9147..s?date=2025-07-28:1
+
+Error fetching project transfers: Error : المسار غير موجود
+
+at 13 (index-DGLVmjVjs:37:43837)
+
+at async i (index DGLVmJVj5:57:43086)
+
+at async me (index-DGLVV-15:57:45271)
+
+at async queryFn (index-DGLVmjV-.js:606:290251)
+
+Error Tetching previous balance: Error : المسار غیر موجود
+
+at 13 (index-DGLVmjV-.js:37:43837) at async i (index-DGLVmJV-.js:37:45086)
+
+at async me (index-DGLVmJV-15:57:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:291361)
+
+Error fetching fund transfers: Error : المسار غیر موجود
+
+at 13 (index-DGLVmJV- 15:57:43837) at async i (index-DGLVmJV-.15:57:45086)
+
+at async me (index-DGLVmjv-.js:57:45271)
+
+at async queryFn (index-DGLVmjV-.js:606:290979)
+
+Error fetching material purchases: Error : المسار غير موجود
+
+at 13 (index-DGLVmjV-.js:57:43837)
+
+hook.js:608
+
+hook.js:608
+
+hook.js:608
+
+hook.js:008
+
+at async i (index-DGLVmjV-.js:57:45086)
+
+at async me (index-DGLVmjV.js:37:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:289054)
+
+Error fetching transportation expenses: Error : المسار غير موجود
+
+at 13 (index-DGLVmjV-.js:57:43837)
+
+at async i (index DGLVmJV.js:37:45086)
+
+at async me (index-DGLVmjv-.js:57:45271)
+
+at async queryFn (index-DGLVmjV-.js:606:288711)
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/project-fund-tra..s?date=2025-07-28:1
+
+Error fetching project transfers: Error : المسار غير موجود
+
+hook.js:608
+
+at 13 (index-DGLVmjV-.js:57:43837)
+
+at async i (index-DGLVmjV.js:37:45086)
+
+at async me (index-DGLVmJV-.js:57:45271)
+
+at async queryFn (index-DGLVmjV-.js:606:290251)
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/98d6c65..s?date=2025-07-28:1
+
+Error fetching fund transfers: Error : المسار غير موجود
+
+hook.js:608
+
+at 13 (index-DGLVmjVjs:57:43837)
+
+at async 1 (index-DGLVmJV- 15:57:45086) at async me (index-DGLVmJV-.js:57:45271)
+
+at async queryFn (index-DGLVmjyjs:606:290979)
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/98d6c55..alance/2025-07-28:1
+
+api/projects/98d6c65..s?date=2025-07-28:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/98d6c65..dateTo=2025-07-28:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/worker-misc-expe..f&date-2025-07-28:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/worker-transters., fädate-2025-07-28-1
+
+Error fetching previous balance: Error : المسار غیر موجود
+
+at 13 (index-DGLVmjV-.js:57:43837)
+
+at async i (index-DGLVmjV.js:37:45086)
+
+at async me (index-DGLVm1y- 15:57:45271)
+
+at async queryin (index-DGLVmJV-.js:606:291361)
+
+Error fetching transportation expenses : Error : المسار غير موجود
+
+at 13 (index-DGLVmJV-.js:57:43837)
+
+at async i (index-DGLVmJV-15:57:45086) at async me (index-DGLVmJV-.js:57:45271)
+
+at async queryFn (index-DGLVmJV-.js:606:288711)
+
+Error fetching material purchases: Error : المسار غير موجود
+
+hook.js:608
+
+hook.15:608
+
+hook.js:608
+
+at 13 (index-DGLVmjV-.js:37:43837) at async 1 (index-DGLVmJV-.15:57:45086)
+
+at async me (index-DGLVmjV-.js: 57:45271)
+
+at async queryFn (index-DGLVmjv-.js:606:289054)
+
+Error fetching wor worker nisc expenses: Error : المسار غير موجود
+
+hook.js:608
+
+at 13 (index-DGLVmJV-.js:57:43837)
+
+at async 1 (index-DGLVmJV-.js:57:45086)
+
+at async me (index-DGLVmjV-.js:57:45271) at async queryFn (index-DGLVmjy.js:606:281721)
+
+Error fetching worker transfers: Error : المسار غير موجود
+
+at 13 (index-DGLVmJV-15:57:43837)
+
+at async i (index-DGLVmJV-j5:57:45086)
+
+at async me (index-DGLVmJV-.js:57:45271)
+
+async queryFn (index-DGLVmjV-.js:606:289707)
+
+حولة - transfer Types : تم حفظ قيمة الإكمال التلقائي .
+
+hook.js:608
+
+index-DGLVmjv.js:606
+حولة تم: transferTypes الإكمال التلقاني
+
+زین sender Names القيمة الإكمال التلقائي
+
+transfer Numbers : تم حفظ قيمة الإكمال التلقائي له 554632288
+
+Failed to load resource: the server responded with a status of 404 ()
+
+Transfer Numbers 554632288 حفظ قيمة الإكمال التلقائي .
+
+تم: senderNames زين قيمة الإكمال التلقائي
+
+حولة = transfer Types : تم حفظ قيمة الإكمال التلقائي .
+
+Lighthouse >>
+
+المستويات التلقائية
+
+V
+
+7013
+
+17 314 مشكلة
+
+index-DGLVmjV-.js:606
+
+index-DGLVmjV-.js:606
+
+index-DGLVmjV-.js:606
+
+api/fund-transfers:1
+
+index-DGLVmjV-.js:606
+
+index-DGLVm1V-.js:606
+
+index-DGLVm1V-15:606
+
+Failed to load resource: the server responded with a status of 404 ()
+
+senderNames = زين حفظ قيمة الإكمال التلقائي لا
+
+حولة - transfer Types : تم حفظ قيمة الإكمال التلقائي
+
+تم حفظ قيمة الإكمال التلقائي: transfer Numbers 554632288
+
+المسار غير موجود : Error : عطا في إضافة الحولة .
+
+api/fund-transfers:1
+
+index-DGLVmjy.js:000
+
+index DGLVmjy.js:606
+
+index-DGLVmjV-.js:606
+
+hook.js:608
+
+at 13 (index-DGLVmjVjs:37:43837)
+
+at async i (index-DGLVmJV-.js:57:45086)
+
+at asyne me (index-DGLVmjV-.js:57:45271)
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example.com
+
+index-DGLVmjv-.js:896
+
+index-DGLVmjv-.js:896
+
+A pp/workers
+
+soft navigation has been detected: https://construction management-n5bvg19wp-mr-199.vercel.a index-DGLVmjv.js:48
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/workers/16522679..baa2-b2798527efb9:1
+
+Failed to load resource: the server responded with a status of 404()
+
+api/workers/f6522679..baaz-b2798527efb9:1
+
+A Warning: Missing Description' or 'aria-describedby-(undefined) for
+
+(DialogContent}
+
+hook.js:608
+
+>|
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/workers/f6522679..baa2-b2798527efb9:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/workers/16522679..baa2-b2798527efb9:1
+
+]ProtectedRoute فحص الحماية : Object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى للمستخدم : admin@example.com
+
+]App. Router بدم تحميل Router... 2025-09-03T14:45:50.5072
+
+]App. Router بده تحميل Router... 2025-09-03T14:45:50.5102
+
+index-DGLVmjv-.js:896
+
+index-DGLVmjv..js:896
+
+index-DGLVmjv-.js:896
+
+index-DGLVmjV-.js:896
+
+]Error Boundary( تم النقاط خطا : TypeError: Cannot read properties of undefined (reading 'total Income') hook.js:608
+
+index-DGLVmjy.js:621:12747
+
+at Array.map (<anonymous>)
+
+at bee (index-DGLVmJV-.js:621:10603)
+
+at Pv (index-DGLVmjV-.js:48:34174)
+
+at Ry (index-DGLVmjV-.js:48:62074)
+
+Vk (index-DGLVm1V-.15:48:72534) at
+
+at e4 (index-DGLVmJV-5:48:106483) at LB (index-DGLVmJV-.js:48:105545)
+
+at (index-DGLVmjv.js:48:102147)
+
+eg (index-DGLVmjV-.js:48:105375)
+
+A soft navigation has been detected: https://construction-management-n5bvg19wp-mr-199.vercel.a index-DGLVmJV-.js:48
+
+pp/projects
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example.com
+
+]App.Router به تحميل Router... 2025-09-03T14:45:50.5192
+
+]App Router به تحميل Router... 2025-09-03T14:45:50.521Z
+
+index-DGLVmjv..js:896
+
+index-DGLVm1V-.js:896
+
+index-DGLVmjV-.js:896
+
+index-DGLVmjV-.js:896
+
+[ at index-DGLVV-.js:621:12747
+
+ErrorBoundary] تم التقاط خطا : TypeError: Cannot read properties of undefined (reading 'totalIncome') hook.js1008
+
+at Array.map (<anonymous>)
+
+at bee (index-DGLVmjV-.js:621:10603) at Pv (index-DGLVm1V-.15:48:34174)
+
+index-DGL at Ry (index-DGLVmJV-.js:48:62074)
+
+at Vk (index-DGLVmjV-.js:48:72534)
+
+at c4 (index-DGLVmJV-.js:48:106483) at LB (index-DGLVmjV-.js:48:105545)
+
+at eg (index-DGIVmjy.js:48:105375) at r4 (index-DGLVmJV-.js:48:102495)
+
+ТуреЕггor: Cannot read properties of undefined (reading 'totalIncome')
+
+index-DGLVinjV-.js:621:12747
+
+at Array.map (<anonymous»)
+
+at bee (index DGLVmjy.js:621:10603) (index-DGLY
+
+at Ry (index-DGLVmjV-.js:48:62074)
+
+Pv (index-DGLVmjV-.js:48:34174)
+
+at Vk (index-DGLVmjV.js:48:72534)
+
+at c4 (index-DGL VinjV-.js:48:106483)
+
+at LB (index-DGIVmjv-.js:48:105545)
+
+at eg (index-DGLVmjy.js:48:105375) (index-DGLVmV-.js:48:102495)
+
+hook.js:608
+
+X
+
+[ErrorBoundary( تفاصيل الخطة : TypeError: Cannot read properties of undefined (reading 'totalIncome') hook.js:608
+
+at index-DGLVm1V-.js:621:12747
+
+at Array.map (<anonymous>)
+
+at bee (index-DGLVmjV-.js:621:10603)
+
+at Pv (index-DGLVmjV-.js:48:34174)
+
+at Ry (index-DGLVmjVjs:48:62074)
+
+at Vk (index-DGLVmjV-.js:48:72334)
+
+at 4 (index-DGLVmjV-.js:48:106483)
+
+at LB (index-DGLVmjV.js:48:105545)
+
+at cg (index-DGLVm1V-15:48:105375)
+
+at r4 (index-DGLVmjy.js:48:102495) Object.
+
+[Error Boundary] Stack trace: TypeError: Cannot read properties of undefined (reading 'totalIncome')
+
+at https://construction-management-n5bvg19wp-ar-199.vercel.app/assets/index-DGLVmJV-15:621:12747 at Array.map (<anonymous>)
+
+hook.js:608
+
+at bee (https://construction-management-n5bvg19wp-mr-199.vercel.aoo/assets/index-DGLVmJV-.js:621:10603)
+
+at Pv (https://construction-management-n5bvg19ap-mr-199.vercel.app/assets/index-DGLVmJV-15:48:34174) at Ry (https://construction-management-n5bvg19ap-mr-199.vercel.app/assets/index-DGLVmJV-.js:48:62074)
+
+at Vk (https://construction-management-n5bvg19ap-mr-199.vercel.opp/assets/index-DGLVmJV-.js:48:72534)
+
+at c4 (https://construction-management-n5bvg19ap-mr-199.vercel.app/assets/index-DGLVmJV-.15:48:106483)
+
+at LB (https://construction management n5bvg19ap-mr-199.vercel.app/assets/index-DGLVmjV-.js:48:105545) at cg (https://construction-management-n5bvg19ap-mr-199.vercel.app/assets/index-DGLVmjV- 15:48:105375)
+
+at r4 (https://construction-management-n5bvg19ap-mr-199.vercel.app/assets/index-DGLVmJV-15:48:102495)

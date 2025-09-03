@@ -212,7 +212,7 @@ function DailyExpensesContent() {
     queryFn: async () => {
       try {
         const response = await apiRequest(`/api/projects/${selectedProjectId}/attendance?date=${selectedDate}`, "GET");
-        // معالجة الهيكل المتداخل للاستجابة
+        // معالجة آمنة للهيكل المتداخل للاستجابة
         if (response && response.data && Array.isArray(response.data)) {
           return response.data as WorkerAttendance[];
         }
@@ -225,12 +225,15 @@ function DailyExpensesContent() {
     enabled: !!selectedProjectId,
   });
 
+  // معالجة آمنة للبيانات - التأكد من أن البيانات مصفوفات
+  const safeAttendance = Array.isArray(todayAttendance) ? todayAttendance : [];
+
   const { data: todayTransportation = [] } = useQuery<TransportationExpense[]>({
     queryKey: ["/api/projects", selectedProjectId, "transportation-expenses", selectedDate],
     queryFn: async () => {
       try {
         const response = await apiRequest(`/api/projects/${selectedProjectId}/transportation-expenses?date=${selectedDate}`, "GET");
-        // معالجة الهيكل المتداخل للاستجابة
+        // معالجة آمنة للهيكل المتداخل للاستجابة
         if (response && response.data && Array.isArray(response.data)) {
           return response.data as TransportationExpense[];
         }
@@ -243,13 +246,16 @@ function DailyExpensesContent() {
     enabled: !!selectedProjectId,
   });
 
+  // معالجة آمنة للبيانات
+  const safeTransportation = Array.isArray(todayTransportation) ? todayTransportation : [];
+
   const { data: todayMaterialPurchases = [], refetch: refetchMaterialPurchases } = useQuery({
     queryKey: ["/api/projects", selectedProjectId, "material-purchases", selectedDate],
     queryFn: async () => {
       try {
         const response = await apiRequest(`/api/projects/${selectedProjectId}/material-purchases?dateFrom=${selectedDate}&dateTo=${selectedDate}`, "GET");
         console.log("Material purchases response:", response);
-        // معالجة الهيكل المتداخل للاستجابة
+        // معالجة آمنة للهيكل المتداخل للاستجابة
         if (response && response.data && Array.isArray(response.data)) {
           return response.data as any[];
         }
@@ -261,6 +267,9 @@ function DailyExpensesContent() {
     },
     enabled: !!selectedProjectId,
   });
+
+  // معالجة آمنة للبيانات
+  const safeMaterialPurchases = Array.isArray(todayMaterialPurchases) ? todayMaterialPurchases : [];
 
   // جلب معلومات المواد مع معالجة آمنة للأخطاء
   const { data: materials = [] } = useQuery({
@@ -288,6 +297,10 @@ function DailyExpensesContent() {
     queryFn: async () => {
       try {
         const response = await apiRequest(`/api/worker-transfers?projectId=${selectedProjectId}&date=${selectedDate}`, "GET");
+        // معالجة آمنة للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as WorkerTransfer[];
+        }
         return Array.isArray(response) ? response as WorkerTransfer[] : [];
       } catch (error) {
         console.error("Error fetching worker transfers:", error);
@@ -302,14 +315,22 @@ function DailyExpensesContent() {
     queryFn: async () => {
       try {
         const response = await apiRequest(`/api/worker-misc-expenses?projectId=${selectedProjectId}&date=${selectedDate}`, "GET");
+        // معالجة آمنة للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
         return Array.isArray(response) ? response : [];
       } catch (error) {
-        console.error("Error fetching misc expenses:", error);
+        console.error("Error fetching worker misc expenses:", error);
         return [];
       }
     },
     enabled: !!selectedProjectId,
   });
+
+  // معالجة آمنة لباقي البيانات
+  const safeWorkerTransfers = Array.isArray(todayWorkerTransfers) ? todayWorkerTransfers : [];
+  const safeMiscExpenses = Array.isArray(todayMiscExpenses) ? todayMiscExpenses : [];
 
   // جلب عمليات ترحيل الأموال بين المشاريع مع أسماء المشاريع
   const { data: projectTransfers = [] } = useQuery<(ProjectFundTransfer & { fromProjectName?: string; toProjectName?: string })[]>({
@@ -348,6 +369,9 @@ function DailyExpensesContent() {
     gcTime: 300000, // الاحتفاظ بالذاكرة لـ 5 دقائق
   });
 
+  // معالجة آمنة لترحيل المشاريع
+  const safeProjectTransfers = Array.isArray(projectTransfers) ? projectTransfers : [];
+
   const { data: todayFundTransfers = [], refetch: refetchFundTransfers, isLoading: fundTransfersLoading } = useQuery({
     queryKey: ["/api/projects", selectedProjectId, "fund-transfers", selectedDate],
     queryFn: async () => {
@@ -357,7 +381,7 @@ function DailyExpensesContent() {
       
       try {
         const response = await apiRequest(`/api/projects/${selectedProjectId}/fund-transfers?date=${selectedDate}`, "GET");
-        // معالجة الهيكل المتداخل للاستجابة
+        // معالجة آمنة للهيكل المتداخل للاستجابة
         if (response && response.data && Array.isArray(response.data)) {
           return response.data as FundTransfer[];
         }
@@ -373,6 +397,9 @@ function DailyExpensesContent() {
     staleTime: 30000, // البيانات صالحة لـ30 ثانية
     gcTime: 60000, // الاحتفاظ بالذاكرة لدقيقة واحدة
   });
+
+  // معالجة آمنة للعهد
+  const safeFundTransfers = Array.isArray(todayFundTransfers) ? todayFundTransfers : [];
 
   // جلب الرصيد المتبقي من اليوم السابق
   const { data: previousBalance } = useQuery({
@@ -814,7 +841,7 @@ function DailyExpensesContent() {
       0
     );
     
-    // حساب المشتريات النقدية فقط
+    // حساب المشتريات النقدية فقط - استخدام البيانات الآمنة
     const totalMaterialCosts = safeMaterialPurchases
       .filter(purchase => purchase.purchaseType === "نقد")
       .reduce((sum, purchase) => sum + parseFloat(purchase.totalAmount || "0"), 0);
@@ -1072,7 +1099,7 @@ function DailyExpensesContent() {
                 <div className="text-center text-muted-foreground">جاري التحميل...</div>
               ) : Array.isArray(todayFundTransfers) && todayFundTransfers.length > 0 ? (
                 <div className="space-y-2">
-                  {todayFundTransfers.map((transfer, index) => (
+                  {safeFundTransfers.map((transfer, index) => (
                     <div key={transfer.id || index} className="flex justify-between items-center p-2 bg-muted rounded">
                       <div className="text-sm flex-1">
                         <div>{transfer.senderName || 'غير محدد'}</div>
@@ -1141,7 +1168,7 @@ function DailyExpensesContent() {
             </div>
           ) : (
             <div className="space-y-2">
-              {todayAttendance.map((attendance, index) => {
+              {safeAttendance.map((attendance, index) => {
                 const worker = workers.find(w => w.id === attendance.workerId);
                 return (
                   <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
@@ -1236,7 +1263,7 @@ function DailyExpensesContent() {
               </div>
             ) : (
               <div className="mt-3 space-y-2">
-                {todayTransportation.map((expense, index) => (
+                {safeTransportation.map((expense, index) => (
                   <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
                     <span className="text-sm flex-1">{expense.description}</span>
                     <div className="flex items-center gap-2">
@@ -1290,7 +1317,7 @@ function DailyExpensesContent() {
             </div>
           ) : (
             <div className="space-y-2 mb-3">
-              {todayMaterialPurchases.map((purchase, index) => {
+              {safeMaterialPurchases.map((purchase, index) => {
                 const material = purchase.material || (Array.isArray(materials) ? materials.find((m: any) => m.id === purchase.materialId) : null);
                 return (
                 <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
@@ -1391,7 +1418,7 @@ function DailyExpensesContent() {
             </div>
           ) : (
             <div className="space-y-2 mb-3">
-              {todayWorkerTransfers.map((transfer, index) => {
+              {safeWorkerTransfers.map((transfer, index) => {
                 const worker = workers.find(w => w.id === transfer.workerId);
                 return (
                   <div key={index} className="flex justify-between items-center p-3 bg-muted rounded border-r-4 border-warning">
@@ -1501,7 +1528,7 @@ function DailyExpensesContent() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {projectTransfers.map((transfer) => (
+                  {safeProjectTransfers.map((transfer) => (
                     <div 
                       key={transfer.id} 
                       className={`p-3 rounded border-r-4 ${
