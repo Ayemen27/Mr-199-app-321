@@ -1,0 +1,30 @@
+=== Audit started: Wed Sep  3 12:03:49 PM UTC 2025 ===
+# 1. Basic environment info
+User: runner
+Node: v20.19.3
+NPM/Yarn: 10.8.2
+Disk usage (df -h):
+Filesystem                                               Size  Used Avail Use% Mounted on
+overlay                                                   50G   29G   19G  61% /
+tmpfs                                                     64M     0   64M   0% /dev
+overlay                                                   32G  4.1M   32G   1% /nix
+/dev/nbd17                                                32G  4.1M   32G   1% /tmp
+tmpfs                                                     16G   29M   16G   1% /io
+/dev/disk/by-label/nixos                                  50G   29G   19G  61% /pid2
+/dev/disk/by-id/google-nixmodules-b023e33-asia-south1-b   15G   15G     0 100% /etc/nixmodules
+tmpfs                                                    8.0K     0  8.0K   0% /mnt/ruse
+shm                                                       64M     0   64M   0% /dev/shm
+overlay                                                   50G   29G   19G  61% /mnt/cacache/nix
+overlay                                                   50G   29G   19G  61% /mnt/cacache/nix/store
+devtmpfs                                                 3.2G     0  3.2G   0% /dev/tty
+tmpfs                                                     32G     0   32G   0% /proc/acpi
+tmpfs                                                     32G     0   32G   0% /proc/scsi
+tmpfs                                                     32G     0   32G   0% /sys/firmware
+overlay                                                   32G  4.1M   32G   1% /home/runner
+/dev/nbd72                                               256G  2.7G  252G   2% /home/runner/workspace
+/dev/nbd72                                               256G  2.7G  252G   2% /mnt/nix
+overlay                                                  256G  2.7G  252G   2% /nix/store
+Project size (du -sh .):
+3.5G	.
+
+# 2. Git status
