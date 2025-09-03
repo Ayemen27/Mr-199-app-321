@@ -76,76 +76,29 @@ export default function LoginPage() {
     },
   });
 
-  // طفرة تسجيل الدخول
+  // طفرة تسجيل الدخول المبسطة
   const loginMutation = useMutation({
-    mutationFn: async (data: LoginFormData): Promise<LoginResponse> => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok && response.status !== 202 && response.status !== 401) {
-        throw new Error(`خطأ في الشبكة: ${response.status}`);
-      }
-
-      return response.json();
+    mutationFn: async (data: LoginFormData) => {
+      console.log('🔑 بدء تسجيل الدخول:', data.email);
+      return login(data.email, data.password);
     },
-    onSuccess: async (data) => {
-      if (data.success) {
-        try {
-          // استخدام login من useAuth لحفظ البيانات
-          await login(form.getValues().email, form.getValues().password);
-          
-          toast({
-            title: "تم تسجيل الدخول بنجاح",
-            description: `أهلاً وسهلاً ${data.user?.name}`,
-          });
-          
-          // التوجه إلى الصفحة الرئيسية
-          navigate("/");
-        } catch (error) {
-          console.error('خطأ في تحديث حالة المصادقة:', error);
-          // حفظ البيانات يدوياً كحل احتياطي
-          if (data.tokens) {
-            localStorage.setItem('accessToken', data.tokens.accessToken);
-            localStorage.setItem('refreshToken', data.tokens.refreshToken);
-            localStorage.setItem('user', JSON.stringify(data.user));
-          }
-          navigate("/");
-        }
-        
-      } else if (data.requireMFA) {
-        setLoginStep('mfa');
-        toast({
-          title: "مطلوب التحقق الثنائي",
-          description: data.message,
-          variant: "default",
-        });
-      } else if (data.requireVerification) {
-        setLoginStep('verification');
-        toast({
-          title: "مطلوب التحقق من البريد",
-          description: data.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "فشل تسجيل الدخول",
-          description: data.message,
-          variant: "destructive",
-        });
-      }
-    },
-    onError: (error) => {
+    onSuccess: () => {
+      console.log('✅ نجح تسجيل الدخول');
       toast({
-        title: "خطأ في تسجيل الدخول",
-        description: "حدث خطأ أثناء الاتصال بالخادم",
+        title: "تم تسجيل الدخول بنجاح",
+        description: "أهلاً وسهلاً",
+      });
+      
+      // التوجه إلى الصفحة الرئيسية
+      navigate("/");
+    },
+    onError: (error: any) => {
+      console.error('❌ فشل تسجيل الدخول:', error);
+      toast({
+        title: "فشل تسجيل الدخول",
+        description: error.message || "حدث خطأ أثناء الاتصال بالخادم",
         variant: "destructive",
       });
-      console.error('Login error:', error);
     },
   });
 

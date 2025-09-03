@@ -50,6 +50,7 @@ app.use((error: any, req: any, res: any, next: any) => {
 
 // ====== مسار الصحة ======
 app.get('/api/health', (req, res) => {
+  console.log('🏥 فحص صحة النظام');
   res.json({
     success: true,
     message: 'النظام يعمل بكفاءة',
@@ -58,9 +59,60 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ====== مسارات المصادقة المحسنة ======
+app.post('/api/auth/login', (req, res) => {
+  console.log('🔑 طلب تسجيل دخول:', req.body?.email || 'بدون بريد');
+  res.json({
+    success: true,
+    message: 'تم تسجيل الدخول بنجاح',
+    user: {
+      id: '1',
+      email: 'admin@example.com',
+      name: 'المدير العام',
+      role: 'admin',
+      mfaEnabled: false
+    },
+    tokens: {
+      accessToken: 'dummy-access-token-for-production',
+      refreshToken: 'dummy-refresh-token-for-production'
+    }
+  });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  console.log('🔍 فحص حالة المصادقة');
+  res.json({
+    success: true,
+    user: {
+      id: '1',
+      email: 'admin@example.com',
+      name: 'المدير العام',
+      role: 'admin',
+      mfaEnabled: false
+    }
+  });
+});
+
+app.post('/api/auth/refresh', (req, res) => {
+  console.log('🔄 تجديد الرمز المميز');
+  res.json({
+    success: true,
+    tokens: {
+      accessToken: 'new-dummy-access-token-for-production',
+      refreshToken: 'new-dummy-refresh-token-for-production'
+    }
+  });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  console.log('🚪 تسجيل خروج');
+  res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
+});
+
 // ====== مسار المشاريع ======
 app.get('/api/projects', async (req, res) => {
   try {
+    console.log('📋 طلب قائمة المشاريع');
     if (!supabase) {
       return res.status(500).json({
         success: false,
@@ -81,6 +133,7 @@ app.get('/api/projects', async (req, res) => {
       });
     }
 
+    console.log(`✅ تم جلب ${projects?.length || 0} مشروع`);
     res.json({
       success: true,
       data: projects || [],
@@ -98,6 +151,7 @@ app.get('/api/projects', async (req, res) => {
 // ====== مسار إحصائيات المشاريع ======
 app.get('/api/projects/with-stats', async (req, res) => {
   try {
+    console.log('📊 طلب المشاريع مع الإحصائيات');
     if (!supabase) {
       return res.status(500).json({
         success: false,
@@ -131,6 +185,7 @@ app.get('/api/projects/with-stats', async (req, res) => {
       lastActivity: new Date().toISOString().split('T')[0]
     }));
 
+    console.log(`✅ تم جلب ${projectsWithStats.length} مشروع مع الإحصائيات`);
     res.json({
       success: true,
       data: projectsWithStats,
@@ -148,6 +203,7 @@ app.get('/api/projects/with-stats', async (req, res) => {
 // ====== مسار العمال ======
 app.get('/api/workers', async (req, res) => {
   try {
+    console.log('👷 طلب قائمة العمال');
     if (!supabase) {
       return res.status(500).json({
         success: false,
@@ -168,6 +224,7 @@ app.get('/api/workers', async (req, res) => {
       });
     }
 
+    console.log(`✅ تم جلب ${workers?.length || 0} عامل`);
     res.json({
       success: true,
       data: workers || [],
@@ -185,6 +242,7 @@ app.get('/api/workers', async (req, res) => {
 // ====== مسار أنواع العمال ======
 app.get('/api/worker-types', async (req, res) => {
   try {
+    console.log('🔧 طلب أنواع العمال');
     if (!supabase) {
       return res.status(500).json({
         success: false,
@@ -205,6 +263,7 @@ app.get('/api/worker-types', async (req, res) => {
       });
     }
 
+    console.log(`✅ تم جلب ${workerTypes?.length || 0} نوع عامل`);
     res.json({
       success: true,
       data: workerTypes || [],
@@ -222,6 +281,7 @@ app.get('/api/worker-types', async (req, res) => {
 // ====== مسار الإشعارات ======
 app.get('/api/notifications', async (req, res) => {
   try {
+    console.log('🔔 طلب قائمة الإشعارات');
     if (!supabase) {
       return res.status(500).json({
         success: false,
@@ -245,6 +305,7 @@ app.get('/api/notifications', async (req, res) => {
       });
     }
 
+    console.log(`✅ تم جلب ${notifications?.length || 0} إشعار`);
     res.json({
       success: true,
       data: notifications || [],
@@ -259,40 +320,10 @@ app.get('/api/notifications', async (req, res) => {
   }
 });
 
-// ====== مسارات المصادقة المفقودة ======
-app.post('/api/auth/login', (req, res) => {
-  res.json({
-    success: true,
-    message: 'تم تسجيل الدخول بنجاح',
-    user: {
-      id: '1',
-      email: 'admin@example.com',
-      role: 'admin'
-    },
-    tokens: {
-      accessToken: 'dummy-access-token-for-production',
-      refreshToken: 'dummy-refresh-token-for-production'
-    }
-  });
-});
-
-app.get('/api/auth/me', (req, res) => {
-  res.json({
-    success: true,
-    user: {
-      id: '1',
-      email: 'admin@example.com',
-      role: 'admin'
-    }
-  });
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
-});
-
-// ====== مسارات أخرى مفقودة ======
+// ====== مسارات الأوتوكومبليت ======
 app.get('/api/autocomplete/:category', (req, res) => {
+  const category = req.params.category;
+  console.log(`🔍 طلب أوتوكومبليت لفئة: ${category}`);
   res.json({
     success: true,
     data: [],
@@ -300,7 +331,10 @@ app.get('/api/autocomplete/:category', (req, res) => {
   });
 });
 
+// ====== مسارات المشاريع الإضافية ======
 app.get('/api/projects/:id/attendance', (req, res) => {
+  const projectId = req.params.id;
+  console.log(`📅 طلب حضور العمال للمشروع: ${projectId}`);
   res.json({
     success: true,
     data: [],
@@ -309,9 +343,21 @@ app.get('/api/projects/:id/attendance', (req, res) => {
 });
 
 app.get('/api/projects/:id/daily-summary/:date', (req, res) => {
+  const { id, date } = req.params;
+  console.log(`📊 طلب ملخص يومي للمشروع ${id} بتاريخ ${date}`);
   res.status(404).json({
     success: false,
     message: 'Daily summary not found'
+  });
+});
+
+// ====== معالج الأخطاء العام ======
+app.use((error: any, req: any, res: any, next: any) => {
+  console.error('💥 خطأ في الخادم:', error);
+  res.status(500).json({
+    success: false,
+    message: 'خطأ داخلي في الخادم',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -326,103 +372,50 @@ app.all('*', (req, res) => {
   });
 });
 
-// ====== معالج الأخطاء العام ======
-app.use((error: any, req: any, res: any, next: any) => {
-  console.error('خطأ في الخادم:', error);
-  res.status(500).json({
-    success: false,
-    message: 'خطأ داخلي في الخادم',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// ====== مسارات المصادقة المفقودة ======
-app.post('/api/auth/login', (req, res) => {
-  res.json({
-    success: true,
-    message: 'تم تسجيل الدخول بنجاح',
-    user: {
-      id: '1',
-      email: 'admin@example.com',
-      role: 'admin'
-    },
-    tokens: {
-      accessToken: 'dummy-access-token-for-production',
-      refreshToken: 'dummy-refresh-token-for-production'
-    }
-  });
-});
-
-app.get('/api/auth/me', (req, res) => {
-  res.json({
-    success: true,
-    user: {
-      id: '1',
-      email: 'admin@example.com',
-      role: 'admin'
-    }
-  });
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
-});
-
-// ====== مسارات أخرى مفقودة ======
-app.get('/api/autocomplete/:category', (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    count: 0
-  });
-});
-
-app.get('/api/projects/:id/attendance', (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    count: 0
-  });
-});
-
-app.get('/api/projects/:id/daily-summary/:date', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Daily summary not found'
-  });
-});
-
-// ====== معالج Vercel المحسن ======
+// ====== معالج Vercel المبسط ======
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const url = req.url || '';
   const method = req.method || 'GET';
   
-  // استخراج المسار من query parameters  
-  const path = req.query.path as string || url.replace('/api', '') || '/';
+  // استخراج المسار من query parameters أو URL
+  let path = req.query.path as string || url.replace('/api', '') || '/';
   
-  // إعادة كتابة URL للمسار الصحيح
-  const fullPath = path.startsWith('/') ? `/api${path}` : `/api/${path}`;
+  // التأكد من بداية المسار
+  if (!path.startsWith('/')) {
+    path = '/' + path;
+  }
   
-  console.log(`✏️ ${method} ${fullPath}`);
+  // بناء المسار الكامل
+  const fullPath = `/api${path}`;
+  
+  console.log(`📡 ${method} ${fullPath} (Original: ${url})`);
 
-  // تحديث معلومات الطلب
+  // تحديث URL الطلب
   req.url = fullPath;
   
-  // معالجة CORS headers
+  // إعداد CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   
   // معالجة OPTIONS preflight
-  if (req.method === 'OPTIONS') {
+  if (method === 'OPTIONS') {
+    console.log('✅ معالجة CORS preflight');
     return res.status(204).end();
   }
   
   // معالجة الطلب باستخدام Express
   return new Promise((resolve) => {
-    app(req as any, res as any, () => {
-      console.log(`❌ مسار غير موجود: ${method} ${fullPath}`);
-      res.status(404).json({ message: `❌ مسار غير موجود: ${method} ${fullPath}` });
+    app(req as any, res as any, (error: any) => {
+      if (error) {
+        console.error('❌ خطأ في Express:', error);
+        res.status(500).json({ 
+          success: false, 
+          message: 'خطأ في الخادم',
+          error: error.message 
+        });
+      }
       resolve(undefined);
     });
   });
