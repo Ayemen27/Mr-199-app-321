@@ -722,6 +722,169 @@ app.get('/api/workers/:id', async (req, res) => {
   }
 });
 
+// مسار تحديث العامل - PATCH /api/workers/:id
+app.patch('/api/workers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    console.log(`✏️ تحديث بيانات العامل: ${id}`);
+    
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'قاعدة البيانات غير متصلة'
+      });
+    }
+
+    const { data: worker, error } = await supabase
+      .from('workers')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.log('⚠️ خطأ في تحديث العامل:', error);
+      return res.status(400).json({
+        success: false,
+        message: 'فشل في تحديث العامل'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: worker
+    });
+  } catch (error) {
+    console.error('خطأ في تحديث العامل:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطأ داخلي في الخادم'
+    });
+  }
+});
+
+// مسار حذف العامل - DELETE /api/workers/:id
+app.delete('/api/workers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`🗑️ حذف العامل: ${id}`);
+    
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'قاعدة البيانات غير متصلة'
+      });
+    }
+
+    const { error } = await supabase
+      .from('workers')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.log('⚠️ خطأ في حذف العامل:', error);
+      return res.status(400).json({
+        success: false,
+        message: 'فشل في حذف العامل'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'تم حذف العامل بنجاح'
+    });
+  } catch (error) {
+    console.error('خطأ في حذف العامل:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطأ داخلي في الخادم'
+    });
+  }
+});
+
+// مسار تحديث العامل - PUT /api/workers/:id (للتوافق مع add-worker-form)
+app.put('/api/workers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    console.log(`✏️ تحديث كامل للعامل: ${id}`);
+    
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'قاعدة البيانات غير متصلة'
+      });
+    }
+
+    const { data: worker, error } = await supabase
+      .from('workers')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.log('⚠️ خطأ في تحديث العامل:', error);
+      return res.status(400).json({
+        success: false,
+        message: 'فشل في تحديث العامل'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: worker
+    });
+  } catch (error) {
+    console.error('خطأ في تحديث العامل:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطأ داخلي في الخادم'
+    });
+  }
+});
+
+// مسار إضافة عامل جديد - POST /api/workers
+app.post('/api/workers', async (req, res) => {
+  try {
+    const workerData = req.body;
+    console.log(`➕ إضافة عامل جديد:`, workerData.name);
+    
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'قاعدة البيانات غير متصلة'
+      });
+    }
+
+    const { data: worker, error } = await supabase
+      .from('workers')
+      .insert([workerData])
+      .select()
+      .single();
+
+    if (error) {
+      console.log('⚠️ خطأ في إضافة العامل:', error);
+      return res.status(400).json({
+        success: false,
+        message: 'فشل في إضافة العامل'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: worker
+    });
+  } catch (error) {
+    console.error('خطأ في إضافة العامل:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطأ داخلي في الخادم'
+    });
+  }
+});
+
 // مسار العهد العام (بدون مشروع محدد) 
 app.get('/api/fund-transfers', async (req, res) => {
   try {

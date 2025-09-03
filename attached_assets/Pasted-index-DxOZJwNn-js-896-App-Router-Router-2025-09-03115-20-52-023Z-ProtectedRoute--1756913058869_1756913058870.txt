@@ -1,0 +1,233 @@
+index-DxOZJwNn.js:896
+
+]App. Router به تحميل Router... 2025-09-03115:20:52.023Z
+
+]ProtectedRoute[ فحص الحماية Object
+
+]ProtectedRoute[ في حالة تحميل إظهار شاشة التحميل
+
+]AuthProvider[ 03-09-2025 ... 15:20:52.0712 بدء تهيئة المصادقة
+
+]AuthProvider[ فحص البيانات المحفوظة : Object
+
+]AuthProvider( لا توجد بهاتان محفوظة
+
+]AuthProvider[ انتهاء تهيئة المصادقة isLoading false
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]ProtectedRoute[ 1081 غير مصادق عليه إعادة توجيه إلى
+
+index-DxOZ.JWNn.js:896
+
+index-DxOZJwNn.js:896
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.15:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:896
+
+index-DxOZJwNn.js:896
+
+(محاولة (17) React تم العثور على محتوى .
+
+VI/12:32
+
+العد التنازلي . ... تم تحميل النافذة.
+
+VI12:19
+
+التحميل
+
+VM12:8
+
+بدء تسجيل الدخول اللي : admin@test.com
+
+index-DxOZJwNn.js:606
+
+]AuthProvider.login[ بند تسجيل الدخول : admin@test.com 2025-09-03T15:20:59.5692
+
+index-DxOZJwNn.js:606
+
+]AuthProvider.login ارسال طلب تسجيل الدخول إلى /api/auth/login
+
+index-DxOZ.JWNn.js:606
+
+]AuthProvider.login[ 200 : استجابة تسجيل الدخول
+
+index-DxOZJwNn.js:606
+
+]AuthProvider.login[ بيانات الاستجابة: object
+
+index-DxOZJwNn.js:606
+
+]AuthProvider login( نجح تسجيل الدخول حفظ بيانات المستخدم : admin@example.com
+
+index-DxOZJwNn.js:606
+
+]AuthProvider.login[ الرموز من tokens object
+
+index-DxOZ.JWNn.js:606
+
+]AuthProvider login[ تحديث cache queries
+
+index-DxOZJwNn.js:606
+
+]AuthProvider login[ اكتمل تسجيل الدخول بنجاح
+
+index-DxOZJwNn.js:606
+
+نجح تسجيل الدخول .
+
+index-DxOZJwNn.js:606
+
+A soft navigation has been detected: https://construction-management-taen1xm6n-mr-199.vercel.a
+
+index-DxOZJwNn.js:57
+
+RP/
+
+]ProtectedRoute[ فحص الحماية Object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example
+
+2 بيانات المشروع المحدد في Frontend : Object
+
+: مشروع الحبشي - تحقق من البيانات . Object
+
+index-DxOZJwNn.js:896
+
+index-DxOZ.JWNn.js:896
+
+index-DxQZ.JWNn.js:606
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/4dd9147..ummary/2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 () a01/projects/4dd9147..ummary/2025-09-03:1
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى للمستخدم : admin@example.com
+
+index-DxOZJwNn.js:896
+
+index-DxOZJwNn.js:896
+
+A soft navigation has been detected: https://construction-management-faen1xm6n-mr-199.vercel.a
+
+index-DxOZJwNn.15:48
+
+pp/daily-expenses
+
+Material purchases response: Object
+
+حفظ القيمة الإكمال التلقائي transfer Types = حولة بنكية
+
+القيمة الإكمال التلقائي transfer Types تسليم يدوي
+
+قيمة الإكمال التلكاني transfer Types صراف آلى
+
+القيمة الإكمال التلقائي transfer Types= تحويل داخلي
+
+قيمة الإكمال التلقائي transferTypes
+
+transfertypes تم حفظ قيمة الإكمال التلقائي . نقدية
+
+شيك
+
+Material purchases response: Object
+
+Material purchases response: Object
+
+Material purchases response: Object
+
+Material purchases response: Object
+
+Material purchases response: Object
+
+Material purchases response: Object
+
+Material purchases response: Object
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.15:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.15:606
+
+index-DxQZ.JWNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.15:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZ.JWN.js:606
+
+A soft navigation has been detected: https://construction-management-faenixmon-mr-199.vercel.a
+
+index-DxOZJwNn.js:48
+
+pp/project-transfers
+
+]QueryClient[ البيانات المستلمة : /api/project-fund-transfers Object
+
+]QueryClient[ استخراج data.data من API response
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example.com
+
+index-DxOZJwNn.js.57
+
+index-DxOZJwNn.js:57
+
+index-DxOZJwNn.js:896
+
+index-DxOZ.JWNn.js:896
+
+A soft navigation has been detected: https://construction-management-faenjxmon-mr-199.vercel.a index-DxOZJwNn.js:48 pp/workers
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/workers/f0522079.baaz-b2798327efb9:1
+
+Failed to load resource: the server responded with a status of 404()
+
+api/workers/f6522079..baaz-b2798527efb9:1
+
+Warning: Missing Description aria-describedby=(undefined) for
+
+(DialogContent}
+
+Failed to load resource: the server responded with a status of 404 ()
+
+Failed to load resource: the server responded with a status of 404 ()
+
+hook.js:608
+
+api/workers:1
+
+api/workers:1
