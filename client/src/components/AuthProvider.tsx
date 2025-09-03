@@ -47,47 +47,67 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // تحقق من وجود مستخدم محفوظ عند بدء التطبيق
   useEffect(() => {
     const initAuth = async () => {
+      console.log('🔐 [AuthProvider] بدء تهيئة المصادقة...', new Date().toISOString());
       try {
         const savedUser = localStorage.getItem('user');
         const accessToken = localStorage.getItem('accessToken');
         
+        console.log('🔍 [AuthProvider] فحص البيانات المحفوظة:', {
+          hasUser: !!savedUser,
+          hasToken: !!accessToken,
+          userPreview: savedUser ? JSON.parse(savedUser).email : 'غير موجود'
+        });
+        
         if (savedUser && accessToken) {
+          console.log('✅ [AuthProvider] تم العثور على بيانات محفوظة، التحقق من صحتها...');
           // التحقق من صحة الرمز المميز مع النظام المتقدم
           try {
+            console.log('📡 [AuthProvider] إرسال طلب التحقق إلى /api/auth/me');
             const response = await fetch('/api/auth/me', {
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
               },
             });
             
+            console.log('📨 [AuthProvider] استجابة /api/auth/me:', response.status);
+            
             if (response.ok) {
               const data = await response.json();
+              console.log('📋 [AuthProvider] بيانات المستخدم من API:', data);
               if (data.success) {
+                console.log('✅ [AuthProvider] تم التحقق بنجاح، حفظ المستخدم:', data.user.email);
                 setUser(data.user);
                 return;
               }
             }
             
+            console.log('🔄 [AuthProvider] فشل التحقق، محاولة تجديد الرمز...');
             // إذا فشل التحقق، محاولة تجديد الرمز
             const refreshSuccess = await refreshToken();
             if (!refreshSuccess) {
+              console.log('❌ [AuthProvider] فشل تجديد الرمز، مسح البيانات المحفوظة');
               // مسح البيانات المحفوظة إذا فشل التجديد
               localStorage.removeItem('user');
               localStorage.removeItem('accessToken');
               localStorage.removeItem('refreshToken');
+            } else {
+              console.log('✅ [AuthProvider] نجح تجديد الرمز');
             }
           } catch (error) {
-            console.error('خطأ في التحقق من الرمز:', error);
+            console.error('❌ [AuthProvider] خطأ في التحقق من الرمز:', error);
             // مسح البيانات المحفوظة في حالة الخطأ
             localStorage.removeItem('user');
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
           }
+        } else {
+          console.log('ℹ️ [AuthProvider] لا توجد بيانات محفوظة');
         }
       } catch (error) {
-        console.error('خطأ في تحقق المصادقة:', error);
+        console.error('❌ [AuthProvider] خطأ في تحقق المصادقة:', error);
         // إذا حدث خطأ، لا تسجل خروج، فقط امسح التحميل
       } finally {
+        console.log('🏁 [AuthProvider] انتهاء تهيئة المصادقة، isLoading = false');
         setIsLoading(false);
       }
     };
@@ -97,6 +117,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // تسجيل الدخول
   const login = async (email: string, password: string) => {
+    console.log('🔑 [AuthProvider.login] بدء تسجيل الدخول:', email, new Date().toISOString());
+    
+    console.log('📡 [AuthProvider.login] إرسال طلب تسجيل الدخول إلى /api/auth/login');
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
@@ -105,23 +128,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       body: JSON.stringify({ email, password }),
     });
 
+    console.log('📨 [AuthProvider.login] استجابة تسجيل الدخول:', response.status);
     const data = await response.json();
+    console.log('📋 [AuthProvider.login] بيانات الاستجابة:', data);
 
     if (data.success) {
+      console.log('✅ [AuthProvider.login] نجح تسجيل الدخول، حفظ بيانات المستخدم:', data.user.email);
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       // معالجة كلاً من tokens.accessToken و token (للتوافق مع Vercel)
       if (data.tokens && data.tokens.accessToken) {
+        console.log('💾 [AuthProvider.login] حفظ الرموز من tokens object');
         localStorage.setItem('accessToken', data.tokens.accessToken);
         localStorage.setItem('refreshToken', data.tokens.refreshToken || '');
       } else if (data.token) {
+        console.log('💾 [AuthProvider.login] حفظ الرموز من token field');
         localStorage.setItem('accessToken', data.token);
         localStorage.setItem('refreshToken', data.refreshToken || '');
       }
       
+      console.log('🔄 [AuthProvider.login] تحديث cache queries');
       queryClient.invalidateQueries();
+      console.log('🎉 [AuthProvider.login] اكتمل تسجيل الدخول بنجاح');
     } else {
+      console.log('❌ [AuthProvider.login] فشل تسجيل الدخول:', data.message);
       throw new Error(data.message);
     }
   };

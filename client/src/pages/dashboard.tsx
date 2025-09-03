@@ -44,6 +44,8 @@ interface ProjectWithStats extends Project {
 }
 
 export default function Dashboard() {
+  console.log('🏠 [Dashboard] بدء تحميل لوحة القيادة...', new Date().toISOString());
+  
   const [, setLocation] = useLocation();
   const { selectedProjectId, selectProject } = useSelectedProject();
   const [showFloatingMenu, setShowFloatingMenu] = useState(false);
@@ -94,8 +96,19 @@ export default function Dashboard() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // تأخير متزايد
   });
 
+  // تتبع حالة استعلام المشاريع
+  console.log('📊 [Dashboard] حالة استعلام المشاريع:', {
+    isLoading: projectsLoading,
+    hasData: !!projectsResponse,
+    hasError: !!projectsError,
+    dataCount: (projectsResponse as any)?.data?.length || 0,
+    timestamp: new Date().toISOString()
+  });
+
   // التأكد من أن projects مصفوفة صالحة
   const projects = Array.isArray((projectsResponse as any)?.data) ? (projectsResponse as any).data : [];
+
+  console.log('📋 [Dashboard] المشاريع المحملة:', projects.length, 'مشروع');
 
   // جلب أنواع العمال من قاعدة البيانات
   const { data: workerTypesResponse, error: workerTypesError, refetch: refetchWorkerTypes } = useQuery({

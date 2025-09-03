@@ -56,6 +56,8 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
+  console.log('🧭 [App.Router] بدء تحميل Router...', new Date().toISOString());
+  
   return (
     <Switch>
       {/* صفحات غير محمية - بدون شريط علوي أو سفلي */}
