@@ -277,7 +277,7 @@ export function EquipmentManagement() {
       // إضافة رأس التقرير الاحترافي
       const reportProjectName = reportProjectFilter === "all" ? "جميع المشاريع" : 
                                 reportProjectFilter === "warehouse" ? "المستودع" :
-                                projects.find((p: any) => p.id === reportProjectFilter)?.name || "مشروع محدد";
+                                (Array.isArray(projects) ? projects.find((p: any) => p.id === reportProjectFilter)?.name : undefined) || "مشروع محدد";
       
       let currentRow = addReportHeader(
         worksheet,
@@ -323,7 +323,7 @@ export function EquipmentManagement() {
       // إضافة بيانات المعدات
       filteredEquipment.forEach((item: Equipment, index: number) => {
         const projectName = item.currentProjectId 
-          ? projects.find((p: any) => p.id === item.currentProjectId)?.name || 'مشروع غير معروف'
+          ? (Array.isArray(projects) ? projects.find((p: any) => p.id === item.currentProjectId)?.name : undefined) || 'مشروع غير معروف'
           : 'المستودع';
         
         const row = worksheet.addRow([
@@ -434,7 +434,7 @@ export function EquipmentManagement() {
       // Generate filename
       const filenameProjectName = reportProjectFilter === "all" ? "جميع_المشاريع" : 
                                   reportProjectFilter === "warehouse" ? "المستودع" :
-                                  projects.find((p: any) => p.id === reportProjectFilter)?.name?.replace(/\s/g, '_') || "مشروع_محدد";
+                                  (Array.isArray(projects) ? projects.find((p: any) => p.id === reportProjectFilter)?.name : undefined)?.replace(/\s/g, '_') || "مشروع_محدد";
       
       const filename = `كشف_المعدات_${filenameProjectName}_${new Date().toISOString().split('T')[0]}.xlsx`;
       
@@ -480,7 +480,7 @@ export function EquipmentManagement() {
       // Create print content
       const pdfProjectName = reportProjectFilter === "all" ? "جميع المشاريع" : 
                              reportProjectFilter === "warehouse" ? "المستودع" :
-                             projects.find((p: any) => p.id === reportProjectFilter)?.name || "مشروع محدد";
+                             (Array.isArray(projects) ? projects.find((p: any) => p.id === reportProjectFilter)?.name : undefined) || "مشروع محدد";
       
       const printContent = `
         <html dir="rtl">
@@ -707,7 +707,7 @@ export function EquipmentManagement() {
               <tbody>
                 ${filteredEquipment.map((item: Equipment) => {
                   const itemProjectName = item.currentProjectId 
-                    ? projects.find((p: any) => p.id === item.currentProjectId)?.name || 'مشروع غير معروف'
+                    ? (Array.isArray(projects) ? projects.find((p: any) => p.id === item.currentProjectId)?.name : undefined) || 'مشروع غير معروف'
                     : 'المستودع';
                   
                   return `
@@ -1224,7 +1224,7 @@ export function EquipmentManagement() {
                         <MapPin className="h-3 w-3" />
                         <span className="truncate" data-testid={`text-location-${item.id}`}>
                           {item.currentProjectId 
-                            ? projects.find((p: any) => p.id === item.currentProjectId)?.name || 'مشروع غير معروف'
+                            ? (Array.isArray(projects) ? projects.find((p: any) => p.id === item.currentProjectId)?.name : undefined) || 'مشروع غير معروف'
                             : 'المستودع'
                           }
                         </span>

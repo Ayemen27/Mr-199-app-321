@@ -179,9 +179,29 @@ export const getQueryFn: <T>(options: {
       // تسجيل وفحص البيانات المُستلمة
       console.log('📊 [QueryClient] البيانات المُستلمة:', queryKey[0], data);
       
-      // حماية إضافية من مشاكل البيانات
+      // حماية إضافية من مشاكل البيانات وإستخراج البيانات الفعلية
       if (data && typeof data === 'object') {
-        // التأكد من أن data.data مصفوفة إذا كانت موجودة
+        // إذا كانت البيانات في الشكل { success, data, count } (شكل Vercel API)
+        if (data.success !== undefined && data.data !== undefined) {
+          console.log('🔧 [QueryClient] استخراج data.data من API response');
+          
+          // التأكد من أن data.data مصفوفة
+          if (data.data !== null && !Array.isArray(data.data)) {
+            console.warn('🚨 [QueryClient] تحذير: data.data ليست مصفوفة، تحويل إلى مصفوفة فارغة');
+            console.warn('🔍 نوع البيانات الحالي:', typeof data.data, data.data);
+            return [];
+          }
+          
+          // إرجاع البيانات الفعلية (المصفوفة)
+          return data.data || [];
+        }
+        
+        // إذا كانت البيانات مصفوفة مباشرة (شكل Replit)
+        if (Array.isArray(data)) {
+          return data;
+        }
+        
+        // حماية إضافية - إذا كانت data.data موجودة ولكن success غير محدد
         if (data.data !== undefined && data.data !== null && !Array.isArray(data.data)) {
           console.warn('🚨 [QueryClient] تحذير: data.data ليست مصفوفة، تحويل إلى مصفوفة فارغة');
           console.warn('🔍 نوع البيانات الحالي:', typeof data.data, data.data);

@@ -199,7 +199,7 @@ export default function Dashboard() {
 
 
 
-  const selectedProject = projects.find((p: ProjectWithStats) => p.id === selectedProjectId);
+  const selectedProject = Array.isArray(projects) ? projects.find((p: ProjectWithStats) => p.id === selectedProjectId) : undefined;
 
 
 

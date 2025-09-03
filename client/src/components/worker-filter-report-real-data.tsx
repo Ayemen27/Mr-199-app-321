@@ -360,7 +360,7 @@ export default function WorkerFilterReportRealData() {
       const imgData = canvas.toDataURL('image/png', 1.0);
       const link = document.createElement('a');
       const projectName = selectedProjectIds.length === 1 ? 
-        projects.find(p => p.id === selectedProjectIds[0])?.name || 'مشروع' : 'جميع_المشاريع';
+        (Array.isArray(projects) ? projects.find(p => p.id === selectedProjectIds[0])?.name : undefined) || 'مشروع' : 'جميع_المشاريع';
       link.download = `تقرير_تصفية_العمال_${projectName}_${formatDate(dateFrom)}_إلى_${formatDate(dateTo)}.png`;
       link.href = imgData;
       document.body.appendChild(link);

@@ -84,7 +84,7 @@ export function TransferEquipmentDialog({ equipment, open, onOpenChange, project
   const getCurrentLocationName = () => {
     if (!equipment) return "";
     if (!equipment.currentProjectId) return "المستودع";
-    const project = projects.find(p => p.id === equipment.currentProjectId);
+    const project = Array.isArray(projects) ? projects.find(p => p.id === equipment.currentProjectId) : undefined;
     return project ? project.name : "مشروع غير معروف";
   };
 

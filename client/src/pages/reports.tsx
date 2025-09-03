@@ -100,8 +100,8 @@ export default function Reports() {
     staleTime: 30000,
   });
 
-  const selectedProject = projects.find(p => p.id === selectedProjectId);
-  const selectedProjectWithStats = projectsWithStats.find((p: any) => p.id === selectedProjectId);
+  const selectedProject = Array.isArray(projects) ? projects.find(p => p.id === selectedProjectId) : undefined;
+  const selectedProjectWithStats = Array.isArray(projectsWithStats) ? projectsWithStats.find((p: any) => p.id === selectedProjectId) : undefined;
   const projectStats = selectedProjectWithStats?.stats || {};
 
   // حساب الإحصائيات
