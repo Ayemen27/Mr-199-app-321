@@ -172,18 +172,55 @@ function DailyExpensesContent() {
 
   const { data: workers = [] } = useQuery<Worker[]>({
     queryKey: ["/api/workers"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/workers", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Worker[];
+        }
+        return Array.isArray(response) ? response as Worker[] : [];
+      } catch (error) {
+        console.error("Error fetching workers:", error);
+        return [];
+      }
+    },
+    staleTime: 300000, // 5 دقائق
+    gcTime: 600000, // 10 دقائق
   });
 
   // جلب قائمة المشاريع لعرض أسماء المشاريع في ترحيل الأموال
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/projects", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Project[];
+        }
+        return Array.isArray(response) ? response as Project[] : [];
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        return [];
+      }
+    },
   });
 
   const { data: todayAttendance = [] } = useQuery<WorkerAttendance[]>({
     queryKey: ["/api/projects", selectedProjectId, "attendance", selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/projects/${selectedProjectId}/attendance?date=${selectedDate}`, "GET");
-      return Array.isArray(response) ? response as WorkerAttendance[] : [];
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/attendance?date=${selectedDate}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as WorkerAttendance[];
+        }
+        return Array.isArray(response) ? response as WorkerAttendance[] : [];
+      } catch (error) {
+        console.error("Error fetching attendance:", error);
+        return [];
+      }
     },
     enabled: !!selectedProjectId,
   });
@@ -191,8 +228,17 @@ function DailyExpensesContent() {
   const { data: todayTransportation = [] } = useQuery<TransportationExpense[]>({
     queryKey: ["/api/projects", selectedProjectId, "transportation-expenses", selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/projects/${selectedProjectId}/transportation-expenses?date=${selectedDate}`, "GET");
-      return Array.isArray(response) ? response as TransportationExpense[] : [];
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/transportation-expenses?date=${selectedDate}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as TransportationExpense[];
+        }
+        return Array.isArray(response) ? response as TransportationExpense[] : [];
+      } catch (error) {
+        console.error("Error fetching transportation expenses:", error);
+        return [];
+      }
     },
     enabled: !!selectedProjectId,
   });
@@ -200,9 +246,18 @@ function DailyExpensesContent() {
   const { data: todayMaterialPurchases = [], refetch: refetchMaterialPurchases } = useQuery({
     queryKey: ["/api/projects", selectedProjectId, "material-purchases", selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/projects/${selectedProjectId}/material-purchases?dateFrom=${selectedDate}&dateTo=${selectedDate}`, "GET");
-      console.log("Material purchases response:", response);
-      return Array.isArray(response) ? response as any[] : [];
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/material-purchases?dateFrom=${selectedDate}&dateTo=${selectedDate}`, "GET");
+        console.log("Material purchases response:", response);
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as any[];
+        }
+        return Array.isArray(response) ? response as any[] : [];
+      } catch (error) {
+        console.error("Error fetching material purchases:", error);
+        return [];
+      }
     },
     enabled: !!selectedProjectId,
   });
@@ -260,21 +315,35 @@ function DailyExpensesContent() {
   const { data: projectTransfers = [] } = useQuery<(ProjectFundTransfer & { fromProjectName?: string; toProjectName?: string })[]>({
     queryKey: ["/api/project-fund-transfers", selectedProjectId, selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/project-fund-transfers?date=${selectedDate}`, "GET");
-      if (!Array.isArray(response)) return [];
-      
-      const filteredTransfers = response.filter((transfer: ProjectFundTransfer) => 
-        transfer.fromProjectId === selectedProjectId || transfer.toProjectId === selectedProjectId
-      );
-      
-      // إضافة أسماء المشاريع
-      return filteredTransfers.map((transfer: ProjectFundTransfer) => ({
-        ...transfer,
-        fromProjectName: projects.find(p => p.id === transfer.fromProjectId)?.name || 'مشروع غير معروف',
-        toProjectName: projects.find(p => p.id === transfer.toProjectId)?.name || 'مشروع غير معروف'
-      }));
+      try {
+        const response = await apiRequest(`/api/project-fund-transfers?date=${selectedDate}`, "GET");
+        
+        // معالجة الهيكل المتداخل للاستجابة
+        let transferData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          transferData = response.data;
+        } else if (Array.isArray(response)) {
+          transferData = response;
+        }
+        
+        if (!Array.isArray(transferData)) return [];
+        
+        const filteredTransfers = transferData.filter((transfer: ProjectFundTransfer) => 
+          transfer.fromProjectId === selectedProjectId || transfer.toProjectId === selectedProjectId
+        );
+        
+        // إضافة أسماء المشاريع
+        return filteredTransfers.map((transfer: ProjectFundTransfer) => ({
+          ...transfer,
+          fromProjectName: projects.find(p => p.id === transfer.fromProjectId)?.name || 'مشروع غير معروف',
+          toProjectName: projects.find(p => p.id === transfer.toProjectId)?.name || 'مشروع غير معروف'
+        }));
+      } catch (error) {
+        console.error("Error fetching project transfers:", error);
+        return [];
+      }
     },
-    enabled: !!selectedProjectId && showProjectTransfers && projects.length > 0,
+    enabled: !!selectedProjectId && showProjectTransfers && Array.isArray(projects) && projects.length > 0,
     staleTime: 60000, // البيانات صالحة لدقيقة واحدة
     gcTime: 300000, // الاحتفاظ بالذاكرة لـ 5 دقائق
   });
@@ -286,8 +355,17 @@ function DailyExpensesContent() {
         return [];
       }
       
-      const response = await apiRequest(`/api/projects/${selectedProjectId}/fund-transfers?date=${selectedDate}`, "GET");
-      return Array.isArray(response) ? response as FundTransfer[] : [];
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/fund-transfers?date=${selectedDate}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as FundTransfer[];
+        }
+        return Array.isArray(response) ? response as FundTransfer[] : [];
+      } catch (error) {
+        console.error("Error fetching fund transfers:", error);
+        return [];
+      }
     },
     enabled: !!selectedProjectId && !!selectedDate,
     refetchOnMount: true,
@@ -300,8 +378,17 @@ function DailyExpensesContent() {
   const { data: previousBalance } = useQuery({
     queryKey: ["/api/projects", selectedProjectId, "previous-balance", selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/projects/${selectedProjectId}/previous-balance/${selectedDate}`, "GET");
-      return response?.balance || "0";
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/previous-balance/${selectedDate}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && response.data.balance !== undefined) {
+          return response.data.balance || "0";
+        }
+        return response?.balance || "0";
+      } catch (error) {
+        console.error("Error fetching previous balance:", error);
+        return "0";
+      }
     },
     enabled: !!selectedProjectId && !!selectedDate,
   });
@@ -801,11 +888,11 @@ function DailyExpensesContent() {
 
   const totals = calculateTotals();
 
-  // حساب مؤشرات البيانات المتوفرة
+  // حساب مؤشرات البيانات المتوفرة مع معالجة آمنة
   const dataIndicators = {
-    fundTransfers: todayFundTransfers.length > 0,
-    attendance: todayAttendance.length > 0,
-    transportation: todayTransportation.length > 0,
+    fundTransfers: Array.isArray(todayFundTransfers) && todayFundTransfers.length > 0,
+    attendance: Array.isArray(todayAttendance) && todayAttendance.length > 0,
+    transportation: Array.isArray(todayTransportation) && todayTransportation.length > 0,
     materials: Array.isArray(todayMaterialPurchases) && todayMaterialPurchases.length > 0,
     workerTransfers: Array.isArray(todayWorkerTransfers) && todayWorkerTransfers.length > 0,
     miscExpenses: Array.isArray(todayMiscExpenses) && todayMiscExpenses.length > 0
