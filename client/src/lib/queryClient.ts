@@ -176,14 +176,15 @@ export const getQueryFn: <T>(options: {
       await throwIfResNotOk(res);
       const data = await res.json();
       
-      // تسجيل وفحص البيانات المُستلمة
-      console.log('📊 [QueryClient] البيانات المُستلمة:', queryKey[0], data);
+      // تسجيل مبسط في بيئة التطوير فقط
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 ${queryKey[0]} - تم استلام البيانات بنجاح`);
+      }
       
       // حماية إضافية من مشاكل البيانات وإستخراج البيانات الفعلية
       if (data && typeof data === 'object') {
         // إذا كانت البيانات في الشكل { success, data, count } (شكل Vercel API)
         if (data.success !== undefined && data.data !== undefined) {
-          console.log('🔧 [QueryClient] استخراج data.data من API response');
           
           // التأكد من أن data.data مصفوفة
           if (data.data !== null && !Array.isArray(data.data)) {

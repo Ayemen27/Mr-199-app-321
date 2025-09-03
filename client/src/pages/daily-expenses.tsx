@@ -873,16 +873,18 @@ function DailyExpensesContent() {
       const safeFundTransfers = Array.isArray(todayFundTransfers) ? todayFundTransfers : [];
       const safeProjectTransfers = Array.isArray(projectTransfers) ? projectTransfers : [];
 
-      console.log('🧮 [DailyExpenses] calculateTotals - البيانات المُستخدمة:', {
-        attendance: safeAttendance.length,
-        transportation: safeTransportation.length,
-        materialPurchases: safeMaterialPurchases.length,
-        workerTransfers: safeWorkerTransfers.length,
-        miscExpenses: safeMiscExpenses.length,
-        fundTransfers: safeFundTransfers.length,
-        projectTransfers: safeProjectTransfers.length,
-        carriedForward: carriedForward
-      });
+      // تسجيل مبسط للحسابات المالية
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🧮 [DailyExpenses] إجمالي البيانات:', {
+          حضور: safeAttendance.length,
+          نقل: safeTransportation.length,
+          مشتريات: safeMaterialPurchases.length,
+          تحويلات_عمال: safeWorkerTransfers.length,
+          مصاريف_أخرى: safeMiscExpenses.length,
+          تحويلات_أموال: safeFundTransfers.length,
+          تحويلات_مشاريع: safeProjectTransfers.length
+        });
+      }
 
       const totalWorkerWages = safeAttendance.reduce(
         (sum, attendance) => {
@@ -962,7 +964,14 @@ function DailyExpensesContent() {
         remainingBalance: isNaN(remainingBalance) ? 0 : remainingBalance,
       };
 
-      console.log('✅ [DailyExpenses] calculateTotals - النتائج:', result);
+      // تسجيل النتائج في بيئة التطوير فقط
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ الملخص المالي:', {
+          إجمالي_الدخل: formatCurrency(result.totalIncome),
+          إجمالي_المصاريف: formatCurrency(result.totalExpenses),
+          الرصيد_المتبقي: formatCurrency(result.remainingBalance)
+        });
+      }
       return result;
       
     } catch (error) {

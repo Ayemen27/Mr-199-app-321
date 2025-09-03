@@ -1475,9 +1475,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     path = '/' + path;
   }
   
-  // معالجة خاصة للمسارات الديناميكية مثل workers/:id
-  if (path.includes('/workers/') && !path.includes('/api/workers/')) {
-    path = path.replace('/workers/', '/workers/');
+  // معالجة خاصة للمسارات الديناميكية - التأكد من عدم تكرار api
+  if (path.startsWith('/api')) {
+    path = path.replace('/api', '');
   }
   
   // بناء المسار الكامل
