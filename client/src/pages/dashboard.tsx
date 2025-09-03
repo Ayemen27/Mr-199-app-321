@@ -44,8 +44,6 @@ interface ProjectWithStats extends Project {
 }
 
 export default function Dashboard() {
-  console.log('🏠 [Dashboard] بدء تحميل لوحة القيادة...', new Date().toISOString());
-  
   const [, setLocation] = useLocation();
   const { selectedProjectId, selectProject } = useSelectedProject();
   const [showFloatingMenu, setShowFloatingMenu] = useState(false);
@@ -88,37 +86,16 @@ export default function Dashboard() {
   };
 
   // تحميل المشاريع مع الإحصائيات بشكل محسن
-  const { data: projectsResponse, isLoading: projectsLoading, error: projectsError, refetch: refetchProjects } = useQuery({
+  const { data: projects = [], isLoading: projectsLoading } = useQuery<ProjectWithStats[]>({
     queryKey: ["/api/projects/with-stats"],
     staleTime: 1000 * 30, // 30 ثانية فقط للإحصائيات لضمان الحصول على البيانات المحدثة
     refetchInterval: 1000 * 60, // إعادة التحديث كل دقيقة
-    retry: 3, // إعادة المحاولة 3 مرات عند الفشل
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // تأخير متزايد
   });
-
-  // تتبع حالة استعلام المشاريع
-  console.log('📊 [Dashboard] حالة استعلام المشاريع:', {
-    isLoading: projectsLoading,
-    hasData: !!projectsResponse,
-    hasError: !!projectsError,
-    dataCount: (projectsResponse as any)?.data?.length || 0,
-    timestamp: new Date().toISOString()
-  });
-
-  // التأكد من أن projects مصفوفة صالحة
-  const projects = Array.isArray((projectsResponse as any)?.data) ? (projectsResponse as any).data : [];
-
-  console.log('📋 [Dashboard] المشاريع المحملة:', projects.length, 'مشروع');
 
   // جلب أنواع العمال من قاعدة البيانات
-  const { data: workerTypesResponse, error: workerTypesError, refetch: refetchWorkerTypes } = useQuery({
+  const { data: workerTypes = [] } = useQuery<WorkerType[]>({
     queryKey: ["/api/worker-types"],
-    retry: 2,
-    staleTime: 1000 * 60 * 5, // 5 دقائق
   });
-
-  // التأكد من أن workerTypes مصفوفة صالحة
-  const workerTypes = Array.isArray((workerTypesResponse as any)?.data) ? (workerTypesResponse as any).data : [];
 
   // متحولات لإضافة العامل والمشروع
   const addWorkerMutation = useMutation({
@@ -222,7 +199,7 @@ export default function Dashboard() {
 
 
 
-  const selectedProject = Array.isArray(projects) ? projects.find((p: ProjectWithStats) => p.id === selectedProjectId) : undefined;
+  const selectedProject = projects.find((p: ProjectWithStats) => p.id === selectedProjectId);
 
 
 
@@ -326,42 +303,8 @@ export default function Dashboard() {
   ];
 
   // عرض شاشة تحميل أولية إذا كانت المشاريع لم تحمل بعد
-  if (projectsLoading && !projects.length) {
-    return (
-      <div className="p-4 space-y-4">
-        <div className="text-center py-8">
-          <LoadingSpinner className="mx-auto mb-4" />
-          <p className="text-gray-600">جاري تحميل المشاريع...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // عرض رسالة خطأ إذا فشل تحميل البيانات الأساسية
-  if (projectsError && !projects.length) {
-    return (
-      <div className="p-4">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6 text-center">
-            <div className="text-red-600 mb-4">
-              <Clock className="mx-auto h-12 w-12 mb-2" />
-            </div>
-            <h3 className="text-lg font-medium text-red-800 mb-2">
-              حدث خطأ في تحميل البيانات
-            </h3>
-            <p className="text-red-600 mb-4">
-              لا يمكن الاتصال بالخادم حالياً. يرجى المحاولة لاحقاً.
-            </p>
-            <Button 
-              onClick={() => refetchProjects()}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              إعادة المحاولة
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (projectsLoading) {
+    return <LoadingCard />;
   }
 
   return (
@@ -375,94 +318,68 @@ export default function Dashboard() {
         onProjectChange={(projectId, projectName) => selectProject(projectId, projectName)}
       />
 
-      {/* Project Statistics - Always show with appropriate messaging */}
-      <Card className="mb-4">
-        <CardContent className="p-4">
-          {selectedProject ? (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-foreground">{selectedProject.name}</h3>
-                <Badge variant="secondary" className="bg-success text-success-foreground">
-                  نشط
-                </Badge>
-              </div>
-
-              {/* Project Statistics */}
-              <div className="grid grid-cols-2 gap-3">
-                <StatsCard
-                  title="إجمالي التوريد"
-                  value={selectedProject?.stats?.totalIncome || 0}
-                  icon={TrendingUp}
-                  color="blue"
-                  formatter={formatCurrency}
-                />
-                <StatsCard
-                  title="إجمالي المنصرف"
-                  value={selectedProject?.stats?.totalExpenses || 0}
-                  icon={TrendingDown}
-                  color="red"
-                  formatter={formatCurrency}
-                />
-                <StatsCard
-                  title="المتبقي الحالي"
-                  value={selectedProject?.stats?.currentBalance || 0}
-                  icon={DollarSign}
-                  color="green"
-                  formatter={formatCurrency}
-                />
-                <StatsCard
-                  title="العمال النشطين"
-                  value={selectedProject?.stats?.activeWorkers || "0"}
-                  icon={UserCheck}
-                  color="purple"
-                />
-                <StatsCard
-                  title="أيام العمل المكتملة"
-                  value={selectedProject?.stats?.completedDays || "0"}
-                  icon={Calendar}
-                  color="teal"
-                />
-                <StatsCard
-                  title="مشتريات المواد"
-                  value={selectedProject?.stats?.materialPurchases || "0"}
-                  icon={Package}
-                  color="indigo"
-                />
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <div className="mb-4">
-                <FolderPlus className="mx-auto h-16 w-16 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                مرحباً بك في نظام إدارة المشاريع
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {projects.length > 0 
-                  ? "يرجى اختيار مشروع من القائمة أعلاه لعرض الإحصائيات"
-                  : "لا توجد مشاريع حالياً. ابدأ بإنشاء مشروع جديد"}
-              </p>
-              {projects.length === 0 && (
-                <Button 
-                  onClick={() => setShowProjectModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <FolderPlus className="h-4 w-4 mr-2" />
-                  إنشاء مشروع جديد
-                </Button>
-              )}
+      {selectedProject && (
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-foreground">{selectedProject.name}</h3>
+              <Badge variant="secondary" className="bg-success text-success-foreground">
+                نشط
+              </Badge>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {/* Project Statistics */}
+            <div className="grid grid-cols-2 gap-3">
+              <StatsCard
+                title="إجمالي التوريد"
+                value={selectedProject?.stats?.totalIncome || 0}
+                icon={TrendingUp}
+                color="blue"
+                formatter={formatCurrency}
+              />
+              <StatsCard
+                title="إجمالي المنصرف"
+                value={selectedProject?.stats?.totalExpenses || 0}
+                icon={TrendingDown}
+                color="red"
+                formatter={formatCurrency}
+              />
+              <StatsCard
+                title="المتبقي الحالي"
+                value={selectedProject?.stats?.currentBalance || 0}
+                icon={DollarSign}
+                color="green"
+                formatter={formatCurrency}
+              />
+              <StatsCard
+                title="العمال النشطين"
+                value={selectedProject?.stats?.activeWorkers || "0"}
+                icon={UserCheck}
+                color="purple"
+              />
+              <StatsCard
+                title="أيام العمل المكتملة"
+                value={selectedProject?.stats?.completedDays || "0"}
+                icon={Calendar}
+                color="teal"
+              />
+              <StatsCard
+                title="مشتريات المواد"
+                value={selectedProject?.stats?.materialPurchases || "0"}
+                icon={Package}
+                color="indigo"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <Card>
         <CardContent className="p-4">
           <h3 className="text-lg font-bold text-foreground mb-4">إجراءات سريعة</h3>
           <div className="grid grid-cols-2 gap-3">
-            {Array.isArray(quickActions) ? quickActions.map((action, index) => {
+            {quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
                 <Button
@@ -474,7 +391,7 @@ export default function Dashboard() {
                   <span className="text-sm font-medium">{action.label}</span>
                 </Button>
               );
-            }) : null}
+            })}
           </div>
         </CardContent>
       </Card>
@@ -548,30 +465,20 @@ export default function Dashboard() {
                     <SelectValue placeholder="اختر نوع العامل..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {workerTypesError ? (
-                      <div className="p-2 text-center text-red-600 text-sm">
-                        خطأ في تحميل أنواع العمال
-                        <Button 
-                          variant="link" 
-                          size="sm" 
-                          onClick={() => refetchWorkerTypes()}
-                          className="text-red-600 p-0 h-auto font-normal"
-                        >
-                          إعادة المحاولة
-                        </Button>
-                      </div>
-                    ) : (
+                    {workerTypes.map((workerType) => (
+                      <SelectItem key={workerType.id} value={workerType.value}>
+                        {workerType.value}
+                      </SelectItem>
+                    ))}
+                    {workerTypes.length === 0 && (
                       <>
-                        {workerTypes.map((workerType: any) => (
-                          <SelectItem key={workerType.id} value={workerType.value}>
-                            {workerType.value}
-                          </SelectItem>
-                        ))}
-                        {workerTypes.length === 0 && (
-                          <div className="p-2 text-center text-gray-500 text-sm">
-                            لا توجد أنواع عمال محفوظة
-                          </div>
-                        )}
+                        <SelectItem value="معلم">معلم</SelectItem>
+                        <SelectItem value="عامل">عامل</SelectItem>
+                        <SelectItem value="حداد">حداد</SelectItem>
+                        <SelectItem value="نجار">نجار</SelectItem>
+                        <SelectItem value="سائق">سائق</SelectItem>
+                        <SelectItem value="كهربائي">كهربائي</SelectItem>
+                        <SelectItem value="سباك">سباك</SelectItem>
                       </>
                     )}
                   </SelectContent>
