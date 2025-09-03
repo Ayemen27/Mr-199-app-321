@@ -7,7 +7,7 @@
  * الحالة: نشط - الصفحة الأساسية لإدارة المصاريف
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ArrowRight, Save, Users, Car, Plus, Edit2, Trash2, ChevronDown, ChevronUp, ArrowLeftRight, RefreshCw } from "lucide-react";
@@ -863,68 +863,125 @@ function DailyExpensesContent() {
   };
 
   const calculateTotals = () => {
-    // إنشاء متغيرات آمنة لجميع البيانات
-    const safeAttendance = Array.isArray(todayAttendance) ? todayAttendance : [];
-    const safeTransportation = Array.isArray(todayTransportation) ? todayTransportation : [];
-    const safeMaterialPurchases = Array.isArray(todayMaterialPurchases) ? todayMaterialPurchases : [];
-    const safeWorkerTransfers = Array.isArray(todayWorkerTransfers) ? todayWorkerTransfers : [];
-    const safeMiscExpenses = Array.isArray(todayMiscExpenses) ? todayMiscExpenses : [];
-    const safeFundTransfers = Array.isArray(todayFundTransfers) ? todayFundTransfers : [];
-    const safeProjectTransfers = Array.isArray(projectTransfers) ? projectTransfers : [];
+    try {
+      // إنشاء متغيرات آمنة لجميع البيانات مع تسجيل للتشخيص
+      const safeAttendance = Array.isArray(todayAttendance) ? todayAttendance : [];
+      const safeTransportation = Array.isArray(todayTransportation) ? todayTransportation : [];
+      const safeMaterialPurchases = Array.isArray(todayMaterialPurchases) ? todayMaterialPurchases : [];
+      const safeWorkerTransfers = Array.isArray(todayWorkerTransfers) ? todayWorkerTransfers : [];
+      const safeMiscExpenses = Array.isArray(todayMiscExpenses) ? todayMiscExpenses : [];
+      const safeFundTransfers = Array.isArray(todayFundTransfers) ? todayFundTransfers : [];
+      const safeProjectTransfers = Array.isArray(projectTransfers) ? projectTransfers : [];
 
-    const totalWorkerWages = safeAttendance.reduce(
-      (sum, attendance) => sum + parseFloat(attendance.paidAmount || "0"), 
-      0
-    );
-    
-    const totalTransportation = safeTransportation.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount || "0"), 
-      0
-    );
-    
-    // حساب المشتريات النقدية فقط - استخدام البيانات الآمنة
-    const totalMaterialCosts = safeMaterialPurchases
-      .filter(purchase => purchase.purchaseType === "نقد")
-      .reduce((sum, purchase) => sum + parseFloat(purchase.totalAmount || "0"), 0);
-    
-    const totalWorkerTransfers = safeWorkerTransfers.reduce(
-      (sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
-    
-    const totalMiscExpenses = safeMiscExpenses.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount || "0"), 0);
-    
-    const totalFundTransfers = safeFundTransfers.reduce(
-      (sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
-    
-    // حساب الأموال الواردة والصادرة من ترحيل المشاريع
-    const incomingProjectTransfers = safeProjectTransfers
-      .filter(transfer => transfer.toProjectId === selectedProjectId)
-      .reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
-    
-    const outgoingProjectTransfers = safeProjectTransfers
-      .filter(transfer => transfer.fromProjectId === selectedProjectId)
-      .reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
-    
-    const carriedAmount = parseFloat(carriedForward) || 0;
-    
-    const totalIncome = carriedAmount + totalFundTransfers + incomingProjectTransfers;
-    const totalExpenses = totalWorkerWages + totalTransportation + totalMaterialCosts + 
-                          totalWorkerTransfers + totalMiscExpenses + outgoingProjectTransfers;
-    const remainingBalance = totalIncome - totalExpenses;
+      console.log('🧮 [DailyExpenses] calculateTotals - البيانات المُستخدمة:', {
+        attendance: safeAttendance.length,
+        transportation: safeTransportation.length,
+        materialPurchases: safeMaterialPurchases.length,
+        workerTransfers: safeWorkerTransfers.length,
+        miscExpenses: safeMiscExpenses.length,
+        fundTransfers: safeFundTransfers.length,
+        projectTransfers: safeProjectTransfers.length,
+        carriedForward: carriedForward
+      });
 
-    return {
-      totalWorkerWages,
-      totalTransportation,
-      totalMaterialCosts,
-      totalWorkerTransfers,
-      totalMiscExpenses,
-      totalFundTransfers,
-      incomingProjectTransfers,
-      outgoingProjectTransfers,
-      totalIncome,
-      totalExpenses,
-      remainingBalance,
-    };
+      const totalWorkerWages = safeAttendance.reduce(
+        (sum, attendance) => {
+          const amount = parseFloat(attendance.paidAmount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 
+        0
+      );
+      
+      const totalTransportation = safeTransportation.reduce(
+        (sum, expense) => {
+          const amount = parseFloat(expense.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 
+        0
+      );
+      
+      // حساب المشتريات النقدية فقط - استخدام البيانات الآمنة
+      const totalMaterialCosts = safeMaterialPurchases
+        .filter(purchase => purchase.purchaseType === "نقد")
+        .reduce((sum, purchase) => {
+          const amount = parseFloat(purchase.totalAmount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+      
+      const totalWorkerTransfers = safeWorkerTransfers.reduce(
+        (sum, transfer) => {
+          const amount = parseFloat(transfer.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+      
+      const totalMiscExpenses = safeMiscExpenses.reduce(
+        (sum, expense) => {
+          const amount = parseFloat(expense.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+      
+      const totalFundTransfers = safeFundTransfers.reduce(
+        (sum, transfer) => {
+          const amount = parseFloat(transfer.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+      
+      // حساب الأموال الواردة والصادرة من ترحيل المشاريع
+      const incomingProjectTransfers = safeProjectTransfers
+        .filter(transfer => transfer.toProjectId === selectedProjectId)
+        .reduce((sum, transfer) => {
+          const amount = parseFloat(transfer.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+      
+      const outgoingProjectTransfers = safeProjectTransfers
+        .filter(transfer => transfer.fromProjectId === selectedProjectId)
+        .reduce((sum, transfer) => {
+          const amount = parseFloat(transfer.amount || "0");
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+      
+      const carriedAmount = parseFloat(carriedForward) || 0;
+      
+      const totalIncome = carriedAmount + totalFundTransfers + incomingProjectTransfers;
+      const totalExpenses = totalWorkerWages + totalTransportation + totalMaterialCosts + 
+                            totalWorkerTransfers + totalMiscExpenses + outgoingProjectTransfers;
+      const remainingBalance = totalIncome - totalExpenses;
+
+      const result = {
+        totalWorkerWages: isNaN(totalWorkerWages) ? 0 : totalWorkerWages,
+        totalTransportation: isNaN(totalTransportation) ? 0 : totalTransportation,
+        totalMaterialCosts: isNaN(totalMaterialCosts) ? 0 : totalMaterialCosts,
+        totalWorkerTransfers: isNaN(totalWorkerTransfers) ? 0 : totalWorkerTransfers,
+        totalMiscExpenses: isNaN(totalMiscExpenses) ? 0 : totalMiscExpenses,
+        totalFundTransfers: isNaN(totalFundTransfers) ? 0 : totalFundTransfers,
+        incomingProjectTransfers: isNaN(incomingProjectTransfers) ? 0 : incomingProjectTransfers,
+        outgoingProjectTransfers: isNaN(outgoingProjectTransfers) ? 0 : outgoingProjectTransfers,
+        totalIncome: isNaN(totalIncome) ? 0 : totalIncome,
+        totalExpenses: isNaN(totalExpenses) ? 0 : totalExpenses,
+        remainingBalance: isNaN(remainingBalance) ? 0 : remainingBalance,
+      };
+
+      console.log('✅ [DailyExpenses] calculateTotals - النتائج:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('❌ [DailyExpenses] خطأ في calculateTotals:', error);
+      // إرجاع قيم افتراضية آمنة في حالة حدوث خطأ
+      return {
+        totalWorkerWages: 0,
+        totalTransportation: 0,
+        totalMaterialCosts: 0,
+        totalWorkerTransfers: 0,
+        totalMiscExpenses: 0,
+        totalFundTransfers: 0,
+        incomingProjectTransfers: 0,
+        outgoingProjectTransfers: 0,
+        totalIncome: 0,
+        totalExpenses: 0,
+        remainingBalance: 0,
+      };
+    }
   };
 
   const handleSaveSummary = () => {
@@ -954,7 +1011,42 @@ function DailyExpensesContent() {
     });
   };
 
-  const totals = calculateTotals();
+  // حساب المجاميع مع معالجة آمنة للأخطاء
+  const totals = useMemo(() => {
+    try {
+      const result = calculateTotals();
+      if (!result || typeof result !== 'object') {
+        console.warn('⚠️ [DailyExpenses] calculateTotals returned invalid result:', result);
+        throw new Error('Invalid result from calculateTotals');
+      }
+      return result;
+    } catch (error) {
+      console.error('❌ [DailyExpenses] خطأ في حساب المجاميع:', error);
+      return {
+        totalWorkerWages: 0,
+        totalTransportation: 0,
+        totalMaterialCosts: 0,
+        totalWorkerTransfers: 0,
+        totalMiscExpenses: 0,
+        totalFundTransfers: 0,
+        incomingProjectTransfers: 0,
+        outgoingProjectTransfers: 0,
+        totalIncome: 0,
+        totalExpenses: 0,
+        remainingBalance: 0,
+      };
+    }
+  }, [
+    todayAttendance,
+    todayTransportation,
+    todayMaterialPurchases,
+    todayWorkerTransfers,
+    todayMiscExpenses,
+    todayFundTransfers,
+    projectTransfers,
+    carriedForward,
+    selectedProjectId
+  ]);
 
   // حساب مؤشرات البيانات المتوفرة مع معالجة آمنة
   const dataIndicators = {
