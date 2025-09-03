@@ -347,24 +347,7 @@ app.head('/api/autocomplete', (req, res) => {
 });
 
 // ====== مسارات المشاريع الإضافية ======
-app.get('/api/projects/:id/attendance', (req, res) => {
-  const projectId = req.params.id;
-  console.log(`📅 طلب حضور العمال للمشروع: ${projectId}`);
-  res.json({
-    success: true,
-    data: [],
-    count: 0
-  });
-});
-
-app.get('/api/projects/:id/daily-summary/:date', (req, res) => {
-  const { id, date } = req.params;
-  console.log(`📊 طلب ملخص يومي للمشروع ${id} بتاريخ ${date}`);
-  res.status(404).json({
-    success: false,
-    message: 'Daily summary not found'
-  });
-});
+// تم حذف المسارات المكررة والقديمة - الاعتماد على المسارات الجديدة فقط
 
 // ====== مسار المواد المفقود ======
 app.get('/api/materials', async (req, res) => {
@@ -695,7 +678,93 @@ app.get('/api/projects/:id/material-purchases', async (req, res) => {
   }
 });
 
-// مسار مصروفات العمال المتنوعة
+// تم حذف المسارات المكررة - الاعتماد على النسخ الجديدة فقط
+
+// ====== المسارات المفقودة الإضافية لحل أخطاء 404 ======
+
+// مسار العامل المحدد - لحل أخطاء 404 للعمال  
+app.get('/api/workers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`👤 طلب بيانات العامل: ${id}`);
+    
+    if (!supabase) {
+      return res.status(404).json({
+        success: false,
+        message: 'قاعدة البيانات غير متصلة'
+      });
+    }
+
+    const { data: worker, error } = await supabase
+      .from('workers')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !worker) {
+      console.log('⚠️ لم يتم العثور على العامل:', error);
+      return res.status(404).json({
+        success: false,
+        message: 'العامل غير موجود'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: worker
+    });
+  } catch (error) {
+    console.error('خطأ في مسار العامل:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطأ داخلي في الخادم'
+    });
+  }
+});
+
+// مسار العهد العام (بدون مشروع محدد) 
+app.get('/api/fund-transfers', async (req, res) => {
+  try {
+    console.log('💸 طلب جميع العهد');
+    
+    if (!supabase) {
+      return res.json({
+        success: true,
+        data: [],
+        count: 0
+      });
+    }
+
+    const { data: transfers, error } = await supabase
+      .from('fund_transfers')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.log('⚠️ خطأ في جلب العهد:', error);
+      return res.json({
+        success: true,
+        data: [],
+        count: 0
+      });
+    }
+
+    res.json({
+      success: true,
+      data: transfers || [],
+      count: (transfers || []).length
+    });
+  } catch (error) {
+    console.error('خطأ في مسار العهد العام:', error);
+    res.json({
+      success: true,
+      data: [],
+      count: 0
+    });
+  }
+});
+
+// مسار مصروفات العمال المتنوعة (كامل من السجل)
 app.get('/api/worker-misc-expenses', async (req, res) => {
   try {
     const { projectId, date } = req.query;
@@ -739,7 +808,7 @@ app.get('/api/worker-misc-expenses', async (req, res) => {
   }
 });
 
-// مسار تحويلات العمال
+// مسار تحويلات العمال (كامل من السجل)
 app.get('/api/worker-transfers', async (req, res) => {
   try {
     const { projectId, date } = req.query;
@@ -783,7 +852,7 @@ app.get('/api/worker-transfers', async (req, res) => {
   }
 });
 
-// مسار ترحيل الأموال بين المشاريع
+// مسار ترحيل الأموال بين المشاريع (كامل من السجل)
 app.get('/api/project-fund-transfers', async (req, res) => {
   try {
     const { date } = req.query;
