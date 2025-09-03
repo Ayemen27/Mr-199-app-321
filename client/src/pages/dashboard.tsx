@@ -405,7 +405,7 @@ export default function Dashboard() {
         <CardContent className="p-4">
           <h3 className="text-lg font-bold text-foreground mb-4">إجراءات سريعة</h3>
           <div className="grid grid-cols-2 gap-3">
-            {quickActions.map((action, index) => {
+            {Array.isArray(quickActions) && quickActions.map((action, index) => {
               const Icon = action.icon;
               return (
                 <Button

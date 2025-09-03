@@ -91,9 +91,9 @@ export default function AdvancedDataExport() {
   const toggleProject = (projectId: string) => {
     setExportSettings(prev => ({
       ...prev,
-      selectedProjects: prev.selectedProjects.includes(projectId)
+      selectedProjects: Array.isArray(prev.selectedProjects) && prev.selectedProjects.includes(projectId)
         ? prev.selectedProjects.filter(id => id !== projectId)
-        : [...prev.selectedProjects, projectId]
+        : [...(Array.isArray(prev.selectedProjects) ? prev.selectedProjects : []), projectId]
     }));
   };
 
@@ -101,7 +101,7 @@ export default function AdvancedDataExport() {
   const selectAllProjects = () => {
     setExportSettings(prev => ({
       ...prev,
-      selectedProjects: projects.map(p => p.id)
+      selectedProjects: Array.isArray(projects) ? projects.map(p => p.id) : []
     }));
   };
 
@@ -115,21 +115,23 @@ export default function AdvancedDataExport() {
 
   // جلب البيانات للتصدير
   const fetchExportData = async (): Promise<ExportData> => {
-    const projectsData = await Promise.all(
-      exportSettings.selectedProjects.map(async (projectId) => {
-        const response = await fetch(
-          `/api/reports/daily-expenses/${projectId}/${exportSettings.dateFrom}?dateTo=${exportSettings.dateTo}`
-        );
-        if (!response.ok) throw new Error(`خطأ في جلب بيانات المشروع ${projectId}`);
-        return response.json();
-      })
-    );
+    const projectsData = Array.isArray(exportSettings.selectedProjects) 
+      ? await Promise.all(
+          exportSettings.selectedProjects.map(async (projectId) => {
+            const response = await fetch(
+              `/api/reports/daily-expenses/${projectId}/${exportSettings.dateFrom}?dateTo=${exportSettings.dateTo}`
+            );
+            if (!response.ok) throw new Error(`خطأ في جلب بيانات المشروع ${projectId}`);
+            return response.json();
+          })
+        )
+      : [];
 
     const totalStats = {
-      totalIncome: projectsData.reduce((sum, project) => sum + (project.totalIncome || 0), 0),
-      totalExpenses: projectsData.reduce((sum, project) => sum + (project.totalExpenses || 0), 0),
-      totalWorkers: workers.length,
-      activeDays: projectsData.length
+      totalIncome: Array.isArray(projectsData) ? projectsData.reduce((sum, project) => sum + (project.totalIncome || 0), 0) : 0,
+      totalExpenses: Array.isArray(projectsData) ? projectsData.reduce((sum, project) => sum + (project.totalExpenses || 0), 0) : 0,
+      totalWorkers: Array.isArray(workers) ? workers.length : 0,
+      activeDays: Array.isArray(projectsData) ? projectsData.length : 0
     };
 
     return {
@@ -404,7 +406,7 @@ export default function AdvancedDataExport() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {projects.map(project => (
+              {Array.isArray(projects) && projects.map(project => (
                 <div key={project.id} className="flex items-center space-x-2 space-x-reverse">
                   <Checkbox
                     id={project.id}
@@ -591,7 +593,7 @@ export default function AdvancedDataExport() {
               {/* تفاصيل المشاريع */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold">تفاصيل المشاريع</h3>
-                {exportData.projects.map((project, index) => (
+                {Array.isArray(exportData.projects) && exportData.projects.map((project, index) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-semibold text-lg">{project.projectName || `مشروع ${index + 1}`}</h4>
@@ -627,9 +629,9 @@ export default function AdvancedDataExport() {
                         <h5 className="font-semibold mb-2">أجور العمال ({project.workerAttendance.length})</h5>
                         <div className="text-sm text-gray-600">
                           إجمالي المدفوع: {formatCurrency(
-                            project.workerAttendance.reduce((sum: number, att: any) => 
+                            Array.isArray(project.workerAttendance) ? project.workerAttendance.reduce((sum: number, att: any) => 
                               sum + (att.paidAmount || 0), 0
-                            )
+                            ) : 0
                           )}
                         </div>
                       </div>
@@ -640,9 +642,9 @@ export default function AdvancedDataExport() {
                         <h5 className="font-semibold mb-2">مشتريات المواد ({project.materialPurchases.length})</h5>
                         <div className="text-sm text-gray-600">
                           إجمالي المشتريات: {formatCurrency(
-                            project.materialPurchases.reduce((sum: number, purchase: any) => 
+                            Array.isArray(project.materialPurchases) ? project.materialPurchases.reduce((sum: number, purchase: any) => 
                               sum + (purchase.totalAmount || 0), 0
-                            )
+                            ) : 0
                           )}
                         </div>
                       </div>

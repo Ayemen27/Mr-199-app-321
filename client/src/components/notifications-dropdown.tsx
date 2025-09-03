@@ -59,12 +59,12 @@ export function NotificationsDropdown() {
   });
 
   // عد الإشعارات غير المقروءة
-  const unreadCount = notifications.filter(n => n.status === 'unread').length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter(n => n.status === 'unread').length : 0;
   
   // آخر 5 إشعارات
-  const recentNotifications = notifications
+  const recentNotifications = Array.isArray(notifications) ? notifications
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+    .slice(0, 5) : [];
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -131,7 +131,7 @@ export function NotificationsDropdown() {
               ) : (
                 <ScrollArea className="h-full">
                   <div className="p-4 space-y-3">
-                    {recentNotifications.map((notification, index) => {
+                    {Array.isArray(recentNotifications) && recentNotifications.map((notification, index) => {
                       const PriorityIcon = priorityIcons[notification.priority];
                       const TypeIcon = typeIcons[notification.type];
                       

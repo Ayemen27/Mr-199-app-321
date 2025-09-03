@@ -165,20 +165,20 @@ export default function NotificationsPage() {
   });
 
   // تحويل البيانات لضمان التوافق
-  const normalizedNotifications = notifications.map(notification => ({
+  const normalizedNotifications = Array.isArray(notifications) ? notifications.map(notification => ({
     ...notification,
     priority: getPriorityString(notification.priority),
     status: notification.status || (notification.isRead ? 'read' : 'unread')
-  }));
+  })) : [];
 
   // فلترة الإشعارات
-  const filteredNotifications = normalizedNotifications.filter(notification => {
+  const filteredNotifications = Array.isArray(normalizedNotifications) ? normalizedNotifications.filter(notification => {
     // فلترة حسب الحالة
     if (filter !== 'all' && notification.status !== filter) return false;
     // فلترة حسب النوع
     if (selectedType !== 'all' && notification.type !== selectedType) return false;
     return true;
-  });
+  }) : [];
 
   // أنواع الإشعارات المسموحة حسب نوع المستخدم
   const adminTypes = ['system', 'maintenance', 'warranty', 'damaged'];
@@ -188,17 +188,17 @@ export default function NotificationsPage() {
   const allowedTypes = isAdmin ? [...adminTypes, ...userTypes] : userTypes;
   
   const notificationTypes = Array.from(new Set(
-    normalizedNotifications
+    Array.isArray(normalizedNotifications) ? normalizedNotifications
       .map(n => n.type)
-      .filter(type => allowedTypes.includes(type))
+      .filter(type => allowedTypes.includes(type)) : []
   ));
   
   // إحصائيات سريعة
   const stats = {
-    total: normalizedNotifications.length,
-    unread: normalizedNotifications.filter(n => n.status === 'unread').length,
-    critical: normalizedNotifications.filter(n => getPriorityString(n.priority) === 'critical').length,
-    high: normalizedNotifications.filter(n => getPriorityString(n.priority) === 'high').length,
+    total: Array.isArray(normalizedNotifications) ? normalizedNotifications.length : 0,
+    unread: Array.isArray(normalizedNotifications) ? normalizedNotifications.filter(n => n.status === 'unread').length : 0,
+    critical: Array.isArray(normalizedNotifications) ? normalizedNotifications.filter(n => getPriorityString(n.priority) === 'critical').length : 0,
+    high: Array.isArray(normalizedNotifications) ? normalizedNotifications.filter(n => getPriorityString(n.priority) === 'high').length : 0,
   };
 
   const handleMarkAsRead = (notificationId: string) => {
@@ -357,7 +357,7 @@ export default function NotificationsPage() {
               >
                 جميع الأنواع
               </Button>
-              {notificationTypes.map(type => (
+              {Array.isArray(notificationTypes) && notificationTypes.map(type => (
                 <Button
                   key={type}
                   variant={selectedType === type ? 'secondary' : 'ghost'}
@@ -398,7 +398,7 @@ export default function NotificationsPage() {
               </p>
             </div>
           ) : (
-            filteredNotifications.map((notification) => {
+            Array.isArray(filteredNotifications) && filteredNotifications.map((notification) => {
               const PriorityIcon = priorityIcons[notification.priority];
               const TypeIcon = typeIcons[notification.type];
               

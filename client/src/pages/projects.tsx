@@ -362,7 +362,7 @@ export default function ProjectsPage() {
   }
 
   // حساب الإحصائيات العامة
-  const overallStats = projects.reduce((acc, project) => {
+  const overallStats = Array.isArray(projects) ? projects.reduce((acc, project) => {
     return {
       totalProjects: acc.totalProjects + 1,
       activeProjects: acc.activeProjects + (project.status === 'active' ? 1 : 0),
@@ -378,7 +378,14 @@ export default function ProjectsPage() {
     totalExpenses: 0,
     totalWorkers: 0,
     materialPurchases: 0,
-  });
+  }) : {
+    totalProjects: 0,
+    activeProjects: 0,
+    totalIncome: 0,
+    totalExpenses: 0,
+    totalWorkers: 0,
+    materialPurchases: 0,
+  };
 
   const currentBalance = overallStats.totalIncome - overallStats.totalExpenses;
 

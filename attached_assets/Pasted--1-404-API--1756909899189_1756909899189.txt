@@ -1,0 +1,107 @@
+بناءً على السجلات المقدمة، هناك عدة مشاكل رئيسية تحتاج إلى معالجة:
+
+1. أخطاء 404 متعددة لمسارات API غير موجودة
+
+ظهرت أخطاء 404 للمسارات التالية:
+
+· /api/projects/4dd9147.../summary/2025-09-03
+· /api/projects/4dd9147.../attendance?date=2025-09-03
+· /api/projects/4dd9147.../transportation-expenses?date=2025-09-03
+· /api/projects/4dd9147.../previous-balance/2025-09-03
+· /api/worker-misc-expenses?projectId=...&date=2025-09-03
+· /api/projects/4dd9147.../fund-transfers?date=2025-09-03
+· /api/project-fund-transfers?date=2025-09-03
+· /api/projects/4dd9147.../material-purchases?dateFrom=2025-09-03&dateTo=2025-09-03
+· /api/worker-transfers?projectId=...&date=2025-09-03
+
+الحل: تحتاج إلى إضافة هذه المسارات إلى ملف index.ts في الخادم.
+
+2. خطأ x.filter is not a function
+
+هذا الخطأ يحدث لأن بعض المتغيرات ليست مصفوفات عند محاولة استخدام دالة filter() عليها.
+
+الحل: تأكد من أن جميع المتغيرات التي تستخدم filter() هي مصفوفات:
+
+```typescript
+// في دالة calculateTotals، استبدل:
+const totalWorkerWages = todayAttendance.reduce(...);
+
+// بـ:
+const safeAttendance = Array.isArray(todayAttendance) ? todayAttendance : [];
+const totalWorkerWages = safeAttendance.reduce(...);
+```
+
+3. مشكلة في هيكل استجابة API
+
+يبدو أن بعض استجابات API تعيد كائنًا بدلاً من مصفوفة مباشرة.
+
+الحل: عدّل استدعاءات API لاستخراج البيانات بشكل صحيح:
+
+```typescript
+// في جميع استدعاءات useQuery، غيّر:
+queryFn: async () => {
+  const response = await apiRequest(`/api/endpoint`, "GET");
+  return response;
+}
+
+// إلى:
+queryFn: async () => {
+  const response = await apiRequest(`/api/endpoint`, "GET");
+  return response.data || []; // استخرج البيانات من الحقل data
+}
+```
+
+4. مشكلة في مسارات API في الخادم
+
+يبدو أن الخادم لا يعيد البيانات بالهيكل المتوقع.
+
+الحل: أضف المسارات الناقصة إلى ملف index.ts:
+
+```typescript
+// أضف هذه المسارات إلى index.ts
+app.get('/api/projects/:id/attendance', async (req, res) => {
+  // implementation
+});
+
+app.get('/api/projects/:id/transportation-expenses', async (req, res) => {
+  // implementation
+});
+
+// ... وهكذا لبقية المسارات
+```
+
+5. تحسين معالجة الأخطاء
+
+أضف معالجة أفضل للأخطاء في جميع استدعاءات API:
+
+```typescript
+// في جميع استدعاءات useQuery، أضف معالجة الأخطاء:
+queryFn: async () => {
+  try {
+    const response = await apiRequest(`/api/endpoint`, "GET");
+    return response.data || [];
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return [];
+  }
+}
+```
+
+6. تأكد من أن جميع القيم الافتراضية مصفوفات فارغة
+
+غيّر جميع القيم الافتراضية إلى مصفوفات فارغة:
+
+```typescript
+const { data: todayAttendance = [] } = useQuery(...);
+const { data: todayTransportation = [] } = useQuery(...);
+// ... وهكذا لجميع استدعاءات useQuery
+```
+
+التوصيات النهائية:
+
+1. أولاً: راجع جميع مسارات API في الواجهة الأمامية وتأكد من وجودها في الخادم
+2. ثانياً: أضف معالجة الأخطاء وتحقق من أنواع البيانات في جميع الاستعلامات
+3. ثالثاً: استخدم Array.isArray() قبل أي عملية filter أو map أو reduce
+4. رابعاً: تأكد من أن استجابات API تعيد الهيكل المتوقع (مصفوفات في الحقل data)
+
+هذه التعديلات يجب أن تحل معظم المشاكل الظاهرة في السجلات.

@@ -161,7 +161,7 @@ export function DailyExpenseTemplate({
 
       {/* تفاصيل المصروفات */}
       <div className="space-y-6">
-        {expenseCategories.map((category) => {
+        {Array.isArray(expenseCategories) && expenseCategories.map((category) => {
           if (!category.data || category.data.length === 0) return null;
 
           return (
@@ -177,7 +177,7 @@ export function DailyExpenseTemplate({
               <CardContent>
                 <UnifiedTable
                   headers={category.headers}
-                  data={category.data.map(category.mapRow)}
+                  data={Array.isArray(category.data) ? category.data.map(category.mapRow) : []}
                 />
               </CardContent>
             </Card>

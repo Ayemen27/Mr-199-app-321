@@ -71,7 +71,7 @@ export default function UnifiedWorkerReports() {
   });
 
   // حساب الإحصائيات الإجمالية
-  const totalStats = unifiedData.reduce((acc, worker) => ({
+  const totalStats = Array.isArray(unifiedData) ? unifiedData.reduce((acc, worker) => ({
     totalWorkers: acc.totalWorkers + 1,
     totalWorkDays: acc.totalWorkDays + worker.summary.totalWorkDays,
     totalEarned: acc.totalEarned + worker.summary.totalEarned,
@@ -83,10 +83,16 @@ export default function UnifiedWorkerReports() {
     totalEarned: 0,
     totalPaid: 0,
     totalRemaining: 0
-  });
+  }) : {
+    totalWorkers: 0,
+    totalWorkDays: 0,
+    totalEarned: 0,
+    totalPaid: 0,
+    totalRemaining: 0
+  };
 
   // ترتيب البيانات
-  const sortedData = [...unifiedData].sort((a, b) => {
+  const sortedData = Array.isArray(unifiedData) ? [...unifiedData].sort((a, b) => {
     switch (sortBy) {
       case 'name':
         return a.workerName.localeCompare(b.workerName, 'ar');
@@ -99,7 +105,7 @@ export default function UnifiedWorkerReports() {
       default:
         return 0;
     }
-  });
+  }) : [];
 
   const handleExport = async (format: 'excel' | 'pdf') => {
     if (!selectedProjectId) {
@@ -180,7 +186,7 @@ export default function UnifiedWorkerReports() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">كل العمال</SelectItem>
-                  {workers.map((worker: any) => (
+                  {Array.isArray(workers) && workers.map((worker: any) => (
                     <SelectItem key={worker.id} value={worker.id}>
                       {worker.name} - {worker.type}
                     </SelectItem>
@@ -324,7 +330,7 @@ export default function UnifiedWorkerReports() {
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedData.map((worker) => (
+                      {Array.isArray(sortedData) && sortedData.map((worker) => (
                         <tr key={worker.workerId} className="border-b hover:bg-gray-50">
                           <td className="p-3">
                             <div>
@@ -388,7 +394,7 @@ export default function UnifiedWorkerReports() {
               ) : (
                 /* عرض تفصيلي */
                 <div className="space-y-6">
-                  {sortedData.map((worker) => (
+                  {Array.isArray(sortedData) && sortedData.map((worker) => (
                     <Card key={worker.workerId} className="border-l-4 border-l-blue-500">
                       <CardHeader>
                         <div className="flex justify-between items-start">
@@ -447,7 +453,7 @@ export default function UnifiedWorkerReports() {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {worker.monthlyBreakdown.map((month, index) => (
+                                  {Array.isArray(worker.monthlyBreakdown) && worker.monthlyBreakdown.map((month, index) => (
                                     <tr key={index} className="border-b">
                                       <td className="p-2">{month.month}</td>
                                       <td className="p-2">{month.workDays}</td>

@@ -40,7 +40,7 @@ export default function DailyExpensesReport() {
     enabled: !!selectedProjectId
   });
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalExpenses = Array.isArray(expenses) ? expenses.reduce((sum, expense) => sum + expense.amount, 0) : 0;
 
   const handleExportExcel = () => {
     // تصدير Excel - سيتم تطويرها لاحقاً
@@ -183,7 +183,7 @@ export default function DailyExpensesReport() {
                   </tr>
                 </thead>
                 <tbody>
-                  {expenses.map((expense) => (
+                  {Array.isArray(expenses) && expenses.map((expense) => (
                     <tr key={expense.id} className="border-b hover:bg-gray-50">
                       <td className="p-3">{formatDate(expense.date)}</td>
                       <td className="p-3">{expense.description}</td>

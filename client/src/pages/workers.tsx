@@ -401,7 +401,7 @@ export default function WorkersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الأنواع</SelectItem>
-                  {workerTypes.map((type) => (
+                  {Array.isArray(workerTypes) && workerTypes.map((type) => (
                     <SelectItem key={type.id} value={type.name}>
                       {type.name}
                     </SelectItem>

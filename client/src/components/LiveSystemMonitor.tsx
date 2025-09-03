@@ -165,7 +165,7 @@ export default function LiveSystemMonitor() {
         <CardContent>
           <ScrollArea className="h-32 sm:h-40">
             <div className="space-y-2">
-              {alerts.map((alert) => (
+              {Array.isArray(alerts) && alerts.map((alert) => (
                 <div key={alert.id} className={`p-2 border rounded-md ${getAlertBg(alert.type)}`}>
                   <div className="flex items-start gap-2">
                     {getAlertIcon(alert.type)}

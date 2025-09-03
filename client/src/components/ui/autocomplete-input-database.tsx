@@ -65,9 +65,9 @@ export function AutocompleteInput({
   });
 
   // فلترة البيانات حسب البحث
-  const filteredData = autocompleteData.filter(item =>
+  const filteredData = Array.isArray(autocompleteData) ? autocompleteData.filter(item =>
     item.value.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
 
   // حفظ البيانات عند اختيار القيمة
   const handleSelect = useCallback((selectedValue: string) => {
@@ -185,7 +185,7 @@ export function AutocompleteInput({
                 <Search className="w-4 h-4 animate-spin mx-auto mb-2" />
                 جاري التحميل...
               </div>
-            ) : filteredData.length > 0 ? (
+            ) : Array.isArray(filteredData) && filteredData.length > 0 ? (
               <div className="py-1">
                 {filteredData.slice(0, 10).map((item) => (
                   <div

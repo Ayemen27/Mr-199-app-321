@@ -1,0 +1,251 @@
+R
+
+:
+
+۲
+
++
+
+①
+
+devtools://devtools/bu
+
+الأمان الذاكرة التطبيق
+
+المصادر
+
+الشبكة وحدة التحكم العناصر
+
+قادر .
+
+top
+
+) بيانات المشروع المحدد في Frontend:
+
+Object
+
+Object
+
+: مشروع الحيشي - تحقق من البيانات .
+
+>
+
+fullstats: undefined
+
+الدخل : undefined
+
+المصاريف : undefined
+
+مشروع مصنع الجيشي" : مشروع
+
+true : هل متساوية
+
+[[Prototype]]: Object
+
+Lighthouse >>
+
+المستويات التلقائية
+
+1812
+
+15 213 مشكلة
+
+index-BTmJoXU7.15:606
+
+hook. is: 608
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147..ummary/2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404() api/projects/4dd9147..ummary/2025-09-03:1
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]ProtectedRoute[ مصادق عليه إظهار المحتوى للمستخدم: admin@example.com
+
+index-Bin JoXUZ.js:896
+
+index-BTmJoXU7.js:896
+
+A soft navigation has been detected: https://construction-management-omd@vuwkr-mr-199.vercel.a
+
+index-BTmJoXU7.js:48
+
+pp/daily-expenses
+
+]App. Router بدء تحميل Router... 2025-09-03T14:27:48.123Z
+
+index-BTmJoXU7.js:896
+
+]App. Router بده تحميل Router... 2025-09-03T14:27:48.126Z
+
+index-BTmJoXU7.js:896
+
+]App. Router بده تحميل Router. 2025-09-03114:27:48.1332
+
+index-BTmJoXU7.js:896
+
+]App. Router تحميل Router. 2025-09-03T14:27:48.1362
+
+index-BTmJoXU7.js:896
+
+ТуреЁггor: x.filter is not a function at ss (index-BTmJoXU7.js:606:258453)
+
+at Mv (index-BTmJoXU7.js:48:34174) at Ry (index-B Tin.JoXU7.js:48:62074
+
+) at Vk (index-BTmJoXU7.15:48:72534)
+
+at c4 (index-BTmJoXU7.js:48:106483) at 18 (index-BTmJoXU7.js:48:105545)
+
+at cg (index-BTmJoXU7.15:48:105375)
+
+at 14 (index-BTmJoXU7.js:48:102495) index-BTmJoXu7.js:48:113955)
+
+at Sw ( at of (index-BTmJoXU7.15:48:112545)
+
+hook.js:608
+
+ErrorBoundary caught an error: TypeError: x.filter is not a function
+
+hook.js:608
+
+at ss (index-BTmJoXU7.js:606:258453)
+
+at Mv (index-BTin.JoXU7.js:48:34174)
+
+at Vk (index-BTmJoXU7.js:48:72534)
+
+at Ry (index-BTmJoXU7.js:48:62074)
+
+at £4 (index-BTmJoXU7.js:48:106483) )
+
+at LB (index-BTmJoXU7.js:48:105545 at cg (index-BTmJoXU7.js:48:105375)
+
+at 14 (index-BTmJoXU7.js:48:102495)
+
+at Sw (index-BImJoXU7.js:48:113955)
+
+at of (index-BTmJoXU7.js:48:112545) Object
+
+حولة بنكية - transfer Types تم حفظ قيمة الإكمال التلقائي .
+
+index-BTmJoXU7.js:606
+
+Failed to lead resource: the server responded with a status of 404 ()
+
+api/projects/4dd9147..s?date=2025-09-03:1
+
+Error fetching transportation expenses: Error: المسار غير موجود
+
+at 13 (index-BTmJoXU7.js:57:43837)
+
+at async i (index-BTmJoXU7.js:37:45086)
+
+at async me (index-BTmJoXU7.js:37:45271)
+
+at asyne queryem (index-BTm JoXU7.js:606:288655)
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147..alance/2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/worker-misc-expe. 2&date=2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 ()
+
+api/projects/4dd9147..s?date-2025-09-03:1
+
+Error fetching previous balance: Error: العيار غير
+
+at 13 (index-BTmJoXU7.js:57:43837)
+
+at asyne i (index-BTmJoXUZ.js:57:45086) at async me (index-BTmJoXU7.15:57-45271)
+
+at asyne queryin (index-BTs JoXU7.js:606:291305)
+
+Error fetching worker misc expenses: Error : المسار غير موجود
+
+hook.js:608
+
+hook.js:608
+
+at 13 (index-BTmJoXU7.js:37:43837)
+
+at async i (index-BTmJoXU7.js:57:45086)
+
+at async me (index-BTm.JoXU7.js:57:45271)
+
+at asyne queryFm (index-BTm.JoXU7.js:606:281665)
+
+Error fetching fund transfers: Errالعصار غير موجود : ٥٢
+
+at 13 (index-BTmJoXU7.15:57:43837)
+
+at async i (index-BTmJoXU7.js:57:45086)
+
+at async me (index-BTmJoXU7.js:57:45271)
+
+at async queryFn (index-BTmJoXU7.js:606:290923)
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 () api/project-fund-tra...s?date=2025-09-03:1
+
+Error fetching project transfers: Error : المسار غیر موجود
+
+at 13 (index-BTmJoXU7.js:57:43837)
+
+at async i (index-BTmJoXU7.js:57:45086)
+
+at asyne me (index-BTmJoxU7.js:37:45271)
+
+at async queryFn (index-BTmJoXU7.js:606:290195)
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147..dateTo-2025-09-03:1
+
+Failed to load resource: the server responded with a status of 404 () api/worker-transfers..2&date=2025-09-03:1
+
+Error fetching material purchases: Error: المسار غير موجود
+
+at 13 (index-BTmJoXU7.js:57:43837)
+
+at async 1 (index-BTmJoXU7.15:57:45086)
+
+at async me (index-BTmJoXU7.js:37:45271)
+
+at async queryFn (index-BTmJoXU7.js:606:288998)
+
+Error fetching worker transfers: Error : المسار غير موجود at 13 (index-BTmJoXU7.js:57:43837)
+
+at async i (index-BTmJoXU7.js:57:45086)
+
+at async me (index-BTmJoXU7.js:57:45271)
+
+at async queryFn (index-BTmJoXU7.js:606:289651)
+
+hook.js:608
+
+hook.js:608
+
+تسليم يدوي - transfertypes : تم حفظ قيمة الإكمال التلقائي .
+
+صراف الى - transfer Types : تم حفظ قيمة الإكمال التلقائي .
+
+شيك قيمة الإكمال التلقاني transfer Types
+
+حفظ قيمة الإكمال التلقائي لا transfer Types = تحويل داخلي
+
+نقدية = transfer Types : تم حفظ قيمة الإكمال التلقائي
+
+index-BTmJoXU7.js:606
+
+index-BTmJoXU7.js:606
+
+index BTmJoXU7.js:606
+
+index-BTmJoXU7.js:606
+
+index-BTmJaXU7.js:606
