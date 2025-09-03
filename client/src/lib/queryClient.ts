@@ -174,7 +174,22 @@ export const getQueryFn: <T>(options: {
       }
 
       await throwIfResNotOk(res);
-      return await res.json();
+      const data = await res.json();
+      
+      // تسجيل وفحص البيانات المُستلمة
+      console.log('📊 [QueryClient] البيانات المُستلمة:', queryKey[0], data);
+      
+      // حماية إضافية من مشاكل البيانات
+      if (data && typeof data === 'object') {
+        // التأكد من أن data.data مصفوفة إذا كانت موجودة
+        if (data.data !== undefined && data.data !== null && !Array.isArray(data.data)) {
+          console.warn('🚨 [QueryClient] تحذير: data.data ليست مصفوفة، تحويل إلى مصفوفة فارغة');
+          console.warn('🔍 نوع البيانات الحالي:', typeof data.data, data.data);
+          data.data = [];
+        }
+      }
+      
+      return data;
     }
 
     return makeQueryRequest();

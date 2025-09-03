@@ -39,6 +39,7 @@ import FloatingAddButton from "@/components/layout/floating-add-button";
 import { FloatingButtonProvider } from "@/components/layout/floating-button-context";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRoute } from "@/components/AdminRoute";
 import RegisterPage from "@/pages/RegisterPage";
 
@@ -266,18 +267,22 @@ function App() {
   // تم إزالة كود DOM manipulation لتجنب الأخطاء
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <FloatingButtonProvider>
-            <div className="min-h-screen bg-background text-foreground" dir="rtl">
-              <Router />
-              <Toaster />
-            </div>
-          </FloatingButtonProvider>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <FloatingButtonProvider>
+              <div className="min-h-screen bg-background text-foreground" dir="rtl">
+                <ErrorBoundary>
+                  <Router />
+                </ErrorBoundary>
+                <Toaster />
+              </div>
+            </FloatingButtonProvider>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

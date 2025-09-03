@@ -1,0 +1,141 @@
+]App. Router به تحميل Router... 2025-09-03111:25:22.2962
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]AuthProvider[ 03-09-2025 ... 11:25:22.340 بدء تهيئة المصادقةZ
+
+]ProtectedRoute[ في حالة تحميل إظهار شاشة التحميل
+
+]AuthProvider[ فحص البيانات المحفوظة : Object
+
+]AuthProvider[ لا توجد بهاتان محفوظة
+
+]AuthProvider[ انتهاء تهيئة المصادقة isLoading false
+
+]ProtectedRoute[ فحص الحماية : Object
+
+]ProtectedRoute[ 1081 غير مصادق عليه إعادة توجيه إلى
+
+محاولة (24) React تم العثور على محتوى .
+
+الحد التنازلي . ... تم تحميل النافذة.
+
+>
+
+التحميل
+
+بدء تسجيل الدخول اللي : admin@test.com
+
+]AuthProvider login ارسال طلب تسجيل الدخول إلى /api/auth/login
+
+]AuthProvider.login[ 200 :استجابة تسجيل الدخول
+
+]AuthProvider login[ نجح تسجيل الدخول حفظ بيانات المستخدم : admin@example.com
+
+]AuthProvider.login[ بيانات الاستجابة: Object
+
+]AuthProvider.login[ حفظ الرموز من tokens object
+
+]AuthProvider login[ تحديث cache queries
+
+]AuthProvider login[ اكتمل تسجيل الدخول بنجاح
+
+نجح تسجيل الدخول .
+
+]ProtectedRoute[ فحص الحماية Object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example
+
+]App. Router به تحميل Router 2025-09-03T11:25:30.3437
+
+]App. Router بده تحميل Router... 2025-09-03T11:25:30.345Z
+
+]App. Router تحميل Router 2025-09-03T11:25:30.348Z
+
+]App. Router به تحميل Router... 2025-09-03111:25:30.3502
+
+at PQ (index-DfgnLc65.js:606:148677)
+
+Uncaught TypeError: w.find is not a function
+
+at ky (Index-DfgnLc65.js:48:62074) at Rv (index-DfgnLc65.js:48:34174)
+
+at Pk (index-Digalc65.js:48:72534)
+
+at n4 (index-DfgnLc65.js:48:106483)
+
+at RB (index-DfgnLc65.js:48:105545)
+
+at og (index-DfgnLc65.js:48:105375) at Jk (index-DfgnLc65.js:48:102495)
+
+at ww (index-DfgnLc65.js:48:113955)
+
+index-Dfgul.co5.js:896
+
+index DfgnLc65.js:896
+
+index-DfguLc65.js:896
+
+index-DfgnLc65.js:606
+
+index-DfgnLc65.js:606
+
+index-DfgnLc65.js:606
+
+index-DfgnLc65.js:606
+
+index DfgnLc65.js:896
+
+index-DtgnLc65.js:896
+
+)269: (فهرس
+
+20حنا فهرس )
+
+245 (فهرس )
+
+index-DfgnLc65.js:606
+
+]AuthProvider.login[ بن تسجيل الدخول: admin@test.com 2025-09-03T11:25:29.2652
+
+index-DfguLc65.js:606
+
+index-DfgnLc05.js:606
+
+index-DignLc65.js:606
+
+index-DfgnLc65.js:606
+
+index-DfgnLc65.js:606
+
+index-Dfgnlc65.js:606
+
+index-DfgnLc65.js:606
+
+index-DfgnLc65.js:606
+
+index-DfgnLc65.js:606
+
+A soft navigation has been detected: https://construction-management-impayo1nv-mr-199.vercel.a
+
+index-DtgnLc65.15:57
+
+RR/
+
+index-DfgnLc65.js:896
+
+index-DfguLc65.js:896
+
+index-DfgnLc03.js:896
+
+index DfgnLc65.js:896
+
+index-DfgnLc65.js:896
+
+index-Dfgnt.c65.js:896
+
+index-DfgnLc65.js:606
+
+X
+
+at Of (index-DfgnLc65.js:48:112545)
