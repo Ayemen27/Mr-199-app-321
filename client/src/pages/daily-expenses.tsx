@@ -7,10 +7,10 @@
  * الحالة: نشط - الصفحة الأساسية لإدارة المصاريف
  */
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { ArrowRight, Save, Users, Car, Plus, Edit2, Trash2, ChevronDown, ChevronUp, ArrowLeftRight } from "lucide-react";
+import { ArrowRight, Save, Users, Car, Plus, Edit2, Trash2, ChevronDown, ChevronUp, ArrowLeftRight, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, DollarSign } from "lucide-react";
@@ -40,7 +40,52 @@ import type {
   ProjectFundTransfer 
 } from "@shared/schema";
 
-export default function DailyExpenses() {
+// Error Boundary Component
+function ErrorFallback({ error, resetErrorBoundary }: any) {
+  return (
+    <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 m-4">
+      <div className="flex items-center mb-3">
+        <div className="h-6 w-6 rounded-full bg-red-100 flex items-center justify-center ml-2">
+          <span className="text-red-600 text-sm">!</span>
+        </div>
+        <h3 className="font-medium">حدث خطأ في تحميل الصفحة</h3>
+      </div>
+      <details className="mb-3">
+        <summary className="cursor-pointer text-sm">تفاصيل الخطأ</summary>
+        <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">{error.message}</pre>
+      </details>
+      <Button onClick={resetErrorBoundary} size="sm" variant="outline" className="border-red-300">
+        <RefreshCw className="h-4 w-4 ml-1" />
+        إعادة المحاولة
+      </Button>
+    </div>
+  );
+}
+
+class ErrorBoundary extends React.Component<any, any> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <ErrorFallback error={this.state.error} resetErrorBoundary={() => this.setState({ hasError: false, error: null })} />;
+    }
+
+    return this.props.children;
+  }
+}
+
+function DailyExpensesContent() {
   const [, setLocation] = useLocation();
   const { selectedProjectId, selectProject } = useSelectedProject();
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -71,14 +116,22 @@ export default function DailyExpenses() {
     if (!value || value.trim().length < 2) return;
     
     try {
+      // التحقق من أن endpoint autocomplete موجود قبل المحاولة
+      const response = await fetch('/api/autocomplete', { method: 'HEAD' });
+      if (!response.ok) {
+        console.warn(`Autocomplete endpoint not available for ${field}`);
+        return;
+      }
+      
       await apiRequest('/api/autocomplete', 'POST', {
         category: field,
         value: value.trim(),
-        usageCount: 1 // زيادة عداد الاستخدام
+        usageCount: 1
       });
       console.log(`✅ تم حفظ قيمة الإكمال التلقائي: ${field} = ${value.trim()}`);
     } catch (error) {
-      console.error(`❌ خطأ في حفظ قيمة الإكمال التلقائي ${field}:`, error);
+      console.warn(`Failed to save autocomplete value for ${field}:`, error);
+      // تجاهل الخطأ دون مقاطعة التطبيق
     }
   };
 
@@ -178,9 +231,13 @@ export default function DailyExpenses() {
   const { data: todayWorkerTransfers = [], refetch: refetchWorkerTransfers } = useQuery({
     queryKey: ["/api/worker-transfers", selectedProjectId, selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/worker-transfers?projectId=${selectedProjectId}&date=${selectedDate}`, "GET");
-      console.log("Worker transfers response:", response);
-      return Array.isArray(response) ? response as WorkerTransfer[] : [];
+      try {
+        const response = await apiRequest(`/api/worker-transfers?projectId=${selectedProjectId}&date=${selectedDate}`, "GET");
+        return Array.isArray(response) ? response as WorkerTransfer[] : [];
+      } catch (error) {
+        console.error("Error fetching worker transfers:", error);
+        return [];
+      }
     },
     enabled: !!selectedProjectId,
   });
@@ -188,8 +245,13 @@ export default function DailyExpenses() {
   const { data: todayMiscExpenses = [] } = useQuery({
     queryKey: ["/api/worker-misc-expenses", selectedProjectId, selectedDate],
     queryFn: async () => {
-      const response = await apiRequest(`/api/worker-misc-expenses?projectId=${selectedProjectId}&date=${selectedDate}`, "GET");
-      return Array.isArray(response) ? response : [];
+      try {
+        const response = await apiRequest(`/api/worker-misc-expenses?projectId=${selectedProjectId}&date=${selectedDate}`, "GET");
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error("Error fetching misc expenses:", error);
+        return [];
+      }
     },
     enabled: !!selectedProjectId,
   });
@@ -260,18 +322,14 @@ export default function DailyExpenses() {
         try {
           await saveAutocompleteValue('transferTypes', type);
         } catch (error) {
-          // تجاهل الأخطاء في حالة وجود القيم مسبقاً
-          console.log(`Type ${type} might already exist:`, error);
+          // تجاهل الأخطاء بهدوء
+          console.log(`Type ${type} initialization skipped:`, error);
         }
       }
     };
 
-    // تهيئة القيم مرة واحدة فقط
-    const hasInitialized = localStorage.getItem('transferTypesInitialized');
-    if (!hasInitialized) {
-      initializeDefaultTransferTypes();
-      localStorage.setItem('transferTypesInitialized', 'true');
-    }
+    // تهيئة القيم مرة واحدة فقط عند تحميل المكون
+    initializeDefaultTransferTypes();
   }, []);
 
   const addFundTransferMutation = useMutation({
@@ -650,38 +708,53 @@ export default function DailyExpenses() {
   };
 
   const calculateTotals = () => {
-    const totalWorkerWages = todayAttendance.reduce(
+    // إنشاء متغيرات آمنة لجميع البيانات
+    const safeAttendance = Array.isArray(todayAttendance) ? todayAttendance : [];
+    const safeTransportation = Array.isArray(todayTransportation) ? todayTransportation : [];
+    const safeMaterialPurchases = Array.isArray(todayMaterialPurchases) ? todayMaterialPurchases : [];
+    const safeWorkerTransfers = Array.isArray(todayWorkerTransfers) ? todayWorkerTransfers : [];
+    const safeMiscExpenses = Array.isArray(todayMiscExpenses) ? todayMiscExpenses : [];
+    const safeFundTransfers = Array.isArray(todayFundTransfers) ? todayFundTransfers : [];
+    const safeProjectTransfers = Array.isArray(projectTransfers) ? projectTransfers : [];
+
+    const totalWorkerWages = safeAttendance.reduce(
       (sum, attendance) => sum + parseFloat(attendance.paidAmount || "0"), 
       0
     );
-    const totalTransportation = todayTransportation.reduce(
+    
+    const totalTransportation = safeTransportation.reduce(
       (sum, expense) => sum + parseFloat(expense.amount || "0"), 
       0
     );
-    // حساب المشتريات النقدية فقط - المشتريات الآجلة لا تُخصم من الرصيد
-    const totalMaterialCosts = Array.isArray(todayMaterialPurchases) ? 
-      todayMaterialPurchases
-        .filter(purchase => purchase.purchaseType === "نقد") // فلترة المشتريات النقدية فقط
-        .reduce((sum, purchase) => sum + parseFloat(purchase.totalAmount || "0"), 0) : 0;
-    const totalWorkerTransfers = Array.isArray(todayWorkerTransfers) ? 
-      todayWorkerTransfers.reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0) : 0;
-    const totalMiscExpenses = Array.isArray(todayMiscExpenses) ? 
-      todayMiscExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || "0"), 0) : 0;
-    const totalFundTransfers = Array.isArray(todayFundTransfers) ? 
-      todayFundTransfers.reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0) : 0;
+    
+    // حساب المشتريات النقدية فقط
+    const totalMaterialCosts = safeMaterialPurchases
+      .filter(purchase => purchase.purchaseType === "نقد")
+      .reduce((sum, purchase) => sum + parseFloat(purchase.totalAmount || "0"), 0);
+    
+    const totalWorkerTransfers = safeWorkerTransfers.reduce(
+      (sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
+    
+    const totalMiscExpenses = safeMiscExpenses.reduce(
+      (sum, expense) => sum + parseFloat(expense.amount || "0"), 0);
+    
+    const totalFundTransfers = safeFundTransfers.reduce(
+      (sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
     
     // حساب الأموال الواردة والصادرة من ترحيل المشاريع
-    const incomingProjectTransfers = Array.isArray(projectTransfers) ? 
-      projectTransfers.filter(transfer => transfer.toProjectId === selectedProjectId)
-        .reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0) : 0;
-    const outgoingProjectTransfers = Array.isArray(projectTransfers) ? 
-      projectTransfers.filter(transfer => transfer.fromProjectId === selectedProjectId)
-        .reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0) : 0;
+    const incomingProjectTransfers = safeProjectTransfers
+      .filter(transfer => transfer.toProjectId === selectedProjectId)
+      .reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
+    
+    const outgoingProjectTransfers = safeProjectTransfers
+      .filter(transfer => transfer.fromProjectId === selectedProjectId)
+      .reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0);
     
     const carriedAmount = parseFloat(carriedForward) || 0;
     
     const totalIncome = carriedAmount + totalFundTransfers + incomingProjectTransfers;
-    const totalExpenses = totalWorkerWages + totalTransportation + totalMaterialCosts + totalWorkerTransfers + totalMiscExpenses + outgoingProjectTransfers;
+    const totalExpenses = totalWorkerWages + totalTransportation + totalMaterialCosts + 
+                          totalWorkerTransfers + totalMiscExpenses + outgoingProjectTransfers;
     const remainingBalance = totalIncome - totalExpenses;
 
     return {
@@ -1414,5 +1487,14 @@ export default function DailyExpenses() {
         </Button>
       </div>
     </div>
+  );
+}
+
+// Export default مع Error Boundary
+export default function DailyExpenses() {
+  return (
+    <ErrorBoundary>
+      <DailyExpensesContent />
+    </ErrorBoundary>
   );
 }

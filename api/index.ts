@@ -331,6 +331,21 @@ app.get('/api/autocomplete/:category', (req, res) => {
   });
 });
 
+app.post('/api/autocomplete', (req, res) => {
+  const { category, value, usageCount } = req.body;
+  console.log(`💾 حفظ قيمة أوتوكومبليت: ${category} = ${value}`);
+  res.status(201).json({
+    success: true,
+    message: 'تم حفظ القيمة بنجاح',
+    data: { category, value, usageCount }
+  });
+});
+
+app.head('/api/autocomplete', (req, res) => {
+  console.log('🔍 فحص توفر endpoint الأوتوكومبليت');
+  res.status(200).end();
+});
+
 // ====== مسارات المشاريع الإضافية ======
 app.get('/api/projects/:id/attendance', (req, res) => {
   const projectId = req.params.id;

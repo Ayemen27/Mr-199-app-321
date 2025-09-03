@@ -1,0 +1,231 @@
+قادر . top
+
+Lighthouse >>
+
+المستويات التلقائية
+
+172
+
+13 211 مشكلة
+
+at a4 (index-C1yRO9RY 15:48:106483)
+
+at MB (index-CVRO9RY.15:48:105545)
+
+at og (index-CJyRQ9RY. VRO9RY.js:48:103375)
+
+at e4 (index-C1vRO9RY.15:48:102147)
+
+at ww (index-C1VRO9RY.15:48:113955)
+
+at Df (index-CyROGRY.js:48:112545)
+
+]App.Router تحميل Router 2025-09-03T13:12:21.1532
+
+]App. Router بده تحميل Router... 2025-09-03113:12:21.1552
+
+]Error Boundary[ الم النقاط خطاً TypeError: x.filter is not a function
+
+at ns (index-CjvRO9RY.js:606:257924)
+
+at Rv (index-C1yRO9RY.js:48:34174)
+
+at ky (index-CjyRORY.js:48:62074)
+
+at ok (index-CjyRO9RY.js:48:72334)
+
+at a4 at MB (index-CjyR09RY.js:48:106483) (index-CjyRO9RY.js:48:105545)
+
+at og (index CyRO9RY.js:48:105375)
+
+at e4 (index-CjyRO9RY.js:48:102495) at vw (index-CyROSRY.js:48:113955)
+
+at of (index-jyRO9RY.js:48:112545)
+
+index-CJ.yRO9RY.js:896
+
+index-CjyRO9RY.js:896
+
+hook.js:608
+
+TypeError: x.filter is not a function
+
+hook.js:608
+
+at ns (index-C1yRO9RY.js:606:257924)
+
+at Rv (Index-C1vRO9RY.15:48:34174)
+
+at ky (index-CJyRO9RY.js:48:62074)
+
+at Dk (index-CjyRO9RY.js:48:72534)
+
+at a4 (Index-CyR09RY.15:48:106483)
+
+at MB (index-CjyRO9RY.js:48:105545) at og (index-CjyRO9RY.js:48:105375)
+
+at e4 (index-C1yR09RY.15:48:102495)
+
+at ww (index-CjyRO9RY.js:48:113955)
+
+at of (index-CjyR09RY.js:48:112545)
+
+X [ErrorBoundary( تفاصيل الخطأ: TypeError: x.filter is not a function
+
+at ns (Index-C1vRO9RY.15:606:257924)
+
+hook.js:608
+
+at Rv (index-CjyRO9RY.js:48:34174) at ky (index-CjyR09RY.js:48:62074)
+
+at Dk (index-C1yRO9RY.js:48:72534)
+
+at a4 (Index-CjyRO9RY.js:48:106483) at MB (index-CjyRO9RY.js:48:105545)
+
+at og (index-CyRO9RY.js:48:105375) at e4 (Index-C1yRO9RY.js:48:102495)
+
+at vw (index-SjyRO9RY.js:48:113955)
+
+at Df (index-CyRO9RY.js:48:112545) Object
+
+at at ky (https://construction-management-453010520-ar-199.vercel.app/assets/index-CjyRO9RY.js:48:62074)
+
+[ErrorBoundary) Stack trace: TypeError: x.filter is not a function
+
+hook.js:608
+
+at ns ( https://construction-management-4s3ofo52D-mr-199.vercel.app/assets/index-CjyR09RY.js:606:257924)
+
+Rv (https://construction-management 4530f0520-mr-199.vercel.app/assets/index-CjyRO9RY.JsS:48:34174)
+
+(https://construction-management-4s3ofo520-mr-199.vercel.app/assets/index-CjyRO9RY.is:48:72584)
+
+at a4 (https://construction management 4s3ofo520-mr-199.vercel.ano/assets/index-CjyRO9RY.js:48:106483)
+
+at at og (https://construction-management-4530f0520-mr-199.vercel.app/assets/index-CjyRO9RY.js:48:105375)
+
+MB (https://construction-management-4s30f0520-ar-199.vercel.app/assets/index-CjyRO9RY.js:48:105545)
+
+e4 (https://construction management 453ofo520-mr-199.ver.cel.app/assets/index-CjyRO9RY.js: 48:102495) at
+
+at ww (https://construction-management-453010520-mr-199.vercel.app/assets/index-CjyRO9RY.js:48:113955)
+
+Df (https://construction-management-4s3ofo520-mr-199.vercel.app/assets/index-CiyRO9RY.js:48:112545)
+
+Failed
+
+to load resource: the server responded with a status of 404 ()
+
+المسار غير موجود : transfertypes: Error
+
+خطأ في حفظ قيمة الإكمال التلقائي . af s3 (index-CvRO9RY.js:57:43837)
+
+at async 1 (index-C1yR09RY.js:57:45086)
+
+at async xe (index-CjyR09RY.js:57:45271)
+
+at async (index-CjyRO9RY.js:606:284830)
+
+at async 0 (index-CjyRO9RY.js:606:288070)
+
+]QueryClient[ البيانات الفسئلمة : /api/workers Object
+
+]QueryClient[ استخراج data data من API response
+
+Failed to lead resource: the server responded with a status of 404 ()
+
+. المسار غير موجود : Transfer Types : Error خطا في حفظ قيمة الإكمال التلقاني ..
+
+api/autocomplete:1
+
+hook.js:608
+
+index-CjyRO9RY.js:57
+
+index-C1yR09RY.15:57
+
+api/autocomplete:1
+
+hook.js:608
+
+at s3 (index-CyRO9RY.js:57:43837)
+
+at async i (index-CjyR09RY.js:37:45086)
+
+at async xe (index-CjyR09RY.js:57:45271)
+
+at async D (index-CjyR09RY.js:606:284830) at asyne O (index-CjyRO9RY.js:606:288070)
+
+Failed to load resource: the server responded with a status of 404 ()
+
+المسار غير موجود : transfer Types: Error خطأ في حفظ قيمة الإكمال التلقائي .
+
+at s3 (index-CjyRo9RY.js:57:43837)
+
+at async i (index-CjyR09RY.js:37:45086)
+
+at async xe (index-CjyR0O9RY.js:57:45271)
+
+at asyne (index-CjyRO9RY.js:606:284830)
+
+at async (index-CjyRO9RY.js:606:288070)
+
+Failed to load resource: the server responded with a status of 404 ()
+
+المسار غير موجود : transfertypes: Error خطأ في حفظ قيمة الاكمال التلقاني .
+
+at s3 (index-CJyRO9RY.15:57:43837)
+
+at asyne i (index-CjyRO9RY.js:57:45086)
+
+at async xe (index-CJyR09RY.15:57:45271)
+
+at async D (index-C1yR09RY.js:606:284830)
+
+at asyne O (index-CjyRO9RY.js:606:288070)
+
+Failed to load resource: the responded with a status of 404 ()
+
+الصار غير موجود : transfer Types: Error خطأ في حفظ قيمة الإكمال التلقائي .
+
+at s3 (index-CjyRO9RY.js:57:43837)
+
+at async i (index-CjyR09RY.15:57:45086)
+
+at async xe (index-C1yR09RY. 15:57:45271)
+
+at async D (index-CjyRO9RY.js:606:284830) at async o (index-CjyR09RY.js:606:288070)
+
+Failed to load resource: the server responded with a status of 404 ()
+
+المسار غير موجود : transfertypes: Error خطأ في حفظ قيمة الإكمال التلقائي .
+
+
+
+at s3 (index-CjyR09RY.js:57:43837)
+
+at async i (index-CjyRO9RY.js:57:45086)
+
+at async xe (index-CjyRO9RY.js:37:45271)
+
+at async D (index-CjyR09RY.js:606:284830)
+
+at asyne (index-CjyRO9RY.js:606:288070)
+
+api/autocomplete:1
+
+hook.js:608
+
+api/autocomplete:1
+
+hook.15:608
+
+api/autocomplete:1
+
+hook.js:608
+
+api/autocomplete:1
+
+hook.js:608
+
+وهنا ماذا تقول لقد قمت بتطبيق جميع ما قلتها
