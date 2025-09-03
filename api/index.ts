@@ -764,6 +764,48 @@ app.get('/api/fund-transfers', async (req, res) => {
   }
 });
 
+// مسار الموردين - مفقود تماماً من السجل
+app.get('/api/suppliers', async (req, res) => {
+  try {
+    console.log('🏪 طلب جميع الموردين');
+    
+    if (!supabase) {
+      return res.json({
+        success: true,
+        data: [],
+        count: 0
+      });
+    }
+
+    const { data: suppliers, error } = await supabase
+      .from('suppliers')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.log('⚠️ خطأ في جلب الموردين:', error);
+      return res.json({
+        success: true,
+        data: [],
+        count: 0
+      });
+    }
+
+    res.json({
+      success: true,
+      data: suppliers || [],
+      count: (suppliers || []).length
+    });
+  } catch (error) {
+    console.error('خطأ في مسار الموردين:', error);
+    res.json({
+      success: true,
+      data: [],
+      count: 0
+    });
+  }
+});
+
 // مسار مصروفات العمال المتنوعة (كامل من السجل)
 app.get('/api/worker-misc-expenses', async (req, res) => {
   try {
@@ -906,23 +948,28 @@ app.all('*', (req, res) => {
   });
 });
 
-// ====== معالج Vercel المبسط ======
+// ====== معالج Vercel المحسن لحل أخطاء 404 ======
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const url = req.url || '';
   const method = req.method || 'GET';
   
-  // استخراج المسار من query parameters أو URL
+  // استخراج المسار من query parameters أو URL مع معالجة محسنة
   let path = req.query.path as string || url.replace('/api', '') || '/';
   
-  // التأكد من بداية المسار
+  // التأكد من بداية المسار مع معالجة المسارات المعقدة
   if (!path.startsWith('/')) {
     path = '/' + path;
+  }
+  
+  // معالجة خاصة للمسارات الديناميكية مثل workers/:id
+  if (path.includes('/workers/') && !path.includes('/api/workers/')) {
+    path = path.replace('/workers/', '/workers/');
   }
   
   // بناء المسار الكامل
   const fullPath = `/api${path}`;
   
-  console.log(`📡 ${method} ${fullPath} (Original: ${url})`);
+  console.log(`📡 ${method} ${fullPath} (Original: ${url}) (Path: ${path})`);
 
   // تحديث URL الطلب
   req.url = fullPath;
