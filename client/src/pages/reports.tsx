@@ -31,6 +31,7 @@ import { getCurrentDate, formatCurrency, formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { StatsCard, StatsGrid } from "@/components/ui/stats-card";
 import { useFloatingButton } from "@/components/layout/floating-button-context";
+import { apiRequest } from "@/lib/queryClient";
 import UnifiedReportCard from "@/components/unified-report-card";
 import type { Worker, Project } from "@shared/schema";
 
@@ -88,14 +89,50 @@ export default function Reports() {
   // جلب البيانات
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('/api/projects', 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Project[];
+        }
+        return Array.isArray(response) ? response as Project[] : [];
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        return [];
+      }
+    },
   });
 
   const { data: workers = [] } = useQuery<Worker[]>({
     queryKey: ["/api/workers"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('/api/workers', 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Worker[];
+        }
+        return Array.isArray(response) ? response as Worker[] : [];
+      } catch (error) {
+        console.error('Error fetching workers:', error);
+        return [];
+      }
+    },
   });
 
   const { data: projectsWithStats = [] } = useQuery<any[]>({
     queryKey: ["/api/projects/with-stats"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('/api/projects/with-stats', 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching projects with stats:', error);
+        return [];
+      }
+    },
     refetchInterval: 60000,
     staleTime: 30000,
   });
@@ -107,7 +144,7 @@ export default function Reports() {
   // حساب الإحصائيات
   const reportStats: ReportStats = {
     totalReports: 12, // عدد التقارير المتاحة
-    activeProjects: projects.filter(p => p.status === 'active').length,
+    activeProjects: Array.isArray(projects) ? projects.filter(p => p.status === 'active').length : 0,
     totalWorkers: workers.length,
     totalIncome: Number(projectStats?.totalIncome) || 0,
     totalExpenses: Number(projectStats?.totalExpenses) || 0,

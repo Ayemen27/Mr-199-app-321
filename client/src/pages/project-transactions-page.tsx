@@ -11,6 +11,7 @@ import { useSelectedProject } from '@/hooks/use-selected-project';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useFloatingButton } from '@/components/layout/floating-button-context';
+import { apiRequest } from '@/lib/queryClient';
 import { useEffect } from 'react';
 
 interface Project {
@@ -46,35 +47,104 @@ export default function ProjectTransactionsPage() {
   // جلب المشاريع
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('/api/projects', 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Project[];
+        }
+        return Array.isArray(response) ? response as Project[] : [];
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        return [];
+      }
+    },
   });
 
   // جلب بيانات المشروع مع الإحصائيات بدلاً من التحليل المعطل
   const { data: projectStats, isLoading } = useQuery({
     queryKey: ['/api/projects', selectedProjectId, 'stats'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/stats`, 'GET');
+        return response && response.data ? response.data : response;
+      } catch (error) {
+        console.error('Error fetching project stats:', error);
+        return null;
+      }
+    },
     enabled: !!selectedProjectId,
   });
 
   // جلب تحويلات العهدة للمشروع
   const { data: fundTransfers = [] } = useQuery({
     queryKey: ['/api/projects', selectedProjectId, 'fund-transfers'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/fund-transfers`, 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching fund transfers:', error);
+        return [];
+      }
+    },
     enabled: !!selectedProjectId,
   });
 
   // جلب حضور العمال للمشروع  
   const { data: workerAttendance = [] } = useQuery({
     queryKey: ['/api/projects', selectedProjectId, 'worker-attendance'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/worker-attendance`, 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching worker attendance:', error);
+        return [];
+      }
+    },
     enabled: !!selectedProjectId,
   });
 
   // جلب مشتريات المواد للمشروع
   const { data: materialPurchases = [] } = useQuery({
     queryKey: ['/api/projects', selectedProjectId, 'material-purchases'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/material-purchases`, 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching material purchases:', error);
+        return [];
+      }
+    },
     enabled: !!selectedProjectId,
   });
 
   // جلب مصاريف النقل للمشروع
   const { data: transportExpenses = [] } = useQuery({
     queryKey: ['/api/projects', selectedProjectId, 'transportation-expenses'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/transportation-expenses`, 'GET');
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching transportation expenses:', error);
+        return [];
+      }
+    },
     enabled: !!selectedProjectId,
   });
 

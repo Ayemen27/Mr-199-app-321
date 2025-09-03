@@ -157,17 +157,17 @@ export function SecurityPoliciesPage() {
     }
   };
 
-  const filteredPolicies = policies.filter(policy => 
+  const filteredPolicies = Array.isArray(policies) ? policies.filter(policy => 
     policy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     policy.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   // إحصائيات سريعة
   const stats = {
-    totalPolicies: policies.length,
-    activePolicies: policies.filter(p => p.status === 'active').length,
-    criticalViolations: violations.filter(v => v.violation.severity === 'critical').length,
-    pendingSuggestions: suggestions.filter(s => s.status === 'pending').length
+    totalPolicies: Array.isArray(policies) ? policies.length : 0,
+    activePolicies: Array.isArray(policies) ? policies.filter(p => p.status === 'active').length : 0,
+    criticalViolations: Array.isArray(violations) ? violations.filter(v => v.violation.severity === 'critical').length : 0,
+    pendingSuggestions: Array.isArray(suggestions) ? suggestions.filter(s => s.status === 'pending').length : 0
   };
 
   return (
@@ -323,7 +323,7 @@ export function SecurityPoliciesPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">جاري تحميل السياسات...</p>
               </div>
-            ) : filteredPolicies.length > 0 ? (
+            ) : Array.isArray(filteredPolicies) && filteredPolicies.length > 0 ? (
               filteredPolicies.map((policy) => (
                 <Card key={policy.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
@@ -389,7 +389,7 @@ export function SecurityPoliciesPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">جاري تحميل الاقتراحات...</p>
               </div>
-            ) : suggestions.length > 0 ? (
+            ) : Array.isArray(suggestions) && suggestions.length > 0 ? (
               suggestions.map((suggestion) => (
                 <Card key={suggestion.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
@@ -455,7 +455,7 @@ export function SecurityPoliciesPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">جاري تحميل الانتهاكات...</p>
               </div>
-            ) : violations.length > 0 ? (
+            ) : Array.isArray(violations) && violations.length > 0 ? (
               violations.map((item) => (
                 <Card key={item.violation.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">

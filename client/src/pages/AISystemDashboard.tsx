@@ -314,7 +314,7 @@ const DatabaseTableManager = () => {
                 {rawTables.length !== tables.length && (
                   <span className="text-yellow-600"> (تم إزالة {rawTables.length - tables.length} مكرر)</span>
                 )}
-                {tables.length > 0 && ` - إجمالي الصفوف: ${tables.reduce((sum, t) => sum + t.row_count, 0).toLocaleString()}`}
+                {Array.isArray(tables) && tables.length > 0 && ` - إجمالي الصفوف: ${tables.reduce((sum, t) => sum + t.row_count, 0).toLocaleString()}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -333,7 +333,7 @@ const DatabaseTableManager = () => {
               ) : (
                 <ScrollArea className="h-[500px]">
                   <div className="space-y-2">
-                    {tables
+                    {Array.isArray(tables) && tables
                       .sort((a, b) => a.table_name.localeCompare(b.table_name))
                       .map((table) => (
                       <div 
@@ -745,7 +745,7 @@ export default function AISystemDashboard() {
       setVerificationResults(data);
       toast({
         title: "تم التحقق من النتائج",
-        description: `معدل النجاح: ${(data.verificationResults.filter((r: any) => r.success).length / data.verificationResults.length * 100).toFixed(1)}%`,
+        description: `معدل النجاح: ${Array.isArray(data.verificationResults) ? (data.verificationResults.filter((r: any) => r.success).length / data.verificationResults.length * 100).toFixed(1) : 0}%`,
       });
     },
     onError: (error: any) => {
@@ -1048,17 +1048,17 @@ export default function AISystemDashboard() {
                       </TabsTrigger>
                       <TabsTrigger value="manual" className="text-xs flex items-center gap-1">
                         <Settings className="w-3 h-3" />
-                        يدوية ({recommendations.filter(rec => !rec.autoExecutable).length})
+                        يدوية ({Array.isArray(recommendations) ? recommendations.filter(rec => !rec.autoExecutable).length : 0})
                       </TabsTrigger>
                       <TabsTrigger value="auto" className="text-xs flex items-center gap-1">
                         <Zap className="w-3 h-3" />
-                        تلقائية ({recommendations.filter(rec => rec.autoExecutable).length})
+                        تلقائية ({Array.isArray(recommendations) ? recommendations.filter(rec => rec.autoExecutable).length : 0})
                       </TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="all">
                       <ScrollArea className="h-64 sm:h-80">
-                        {recommendations.length > 0 ? (
+                        {Array.isArray(recommendations) && recommendations.length > 0 ? (
                           <div className="space-y-3">
                             {recommendations.slice(0, 5).map((rec) => (
                               <RecommendationCard 
@@ -1088,7 +1088,7 @@ export default function AISystemDashboard() {
                     
                     <TabsContent value="manual">
                       <ScrollArea className="h-64 sm:h-80">
-                        {recommendations.filter(rec => !rec.autoExecutable).length > 0 ? (
+                        {Array.isArray(recommendations) && recommendations.filter(rec => !rec.autoExecutable).length > 0 ? (
                           <div className="space-y-3">
                             {recommendations.filter(rec => !rec.autoExecutable).map((rec) => (
                               <RecommendationCard 
@@ -1111,7 +1111,7 @@ export default function AISystemDashboard() {
                     
                     <TabsContent value="auto">
                       <ScrollArea className="h-64 sm:h-80">
-                        {recommendations.filter(rec => rec.autoExecutable).length > 0 ? (
+                        {Array.isArray(recommendations) && recommendations.filter(rec => rec.autoExecutable).length > 0 ? (
                           <div className="space-y-3">
                             {recommendations.filter(rec => rec.autoExecutable).map((rec) => (
                               <RecommendationCard 
@@ -1235,7 +1235,7 @@ export default function AISystemDashboard() {
                               
                               <ScrollArea className="max-h-64">
                                 <div className="space-y-2">
-                                  {detectedErrorsData?.detectedErrors?.slice(0, 8).map((error: any, index: number) => (
+                                  {Array.isArray(detectedErrorsData?.detectedErrors) && detectedErrorsData.detectedErrors.slice(0, 8).map((error: any, index: number) => (
                                     <div key={error.id || index} className="bg-red-50 border border-red-200 rounded-lg p-3">
                                       {/* Header */}
                                       <div className="flex items-start justify-between mb-2">
@@ -1295,8 +1295,8 @@ export default function AISystemDashboard() {
                                 <div className="text-xs text-red-600">
                                   <span className="font-medium">الإجراءات المقترحة:</span>
                                   <div className="mt-1 space-y-1">
-                                    <div>• فحص {detectedErrorsData?.detectedErrors?.filter((e: any) => e.severity === 'critical').length || 0} مشكلة حرجة</div>
-                                    <div>• مراجعة {detectedErrorsData?.detectedErrors?.filter((e: any) => e.tableName).length || 0} جدول متأثر</div>
+                                    <div>• فحص {Array.isArray(detectedErrorsData?.detectedErrors) ? detectedErrorsData.detectedErrors.filter((e: any) => e.severity === 'critical').length : 0} مشكلة حرجة</div>
+                                    <div>• مراجعة {Array.isArray(detectedErrorsData?.detectedErrors) ? detectedErrorsData.detectedErrors.filter((e: any) => e.tableName).length : 0} جدول متأثر</div>
                                     <div>• تحسين الأداء العام لقاعدة البيانات</div>
                                   </div>
                                 </div>
@@ -1584,12 +1584,12 @@ export default function AISystemDashboard() {
                         <div className="flex justify-between">
                           <span>معدل النجاح:</span>
                           <span className="font-mono text-green-600">
-                            {(verificationResults.verificationResults.filter((r: any) => r.success).length / verificationResults.verificationResults.length * 100).toFixed(1)}%
+                            {Array.isArray(verificationResults.verificationResults) ? (verificationResults.verificationResults.filter((r: any) => r.success).length / verificationResults.verificationResults.length * 100).toFixed(1) : 0}%
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span>التوصيات المتحققة:</span>
-                          <span>{verificationResults.verificationResults.filter((r: any) => r.success).length}</span>
+                          <span>{Array.isArray(verificationResults.verificationResults) ? verificationResults.verificationResults.filter((r: any) => r.success).length : 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>العمليات الفاشلة:</span>
