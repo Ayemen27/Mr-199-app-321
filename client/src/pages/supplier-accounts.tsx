@@ -46,6 +46,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { apiRequest } from "@/lib/queryClient";
 import type { Supplier, MaterialPurchase, Project } from "@shared/schema";
 
 interface SupplierAccountSummary {
@@ -73,11 +74,37 @@ export default function SupplierAccountsPage() {
   // جلب قائمة المشاريع
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/projects", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Project[];
+        }
+        return Array.isArray(response) ? response as Project[] : [];
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        return [];
+      }
+    },
   });
 
   // جلب قائمة الموردين
   const { data: suppliers = [], isLoading: isLoadingSuppliers, error: suppliersError } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/suppliers", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Supplier[];
+        }
+        return Array.isArray(response) ? response as Supplier[] : [];
+      } catch (error) {
+        console.error("Error fetching suppliers:", error);
+        return [];
+      }
+    },
     staleTime: 60000, // 1 minute
     refetchOnWindowFocus: false,
   });
@@ -206,33 +233,34 @@ export default function SupplierAccountsPage() {
   const selectedSupplier = suppliers.find(s => s.id === selectedSupplierId);
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
-  // حساب الإجماليات للمورد المحدد (للعرض التفصيلي)
-  const totals = purchases.reduce((acc, purchase) => {
-    acc.totalAmount += parseFloat(purchase.totalAmount);
+  // حساب الإجماليات للمورد المحدد (للعرض التفصيلي) مع معالجة آمنة
+  const totals = Array.isArray(purchases) ? purchases.reduce((acc, purchase) => {
+    acc.totalAmount += parseFloat(purchase.totalAmount || "0");
     acc.paidAmount += parseFloat(purchase.paidAmount || "0");
     acc.remainingAmount += parseFloat(purchase.remainingAmount || "0");
     return acc;
-  }, { totalAmount: 0, paidAmount: 0, remainingAmount: 0 });
+  }, { totalAmount: 0, paidAmount: 0, remainingAmount: 0 }) : { totalAmount: 0, paidAmount: 0, remainingAmount: 0 };
 
-  // فصل المشتريات حسب نوع الدفع للمورد المحدد (مع دعم الأحرف العربية المختلفة)
-  const cashPurchases = purchases.filter(p => {
+  // فصل المشتريات حسب نوع الدفع للمورد المحدد (مع معالجة آمنة ودعم الأحرف العربية)
+  const safePurchases = Array.isArray(purchases) ? purchases : [];
+  const cashPurchases = safePurchases.filter(p => {
     const cleanType = p.purchaseType?.replace(/['"]/g, '') || '';
     return cleanType === "نقد";
   });
-  const creditPurchases = purchases.filter(p => {
+  const creditPurchases = safePurchases.filter(p => {
     const cleanType = p.purchaseType?.replace(/['"]/g, '') || '';
     // البحث عن جميع أشكال "أجل": مع الألف العادية والمد
     return cleanType === "أجل" || cleanType === "آجل" || cleanType.includes("جل");
   });
   
   const cashTotals = {
-    totalAmount: cashPurchases.reduce((sum, p) => sum + parseFloat(p.totalAmount), 0),
-    count: cashPurchases.length
+    totalAmount: Array.isArray(cashPurchases) ? cashPurchases.reduce((sum, p) => sum + parseFloat(p.totalAmount || "0"), 0) : 0,
+    count: Array.isArray(cashPurchases) ? cashPurchases.length : 0
   };
   
   const creditTotals = {
-    totalAmount: creditPurchases.reduce((sum, p) => sum + parseFloat(p.totalAmount), 0),
-    count: creditPurchases.length
+    totalAmount: Array.isArray(creditPurchases) ? creditPurchases.reduce((sum, p) => sum + parseFloat(p.totalAmount || "0"), 0) : 0,
+    count: Array.isArray(creditPurchases) ? creditPurchases.length : 0
   };
 
   // استخدام الإحصائيات العامة للبطاقات العلوية والمفلترة للمورد المحدد
@@ -245,7 +273,7 @@ export default function SupplierAccountsPage() {
     totalPaid: globalStats?.totalPaid || "0",
     remainingDebt: selectedSupplierId ? (supplierStats?.remainingDebt || "0") : (globalStats?.remainingDebt || "0"),
     activeSuppliers: globalStats?.activeSuppliers || (Array.isArray(suppliers) ? suppliers.filter(s => parseFloat(s.totalDebt) > 0).length : 0),
-    totalPurchases: purchases.length
+    totalPurchases: Array.isArray(purchases) ? purchases.length : 0
   };
 
   const formatDate = (dateStr: string) => {

@@ -164,17 +164,59 @@ export default function MaterialPurchase() {
 
   const { data: materials = [] } = useQuery<Material[]>({
     queryKey: ["/api/materials"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/materials", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Material[];
+        }
+        return Array.isArray(response) ? response as Material[] : [];
+      } catch (error) {
+        console.error("Error fetching materials:", error);
+        return [];
+      }
+    },
+    staleTime: 300000, // 5 دقائق
+    gcTime: 600000, // 10 دقائق
   });
 
   // جلب بيانات الموردين من قاعدة البيانات
   const { data: suppliers = [] } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/suppliers", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as Supplier[];
+        }
+        return Array.isArray(response) ? response as Supplier[] : [];
+      } catch (error) {
+        console.error("Error fetching suppliers:", error);
+        return [];
+      }
+    },
+    staleTime: 300000, // 5 دقائق
+    gcTime: 600000, // 10 دقائق
   });
 
   // Fetch purchase data for editing
   const { data: purchaseToEdit } = useQuery({
     queryKey: ["/api/material-purchases", editId],
-    queryFn: () => apiRequest(`/api/material-purchases/${editId}`, "GET"),
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/material-purchases/${editId}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data) {
+          return response.data;
+        }
+        return response || null;
+      } catch (error) {
+        console.error("Error fetching purchase data for editing:", error);
+        return null;
+      }
+    },
     enabled: !!editId,
   });
 

@@ -84,14 +84,38 @@ export default function WorkerAttendance() {
   // Get today's attendance records
   const { data: todayAttendance = [] } = useQuery({
     queryKey: ["/api/projects", selectedProjectId, "attendance", selectedDate],
-    queryFn: () => apiRequest(`/api/projects/${selectedProjectId}/attendance?date=${selectedDate}`, "GET"),
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/projects/${selectedProjectId}/attendance?date=${selectedDate}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error("Error fetching attendance records:", error);
+        return [];
+      }
+    },
     enabled: !!selectedProjectId,
   });
 
   // Fetch specific attendance record for editing
   const { data: attendanceToEdit } = useQuery({
     queryKey: ["/api/worker-attendance", editId],
-    queryFn: () => apiRequest(`/api/worker-attendance/${editId}`, "GET"),
+    queryFn: async () => {
+      try {
+        const response = await apiRequest(`/api/worker-attendance/${editId}`, "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data) {
+          return response.data;
+        }
+        return response || null;
+      } catch (error) {
+        console.error("Error fetching attendance record for editing:", error);
+        return null;
+      }
+    },
     enabled: !!editId,
   });
 

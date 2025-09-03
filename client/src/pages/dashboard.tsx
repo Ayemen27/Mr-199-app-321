@@ -88,6 +88,19 @@ export default function Dashboard() {
   // تحميل المشاريع مع الإحصائيات بشكل محسن
   const { data: projects = [], isLoading: projectsLoading } = useQuery<ProjectWithStats[]>({
     queryKey: ["/api/projects/with-stats"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/projects/with-stats", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as ProjectWithStats[];
+        }
+        return Array.isArray(response) ? response as ProjectWithStats[] : [];
+      } catch (error) {
+        console.error("Error fetching projects with stats:", error);
+        return [];
+      }
+    },
     staleTime: 1000 * 30, // 30 ثانية فقط للإحصائيات لضمان الحصول على البيانات المحدثة
     refetchInterval: 1000 * 60, // إعادة التحديث كل دقيقة
   });
@@ -95,6 +108,19 @@ export default function Dashboard() {
   // جلب أنواع العمال من قاعدة البيانات
   const { data: workerTypes = [] } = useQuery<WorkerType[]>({
     queryKey: ["/api/worker-types"],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("/api/worker-types", "GET");
+        // معالجة الهيكل المتداخل للاستجابة
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data as WorkerType[];
+        }
+        return Array.isArray(response) ? response as WorkerType[] : [];
+      } catch (error) {
+        console.error("Error fetching worker types:", error);
+        return [];
+      }
+    },
   });
 
   // متحولات لإضافة العامل والمشروع
