@@ -1,0 +1,223 @@
+index-DxOZJwNn.js:896
+
+]App. Router به تحميل Router... 2025-09-03T15:54:42.6962
+
+]ProtectedRoute[ فحص الحماية Object
+
+]ProtectedRoute[ في حالة تحميل إظهار شاشة التحميل
+
+]AuthProvider[ 03-09-2025 ... 15:54:42.744 بدء تهيئة المصادقةZ
+
+]AuthProvider[ فحص البيانات المحفوظة : Object
+
+index-DxOZ.JWNn.js:896
+
+index-DxOZJwNn.js:896
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+الحور على بيانات محفوظة التحقق من صحتها [AuthProvider]
+
+index-DxOZJwNn.15:606
+
+... تم تحميل النافذة، بدء العد التنازلي .
+
+]AuthProvider( إرسال طلب التحقق إلى /api/auth/me
+
+]AuthProvider( استجابة /api/auth/me: 200
+
+]AuthProvider[ بيانات المستخدم من API object
+
+]AuthProvider( تم التحقق بنجاح حفظ المستخدم : admin@example.com
+
+]AuthProvider[ انتهاء تهيئة المصادقة isLoading - false
+
+]ProtectedRoute فحص الحماية object
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم: admin@example.com
+
+index-DxOZ.JWNn.js:606
+
+VM3:19
+
+index-DxOZJwNn.js:606
+
+index-DxOZ.JWNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:606
+
+index-DxOZJwNn.js:896
+
+index DXOZ.JWNn.js:896
+
+(محاولة (1) React ثم الحور على محتوى .
+
+... إخفاء صفحة التحميل
+
+VM3:32
+
+VM3:8
+
+Failed to load resource: the server responded with a status of 404 () api/projects/4dd9147..ummary/2025-09-03:1
+
+:Frontend بيانات المشروع المحدد في ) Object
+
+: مشروع الحمي - تحقق من البيانات . Object
+
+index-DxOZJwNn.js:606
+
+hook.js:608
+
+Failed to load resource: the server responded with a status of 404 (
+
+) api/projects/4dd9147..ummary/2025-09-03-1
+
+]ProtectedRoute[ فحص الحماية : Object
+
+index-DxOZJwNn.js:896
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example.com
+
+index-DxOZJwNn.js:896
+
+5 A soft navigation has been detected: <URL>
+
+A soft navigation has been detected:
+
+https://construction-management-kzah6x16u-mr-199.ver
+
+index-DxOZJwNn.js:48
+
+cel.app/suppliers-pro
+
+A soft navigation has been detected:
+
+https://construction-management-kzah6x16u-mr-199.ver
+
+index-DxOZJwNn.js:48
+
+cel.app/worker-attendance
+
+A soft navigation has been detected:
+
+https://construction management-kzahöx10u-mr-199.ver
+
+index-DxOZJwin.js:48
+
+cel.app/suppliers-pro
+
+A soft navigation has been detected:
+
+https://construction-management-kzah6x16u-mr-199.ver
+
+index-DxOZJwNn.js:48
+
+cel.app/material-purchase
+
+A soft navigation has been detected: https://construction-management-kzah6x16u-mr-199.ver cel.app/project-transfers
+
+index-DxOZJwNn.js:48
+
+]QueryClient[ البيانات المستلمة : /api/suppliers Object
+
+]QueryClient[ استخراج data.data من API response
+
+Failed to load resource: the server responded with a status of 404 ()
+
+Failed to load resource: the server responded with a status of 404 ()
+
+aria-describedby-(undefined) for (DialogContent). ▲Warning: Missing 'Description
+
+index-DxOZJwNn.js:57
+
+index-DxOZJwNn.j5:57
+
+api/suppliers 1
+
+api/suppliers:1
+
+hook.js:608
+
+overrideMethod hook. is:608
+
+]ProtectedRoute[ فحص الحماية : Object
+
+index-DxOZJwNn.js:896
+
+]ProtectedRoute[ مصادق عليه إظهار المحتوى المستخدم : admin@example.com
+
+index-DxOZJwNn.js:896
+
+]QueryClient[ البيانات المستلمة : /api/workers Object
+
+index-DxOZJwNn.js:57
+
+]QueryClient[ استخراج data data من API response
+
+index-DxOZJwNn.js:57
+
+]ProtectedRoute[ فحص الحماية : Object
+
+index-DxOZJwNn.js:896
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى المستخدم : admin@example.com
+
+index-DxOZ.JWNr.js:896
+
+A Warning: Missing Description aria-describedby=(undefined) for (DialogContent)..
+
+hook.js:608
+
+overrideMethod @ hook.js:608
+
+]ProtectedRoute[ فحص الحماية : Object
+
+index-DxOZJwNn.js:896
+
+]ProtectedRoute[ مصادق عليه، إظهار المحتوى للمستخدم : admin@example.com
+
+index-DxOZJwNri.js:896
+
+]QueryClient( البيانات المستلمة : /api/projects Object
+
+index-DxOZJwNn.js:57
+
+]QueryClient[ استخراج data.data من API response
+
+index-DxOZJwNn.js:57
+
+A Warning: Missing Description aria-describedby=(undefined) for (DialogContent}.
+
+hook.js:608
+
+overrideMethod @ hook.js:608
+
+]QueryClient[ البيانات المستلمة : /api/project-fund-transfers Object
+
+index-DxOZJwNn.15:57
+
+count: 0
+
+data: []
+
+success: true
+
+[[Prototype]]: Object
+
+>
+
+]QueryClient[ استخراج data.data من API response
+
+Failed to load resource: the server responded with a status of 404 ()
+
+Failed to load resource; the server responded with a status of 404 ()
+
+index-DxOZJwNn.js:57
+
+api/project-fund-transfers:1
+
+api/project-fund-transfers:1
