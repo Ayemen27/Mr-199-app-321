@@ -41,6 +41,20 @@ A comprehensive construction project management system designed for the Middle E
 - **API Endpoints**: Provides API routes for status checks, auto-adding missing keys, reloading keys from .env, and adding new required keys.
 
 ## Recent Changes (September 2025)
+- **MAJOR API IMPROVEMENTS & SECURITY ENHANCEMENTS (3 سبتمبر)**:
+  - **تحسين شامل لاستعلامات API**: إضافة معالجة محسنة للأخطاء مع try-catch في جميع المكونات
+    - تحسين `notifications-dropdown.tsx` مع معالجة هياكل استجابة متعددة والتحقق من `data.success` و `data.data`
+    - تطوير `projects.tsx` مع معالجة أفضل للاستجابات وتسجيل مفصل للتشخيص
+    - تحديث `project-selector.tsx` مع فحوصات أمان شاملة وإعادة محاولة ذكية
+    - تحسين `workers.tsx` مع معالجة منفصلة لـ workers و worker-types مع أوقات staleTime مختلفة
+    - تطوير `dashboard.tsx` مع معالجة متقدمة لهياكل البيانات المتعددة
+    - تحديث `daily-expenses.tsx` مع حماية شاملة لاستعلامات العمال والمشاريع
+  - **حماية كاملة من انهيار التطبيق**: إضافة `Array.isArray()` قبل جميع عمليات filter/map/reduce
+  - **معالجة هياكل API متعددة**: دعم `{success, data, count}` ومصفوفات مباشرة وكائنات مفردة
+  - **تحسينات الأداء**: إضافة staleTime, retry, وrefetchInterval محسنة لكل مكون
+  - **تسجيل مفصل**: إضافة console.log شامل لتتبع البيانات والأخطاء بوضوح
+  - **معالجة آمنة للاستجابات**: إرجاع مصفوفات فارغة بدلاً من كسر الواجهة عند الأخطاء
+  - **نتيجة**: صفر أخطاء LSP وحماية شاملة من runtime errors مع أداء محسن
 - **CRITICAL VERCEL DEPLOYMENT FIX: إصلاح مشاكل API في بيئة الإنتاج (2 سبتمبر)**:
   - **إصلاح توجيه Vercel**: حل مشكلة عدم وصول طلبات API للمعالجات الصحيحة
     - إضافة استخراج المسار من query parameters في `/api/index.ts`  

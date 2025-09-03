@@ -170,41 +170,82 @@ function DailyExpensesContent() {
     }
   };
 
-  const { data: workers = [] } = useQuery<Worker[]>({
+  const { data: workers = [], error: workersError } = useQuery<Worker[]>({
     queryKey: ["/api/workers"],
     queryFn: async () => {
       try {
+        console.log('🔄 [DailyExpenses] جلب قائمة العمال...');
         const response = await apiRequest("/api/workers", "GET");
-        // معالجة الهيكل المتداخل للاستجابة
-        if (response && response.data && Array.isArray(response.data)) {
-          return response.data as Worker[];
+        console.log('📊 [DailyExpenses] استجابة العمال:', response);
+        
+        // معالجة هيكل الاستجابة المتعددة
+        let workers = [];
+        if (response && typeof response === 'object') {
+          if (response.success !== undefined && response.data !== undefined) {
+            workers = Array.isArray(response.data) ? response.data : [];
+          } else if (Array.isArray(response)) {
+            workers = response;
+          } else if (response.id) {
+            workers = [response];
+          } else if (response.data) {
+            workers = Array.isArray(response.data) ? response.data : [];
+          }
         }
-        return Array.isArray(response) ? response as Worker[] : [];
+        
+        if (!Array.isArray(workers)) {
+          console.warn('⚠️ [DailyExpenses] بيانات العمال ليست مصفوفة، تحويل إلى مصفوفة فارغة');
+          workers = [];
+        }
+        
+        console.log(`✅ [DailyExpenses] تم جلب ${workers.length} عامل`);
+        return workers as Worker[];
       } catch (error) {
-        console.error("Error fetching workers:", error);
-        return [];
+        console.error('❌ [DailyExpenses] خطأ في جلب العمال:', error);
+        return [] as Worker[];
       }
     },
     staleTime: 300000, // 5 دقائق
     gcTime: 600000, // 10 دقائق
+    retry: 2,
   });
 
-  // جلب قائمة المشاريع لعرض أسماء المشاريع في ترحيل الأموال
-  const { data: projects = [] } = useQuery<Project[]>({
+  // جلب قائمة المشاريع لعرض أسماء المشاريع في ترحيل الأموال مع معالجة محسنة
+  const { data: projects = [], error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
     queryFn: async () => {
       try {
+        console.log('🔄 [DailyExpenses] جلب قائمة المشاريع...');
         const response = await apiRequest("/api/projects", "GET");
-        // معالجة الهيكل المتداخل للاستجابة
-        if (response && response.data && Array.isArray(response.data)) {
-          return response.data as Project[];
+        console.log('📊 [DailyExpenses] استجابة المشاريع:', response);
+        
+        // معالجة هيكل الاستجابة المتعددة
+        let projects = [];
+        if (response && typeof response === 'object') {
+          if (response.success !== undefined && response.data !== undefined) {
+            projects = Array.isArray(response.data) ? response.data : [];
+          } else if (Array.isArray(response)) {
+            projects = response;
+          } else if (response.id) {
+            projects = [response];
+          } else if (response.data) {
+            projects = Array.isArray(response.data) ? response.data : [];
+          }
         }
-        return Array.isArray(response) ? response as Project[] : [];
+        
+        if (!Array.isArray(projects)) {
+          console.warn('⚠️ [DailyExpenses] البيانات ليست مصفوفة، تحويل إلى مصفوفة فارغة');
+          projects = [];
+        }
+        
+        console.log(`✅ [DailyExpenses] تم جلب ${projects.length} مشروع`);
+        return projects as Project[];
       } catch (error) {
-        console.error("Error fetching projects:", error);
-        return [];
+        console.error('❌ [DailyExpenses] خطأ في جلب المشاريع:', error);
+        return [] as Project[];
       }
     },
+    staleTime: 300000, // 5 دقائق
+    retry: 2,
   });
 
   const { data: todayAttendance = [] } = useQuery<WorkerAttendance[]>({

@@ -85,24 +85,58 @@ export default function Dashboard() {
     }
   };
 
-  // تحميل المشاريع مع الإحصائيات بشكل محسن
-  const { data: projects = [], isLoading: projectsLoading } = useQuery<ProjectWithStats[]>({
+  // تحميل المشاريع مع الإحصائيات مع معالجة محسنة للأخطاء
+  const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<ProjectWithStats[]>({
     queryKey: ["/api/projects/with-stats"],
     queryFn: async () => {
       try {
+        console.log('🔄 [Dashboard] جلب المشاريع مع الإحصائيات...');
         const response = await apiRequest("/api/projects/with-stats", "GET");
-        // معالجة الهيكل المتداخل للاستجابة
-        if (response && response.data && Array.isArray(response.data)) {
-          return response.data as ProjectWithStats[];
+        console.log('📊 [Dashboard] استجابة المشاريع:', response);
+        
+        // معالجة هيكل الاستجابة المتعددة
+        let projects = [];
+        if (response && typeof response === 'object') {
+          // إذا كانت في شكل {success, data, count}
+          if (response.success !== undefined && response.data !== undefined) {
+            projects = Array.isArray(response.data) ? response.data : [];
+            console.log('✅ [Dashboard] استخراج البيانات من response.data');
+          }
+          // إذا كانت مصفوفة مباشرة
+          else if (Array.isArray(response)) {
+            projects = response;
+            console.log('✅ [Dashboard] استخدام الاستجابة كمصفوفة مباشرة');
+          }
+          // إذا كان كائن واحد
+          else if (response.id) {
+            projects = [response];
+            console.log('✅ [Dashboard] تحويل كائن واحد لمصفوفة');
+          }
+          // إذا كانت خاصية data موجودة ولكن success غير محدد
+          else if (response.data) {
+            projects = Array.isArray(response.data) ? response.data : [];
+            console.log('✅ [Dashboard] استخراج البيانات من data فقط');
+          }
         }
-        return Array.isArray(response) ? response as ProjectWithStats[] : [];
+        
+        // التأكد من أن النتيجة مصفوفة
+        if (!Array.isArray(projects)) {
+          console.warn('⚠️ [Dashboard] البيانات ليست مصفوفة، تحويل إلى مصفوفة فارغة');
+          projects = [];
+        }
+        
+        console.log(`✅ [Dashboard] تم جلب ${projects.length} مشروع مع الإحصائيات`);
+        return projects as ProjectWithStats[];
       } catch (error) {
-        console.error("Error fetching projects with stats:", error);
-        return [];
+        console.error("❌ [Dashboard] خطأ في جلب المشاريع:", error);
+        // إرجاع مصفوفة فارغة لتجنب كسر الداشبورد
+        return [] as ProjectWithStats[];
       }
     },
-    staleTime: 1000 * 30, // 30 ثانية فقط للإحصائيات لضمان الحصول على البيانات المحدثة
+    staleTime: 1000 * 30, // 30 ثانية للإحصائيات الحية
     refetchInterval: 1000 * 60, // إعادة التحديث كل دقيقة
+    retry: 2, // محاولتين إضافيتين
+    refetchOnWindowFocus: false, // تقليل الطلبات غير الضرورية
   });
 
   // جلب أنواع العمال من قاعدة البيانات
