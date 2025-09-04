@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --background: hsl(210, 40%, 8%);
+  --foreground: hsl(210, 40%, 95%);
+  --card: hsl(210, 40%, 12%);
+  --card-foreground: hsl(210, 40%, 95%);
+  --popover: hsl(210, 40%, 12%);
+  --popover-foreground: hsl(210, 40%, 95%);
+  --primary: hsl(210, 100%, 60%);
+  --primary-foreground: hsl(210, 40%, 5%);
+  --secondary: hsl(210, 40%, 16%);
+  --secondary-foreground: hsl(210, 40%, 95%);
+  --muted: hsl(210, 40%, 16%);
+  --muted-foreground: hsl(210, 40%, 65%);
+  --accent: hsl(210, 40%, 18%);
+  --accent-foreground: hsl(210, 40%, 95%);
+  --destructive: hsl(0, 65%, 55%);
+  --destructive-foreground: hsl(210, 40%, 95%);
+  --border: hsl(210, 40%, 18%);
+  --input: hsl(210, 40%, 18%);
+  --ring: hsl(210, 100%, 60%);
+  --radius: 0.5rem;
+  --font-sans: 'Cairo', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  direction: rtl;
+}
+
+.code-font {
+  font-family: var(--font-mono);
+}
+
+.status-success { 
+  background: hsl(142, 76%, 36%); 
+}
+
+.status-warning { 
+  background: hsl(48, 96%, 53%); 
+}
+
+.status-error { 
+  background: hsl(0, 84%, 60%); 
+}
+
+.status-info { 
+  background: hsl(221, 83%, 53%); 
+}
+
+.pulse-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.metric-card {
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

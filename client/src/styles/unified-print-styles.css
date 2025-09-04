@@ -1,0 +1,566 @@
+/* أنماط طباعة موحدة لجميع التقارير - نظام إدارة المشاريع الإنشائية */
+/* تم دمج وتوحيد جميع ملفات CSS للطباعة في ملف واحد لتسهيل الصيانة */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+
+/* ===============================
+   1. إعدادات الصفحة الأساسية
+   =============================== */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 8mm;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+  }
+
+  /* إخفاء عناصر غير مرغوبة */
+  .no-print,
+  .sidebar,
+  .navbar,
+  button:not(.print-visible),
+  .print\\:hidden,
+  nav,
+  aside,
+  .dropdown,
+  .tooltip {
+    display: none !important;
+  }
+
+  /* إظهار عناصر مخصصة للطباعة */
+  .print\\:block {
+    display: block !important;
+  }
+  
+  .print\\:inline {
+    display: inline !important;
+  }
+  
+  .print\\:flex {
+    display: flex !important;
+  }
+
+  /* ===============================
+     2. تنسيق الجسم الرئيسي
+     =============================== */
+  body {
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    color: #1a1a1a !important;
+    background: white !important;
+    direction: rtl;
+    text-align: right;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* ===============================
+     3. تخطيط الحاويات
+     =============================== */
+  .container,
+  .print-preview {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .card,
+  .print\\:shadow-none {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* ===============================
+     4. رأس التقرير
+     =============================== */
+  .report-header {
+    text-align: center;
+    margin-bottom: 20pt;
+    border-bottom: 2pt solid #1e40af;
+    padding-bottom: 12pt;
+    page-break-inside: avoid;
+  }
+
+  .report-header h1,
+  .report-header h2 {
+    font-size: 18pt !important;
+    font-weight: bold !important;
+    color: #1e40af !important;
+    margin: 0 0 8pt 0 !important;
+    text-shadow: none !important;
+  }
+
+  .report-header .subtitle {
+    font-size: 14pt !important;
+    color: #374151 !important;
+    font-weight: 500 !important;
+    margin: 4pt 0 !important;
+  }
+
+  .report-header .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8pt;
+    margin-top: 12pt;
+    font-size: 9pt !important;
+  }
+
+  .report-header .info-item {
+    background-color: #f8fafc !important;
+    padding: 4pt 6pt !important;
+    border: 1pt solid #e2e8f0 !important;
+    border-radius: 3pt;
+    text-align: center;
+  }
+
+  .report-header .info-label {
+    font-weight: 600 !important;
+    color: #475569 !important;
+  }
+
+  .report-header .info-value {
+    font-weight: 500 !important;
+    color: #1e293b !important;
+  }
+
+  /* ===============================
+     5. تنسيق الجداول
+     =============================== */
+  .report-table,
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 15pt 0 !important;
+    font-size: 9pt !important;
+    table-layout: fixed !important;
+    page-break-inside: auto;
+  }
+
+  .report-table th,
+  table th {
+    background-color: #1e40af !important;
+    color: white !important;
+    font-weight: bold !important;
+    padding: 6pt 4pt !important;
+    border: 1pt solid #1e40af !important;
+    text-align: center !important;
+    font-size: 8pt !important;
+    vertical-align: middle !important;
+    page-break-inside: avoid;
+  }
+
+  .report-table td,
+  table td {
+    padding: 5pt 3pt !important;
+    border: 0.5pt solid #cbd5e1 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: 8pt !important;
+    word-wrap: break-word !important;
+    page-break-inside: avoid;
+  }
+
+  /* تلوين الصفوف بالتناوب */
+  .report-table tbody tr:nth-child(even),
+  table tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+  }
+
+  .report-table tbody tr:hover,
+  table tbody tr:hover {
+    background-color: #f1f5f9 !important;
+  }
+
+  /* ===============================
+     6. خلايا خاصة ومميزة
+     =============================== */
+  .total-row {
+    background-color: #dbeafe !important;
+    font-weight: bold !important;
+    border-top: 2pt solid #3b82f6 !important;
+  }
+
+  .summary-row {
+    background-color: #f0f9ff !important;
+    font-weight: 600 !important;
+  }
+
+  .highlight-cell {
+    background-color: #fef3c7 !important;
+    font-weight: 600 !important;
+  }
+
+  .success-cell {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+  }
+
+  .warning-cell {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+  }
+
+  .error-cell {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+  }
+
+  /* ===============================
+     7. عناصر العملة والأرقام
+     =============================== */
+  .currency {
+    font-weight: 600 !important;
+    font-family: 'Courier New', monospace !important;
+    text-align: left !important;
+    direction: ltr;
+  }
+
+  .number {
+    font-family: 'Courier New', monospace !important;
+    font-weight: 500 !important;
+  }
+
+  .balance-positive {
+    color: #16a34a !important;
+    font-weight: bold !important;
+  }
+
+  .balance-negative {
+    color: #dc2626 !important;
+    font-weight: bold !important;
+  }
+
+  /* ===============================
+     8. ملخص التقارير والمجاميع
+     =============================== */
+  .report-summary {
+    margin: 20pt 0 !important;
+    padding: 12pt !important;
+    background-color: #f8fafc !important;
+    border: 2pt solid #1e40af !important;
+    border-radius: 4pt;
+    page-break-inside: avoid;
+  }
+
+  .summary-title {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    color: #1e40af !important;
+    text-align: center;
+    margin-bottom: 12pt !important;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8pt;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4pt 8pt !important;
+    background-color: white !important;
+    border: 1pt solid #e2e8f0 !important;
+    border-radius: 2pt;
+  }
+
+  .summary-label {
+    font-weight: 600 !important;
+    color: #475569 !important;
+  }
+
+  .summary-value {
+    font-weight: bold !important;
+    color: #1e293b !important;
+  }
+
+  /* ===============================
+     9. كشف حساب العامل المحسن
+     =============================== */
+  .worker-statement-container {
+    font-size: 10pt !important;
+    line-height: 1.3 !important;
+  }
+
+  .worker-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 10pt;
+    margin-bottom: 15pt !important;
+    padding: 8pt !important;
+    background-color: #f1f5f9 !important;
+    border: 1pt solid #cbd5e1 !important;
+  }
+
+  .worker-photo {
+    width: 60pt !important;
+    height: 60pt !important;
+    border: 2pt solid #1e40af !important;
+    border-radius: 4pt;
+    object-fit: cover;
+  }
+
+  .worker-info h3 {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    color: #1e40af !important;
+    margin: 0 0 4pt 0 !important;
+  }
+
+  .worker-details {
+    font-size: 9pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .worker-stats {
+    text-align: left;
+    font-size: 9pt !important;
+  }
+
+  .stat-item {
+    margin: 2pt 0 !important;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* جداول الحضور والمشاريع */
+  .attendance-table,
+  .projects-table {
+    font-size: 8pt !important;
+    margin: 10pt 0 !important;
+  }
+
+  .section-title {
+    font-size: 12pt !important;
+    font-weight: bold !important;
+    color: #1e40af !important;
+    border-bottom: 1pt solid #1e40af !important;
+    padding-bottom: 4pt !important;
+    margin: 15pt 0 8pt 0 !important;
+  }
+
+  /* ===============================
+     10. التوقيعات وختم التقرير
+     =============================== */
+  .signatures-section {
+    margin-top: 25pt !important;
+    page-break-inside: avoid;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20pt;
+  }
+
+  .signature-box {
+    text-align: center;
+    border-top: 1pt solid #374151 !important;
+    padding-top: 8pt !important;
+    font-size: 9pt !important;
+  }
+
+  .signature-label {
+    font-weight: 600 !important;
+    color: #374151 !important;
+  }
+
+  .signature-space {
+    height: 30pt !important;
+    margin-bottom: 4pt !important;
+  }
+
+  /* ===============================
+     11. تذييل التقرير
+     =============================== */
+  .report-footer {
+    margin-top: 20pt !important;
+    padding-top: 12pt !important;
+    border-top: 1pt solid #e2e8f0 !important;
+    text-align: center;
+    font-size: 8pt !important;
+    color: #6b7280 !important;
+    page-break-inside: avoid;
+  }
+
+  .footer-info {
+    margin: 2pt 0 !important;
+  }
+
+  .print-date {
+    font-style: italic;
+  }
+
+  /* ===============================
+     12. كسر الصفحات والتدفق
+     =============================== */
+  .page-break-before {
+    page-break-before: always !important;
+  }
+
+  .page-break-after {
+    page-break-after: always !important;
+  }
+
+  .page-break-inside-avoid {
+    page-break-inside: avoid !important;
+  }
+
+  /* منع كسر الصفحة للعناصر المهمة */
+  .report-header,
+  .report-summary,
+  .signatures-section,
+  .total-row,
+  .section-title {
+    page-break-inside: avoid !important;
+  }
+
+  /* ===============================
+     13. تحسينات إضافية
+     =============================== */
+  
+  /* شريط التقدم والمؤشرات */
+  .progress-bar {
+    display: none !important;
+  }
+
+  /* الأيقونات والرموز */
+  .icon {
+    display: none !important;
+  }
+
+  /* الروابط */
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  a:after {
+    content: none !important;
+  }
+
+  /* الأزرار */
+  .btn,
+  button {
+    display: none !important;
+  }
+
+  /* المساعدات النصية */
+  .text-xs { font-size: 7pt !important; }
+  .text-sm { font-size: 8pt !important; }
+  .text-base { font-size: 9pt !important; }
+  .text-lg { font-size: 11pt !important; }
+  .text-xl { font-size: 13pt !important; }
+  .text-2xl { font-size: 16pt !important; }
+
+  /* الألوان النصية */
+  .text-primary { color: #1e40af !important; }
+  .text-success { color: #16a34a !important; }
+  .text-warning { color: #d97706 !important; }
+  .text-danger { color: #dc2626 !important; }
+  .text-muted { color: #6b7280 !important; }
+
+  /* خلفيات */
+  .bg-primary { background-color: #1e40af !important; }
+  .bg-success { background-color: #16a34a !important; }
+  .bg-warning { background-color: #d97706 !important; }
+  .bg-danger { background-color: #dc2626 !important; }
+  .bg-muted { background-color: #f8fafc !important; }
+
+  /* الحدود */
+  .border { border: 1pt solid #e2e8f0 !important; }
+  .border-primary { border-color: #1e40af !important; }
+  .border-success { border-color: #16a34a !important; }
+  .border-warning { border-color: #d97706 !important; }
+  .border-danger { border-color: #dc2626 !important; }
+
+  /* المسافات */
+  .p-0 { padding: 0 !important; }
+  .p-1 { padding: 2pt !important; }
+  .p-2 { padding: 4pt !important; }
+  .p-3 { padding: 6pt !important; }
+  .p-4 { padding: 8pt !important; }
+
+  .m-0 { margin: 0 !important; }
+  .m-1 { margin: 2pt !important; }
+  .m-2 { margin: 4pt !important; }
+  .m-3 { margin: 6pt !important; }
+  .m-4 { margin: 8pt !important; }
+
+  .mb-0 { margin-bottom: 0 !important; }
+  .mb-1 { margin-bottom: 2pt !important; }
+  .mb-2 { margin-bottom: 4pt !important; }
+  .mb-3 { margin-bottom: 6pt !important; }
+  .mb-4 { margin-bottom: 8pt !important; }
+
+  .mt-0 { margin-top: 0 !important; }
+  .mt-1 { margin-top: 2pt !important; }
+  .mt-2 { margin-top: 4pt !important; }
+  .mt-3 { margin-top: 6pt !important; }
+  .mt-4 { margin-top: 8pt !important; }
+}
+
+/* ===============================
+   14. تحسينات خاصة بالشاشة
+   =============================== */
+@media screen {
+  .print-preview {
+    max-width: 210mm;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    padding: 12mm 8mm;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+    direction: rtl;
+    text-align: right;
+  }
+
+  .report-table {
+    font-size: 14px;
+  }
+
+  .worker-statement-container {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+/* تحسين عرض العملة والأرقام الكبيرة */
+.large-number {
+  font-size: 10pt !important;
+  font-weight: bold !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* معاينة تفاعلية للطباعة */
+.print-mode {
+  background: white !important;
+  color: black !important;
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+}
+
+/* إصلاح مشاكل الطباعة في المتصفحات المختلفة */
+@media print and (-webkit-min-device-pixel-ratio: 0) {
+  .report-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+}
+
+/* دعم طباعة Firefox */
+@-moz-document url-prefix() {
+  @media print {
+    .report-table th,
+    .report-table td {
+      border: 1px solid #000 !important;
+    }
+  }
+}
