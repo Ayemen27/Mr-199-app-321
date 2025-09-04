@@ -1,0 +1,148 @@
+12:36:24 AM: build-image version: ab57926b0005f4457a6f3ab1b197e7c5c1cce16f (noble)
+12:36:24 AM: buildbot version: b3b5b4a30e1a6519e8e7fa8f866565b02461c61b
+12:36:24 AM: Fetching cached dependencies
+12:36:24 AM: Starting to download cache of 610.9MB (Last modified: 2025-09-04 20:50:18 +0000 UTC)
+12:36:26 AM: Finished downloading cache in 1.705s
+12:36:26 AM: Starting to extract cache
+12:36:46 AM: Finished extracting cache in 20.622s
+12:36:46 AM: Finished fetching cache in 22.446s
+12:36:46 AM: Starting to prepare the repo for build
+12:36:47 AM: Preparing Git Reference refs/heads/main
+12:36:48 AM: Custom publish path detected. Proceeding with the specified path: 'dist'
+12:36:48 AM: Custom functions path detected. Proceeding with the specified path: 'functions'
+12:36:48 AM: Starting to install dependencies
+12:36:48 AM: Started restoring cached python cache
+12:36:49 AM: Finished restoring cached python cache
+12:36:49 AM: Started restoring cached ruby cache
+12:36:49 AM: Finished restoring cached ruby cache
+12:36:50 AM: Started restoring cached go cache
+12:36:50 AM: Finished restoring cached go cache
+12:36:50 AM: Started restoring cached Node.js version
+12:36:52 AM: Finished restoring cached Node.js version
+12:36:53 AM: Downloading and installing node v20.19.5...
+12:36:53 AM: Downloading https://nodejs.org/dist/v20.19.5/node-v20.19.5-linux-x64.tar.xz...
+12:36:55 AM: Computing checksum with sha256sum
+12:36:55 AM: Checksums matched!
+12:36:59 AM: Now using node v20.19.5 (npm v10.8.2)
+12:36:59 AM: Enabling Node.js Corepack
+12:36:59 AM: Started restoring cached build plugins
+12:36:59 AM: Finished restoring cached build plugins
+12:36:59 AM: WARNING: The environment variable 'NODE_ENV' is set to 'production'. Any 'devDependencies' in package.json will not be installed
+12:36:59 AM: Started restoring cached corepack dependencies
+12:36:59 AM: Finished restoring cached corepack dependencies
+12:36:59 AM: No npm workspaces detected
+12:36:59 AM: Started restoring cached node modules
+12:36:59 AM: Finished restoring cached node modules
+12:37:00 AM: Installing npm packages using npm version 10.8.2
+12:37:05 AM: added 308 packages, removed 46 packages, and changed 82 packages in 5s
+12:37:05 AM: npm packages installed
+12:37:05 AM: Successfully installed dependencies
+12:37:05 AM: Starting build script
+12:37:06 AM: Detected 1 framework(s)
+12:37:06 AM: "vite" at version "5.4.19"
+12:37:06 AM: Section completed: initializing
+12:37:10 AM: Failed during stage 'building site': Build script returned non-zero exit code: 2 (https://ntl.fyi/exit-code-2)
+12:37:07 AM: ​
+12:37:07 AM: Netlify Build                                                 
+12:37:07 AM: ────────────────────────────────────────────────────────────────
+12:37:07 AM: ​
+12:37:07 AM: ❯ Version
+12:37:07 AM:   @netlify/build 35.1.4
+12:37:07 AM: ​
+12:37:07 AM: ❯ Flags
+12:37:07 AM:   accountId: 68b9d26c26dc65512d95f3bb
+12:37:07 AM:   baseRelDir: true
+12:37:07 AM:   buildId: 68ba063b6d04a400089327d9
+12:37:07 AM:   deployId: 68ba063b6d04a400089327db
+12:37:07 AM: ​
+12:37:07 AM: ❯ Current directory
+12:37:07 AM:   /opt/build/repo
+12:37:07 AM: ​
+12:37:07 AM: ❯ Config file
+12:37:07 AM:   /opt/build/repo/netlify.toml
+12:37:07 AM: ​
+12:37:07 AM: ❯ Context
+12:37:07 AM:   production
+12:37:07 AM: ​
+12:37:07 AM: ❯ Loading plugins
+12:37:07 AM:    - @netlify/plugin-lighthouse@6.0.1 from Netlify app
+12:37:09 AM: ​
+12:37:09 AM: build.command from netlify.toml                               
+12:37:09 AM: ────────────────────────────────────────────────────────────────
+12:37:09 AM: ​
+12:37:09 AM: $ npm run build
+12:37:09 AM: > rest-express@1.0.0 build
+12:37:09 AM: > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+12:37:09 AM: sh: 1: vite: not found
+12:37:09 AM: ​
+12:37:09 AM: "build.command" failed                                        
+12:37:09 AM: ────────────────────────────────────────────────────────────────
+12:37:09 AM: ​
+12:37:09 AM:   Error message
+12:37:09 AM:   Command failed with exit code 127: npm run build (https://ntl.fyi/exit-code-127)
+12:37:09 AM: ​
+12:37:09 AM:   Error location
+12:37:09 AM:   In build.command from netlify.toml:
+12:37:09 AM:   npm run build
+12:37:09 AM: ​
+12:37:09 AM:   Resolved config
+12:37:09 AM:   build:
+12:37:09 AM:     command: npm run build
+12:37:09 AM:     commandOrigin: config
+12:37:09 AM:     environment:
+12:37:09 AM:       - SUPABASE_ANON_KEY
+12:37:09 AM:       - SUPABASE_DATABASE_URL
+12:37:09 AM:       - SUPABASE_JWT_SECRET
+12:37:09 AM:       - SUPABASE_SERVICE_ROLE_KEY
+12:37:09 AM:       - NODE_VERSION
+12:37:09 AM:       - NODE_ENV
+12:37:09 AM:       - ERROR_TRACKING_ENABLED
+12:37:09 AM:       - ADVANCED_LOGGING
+12:37:09 AM:       - ARABIC_ERROR_MESSAGES
+12:37:09 AM:     publish: /opt/build/repo/dist
+12:37:09 AM:     publishOrigin: config
+12:37:09 AM:   functions:
+12:37:09 AM:     "*":
+12:37:09 AM:       node_bundler: esbuild
+12:37:09 AM:   functionsDirectory: /opt/build/repo/functions
+12:37:09 AM:   headers:
+12:37:10 AM:     - for: /api/*
+      values:
+        Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With,
+          X-HTTP-Method-Override, X-Error-Tracking
+        Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH
+        Access-Control-Allow-Origin: "*"
+        Access-Control-Max-Age: "86400"
+        X-502-Handler: advanced
+        X-504-Handler: optimized
+        X-Arabic-Support: enabled
+        X-Error-Tracking: enabled
+        X-System-Health: monitored
+    - for: /*
+      values:
+        Cache-Control: public, max-age=0, must-revalidate
+        X-Content-Type-Options: nosniff
+        X-Frame-Options: DENY
+    - for: /assets/*
+      values:
+        Cache-Control: public, max-age=31536000, immutable
+  headersOrigin: config
+  plugins:
+    - inputs: {}
+      origin: ui
+      package: "@netlify/plugin-lighthouse"
+    - inputs: {}
+      origin: config
+      package: "@netlify/plugin-functions-install-core"
+  redirects:
+    - force: true
+      from: /api/*
+      status: 200
+      to: /.netlify/functions/api/:splat
+    - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
+12:37:10 AM: Build failed due to a user error: Build script returned non-zero exit code: 2
+12:37:10 AM: Failing build: Failed to build site
+12:37:11 AM: Finished processing build request in 46.129s
