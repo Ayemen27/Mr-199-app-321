@@ -129,8 +129,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     console.log('📨 [AuthProvider.login] استجابة تسجيل الدخول:', response.status);
-    const data = await response.json();
-    console.log('📋 [AuthProvider.login] بيانات الاستجابة:', data);
+    
+    // معالجة آمنة لتحليل JSON
+    let data;
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+        console.log('📋 [AuthProvider.login] بيانات الاستجابة:', data);
+      } else {
+        // إذا لم تكن الاستجابة JSON، اقرأها كنص لمعرفة المشكلة
+        const text = await response.text();
+        console.error('❌ [AuthProvider.login] رد غير JSON:', text);
+        throw new Error('خطأ في الخادم - يرجى المحاولة مرة أخرى');
+      }
+    } catch (parseError) {
+      console.error('❌ [AuthProvider.login] خطأ في تحليل JSON:', parseError);
+      throw new Error('خطأ في الاتصال بالخادم');
+    }
 
     if (data.success) {
       console.log('✅ [AuthProvider.login] نجح تسجيل الدخول، حفظ بيانات المستخدم:', data.user.email);
