@@ -59,55 +59,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ====== مسارات المصادقة المحسنة ======
-app.post('/api/auth/login', (req, res) => {
-  console.log('🔑 طلب تسجيل دخول:', req.body?.email || 'بدون بريد');
-  res.json({
-    success: true,
-    message: 'تم تسجيل الدخول بنجاح',
-    user: {
-      id: '1',
-      email: 'admin@example.com',
-      name: 'المدير العام',
-      role: 'admin',
-      mfaEnabled: false
-    },
-    tokens: {
-      accessToken: 'dummy-access-token-for-production',
-      refreshToken: 'dummy-refresh-token-for-production'
-    }
-  });
-});
+// ====== استيراد النظام الآمن للمصادقة ======
+import authRoutes from '../server/routes/auth.js';
 
-app.get('/api/auth/me', (req, res) => {
-  console.log('🔍 فحص حالة المصادقة');
-  res.json({
-    success: true,
-    user: {
-      id: '1',
-      email: 'admin@example.com',
-      name: 'المدير العام',
-      role: 'admin',
-      mfaEnabled: false
-    }
-  });
-});
-
-app.post('/api/auth/refresh', (req, res) => {
-  console.log('🔄 تجديد الرمز المميز');
-  res.json({
-    success: true,
-    tokens: {
-      accessToken: 'new-dummy-access-token-for-production',
-      refreshToken: 'new-dummy-refresh-token-for-production'
-    }
-  });
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  console.log('🚪 تسجيل خروج');
-  res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
-});
+// ====== تفعيل النظام الآمن للمصادقة ======
+app.use('/api/auth', authRoutes);
 
 // ====== مسار المشاريع ======
 app.get('/api/projects', async (req, res) => {
