@@ -3,28 +3,16 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "functions": {
-    "api/index.ts": {
+    "api/**/*.ts": {
       "maxDuration": 30,
       "memory": 1024
     },
-    "api/auth/login.ts": {
+    "api/**/*.js": {
       "maxDuration": 15,
       "memory": 512
-    },
-    "api/auth/register.ts": {
-      "maxDuration": 15,
-      "memory": 512
-    },
-    "api/health.ts": {
-      "maxDuration": 10,
-      "memory": 256
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
-    },
     {
       "source": "/(.*)",
       "destination": "/$1"
