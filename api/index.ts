@@ -1784,6 +1784,100 @@ app.get('/api/tool-movements', async (req, res) => {
   }
 });
 
+// مسار جلب سجل حضور عامل محدد للتحرير - المسار المفقود
+app.get('/api/worker-attendance/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`📋 جلب سجل حضور العامل ${id} للتحرير`);
+
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'قاعدة البيانات غير متصلة'
+      });
+    }
+
+    const { data: attendance, error } = await supabase
+      .from('worker_attendance')
+      .select(`
+        *,
+        worker:workers(name, type, dailyWage),
+        project:projects(name)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('خطأ في جلب سجل الحضور:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'خطأ في جلب بيانات الحضور' 
+      });
+    }
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: 'سجل الحضور غير موجود'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: attendance
+    });
+  } catch (error) {
+    console.error('❌ خطأ في جلب سجل الحضور:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'خطأ في الخادم' 
+    });
+  }
+});
+
+// مسار تحديث سجل حضور العامل
+app.put('/api/worker-attendance/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    console.log(`📝 تحديث سجل حضور العامل ${id}:`, updateData);
+
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: 'قاعدة البيانات غير متصلة'
+      });
+    }
+
+    const { data: attendance, error } = await supabase
+      .from('worker_attendance')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('خطأ في تحديث سجل الحضور:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'خطأ في تحديث بيانات الحضور' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: attendance,
+      message: 'تم تحديث سجل الحضور بنجاح'
+    });
+  } catch (error) {
+    console.error('❌ خطأ في تحديث سجل الحضور:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'خطأ في الخادم' 
+    });
+  }
+});
+
 // مسار تحضور العمال - إصلاح المسار المفقود
 app.get('/api/reports/worker-attendance/:projectId/:date', async (req, res) => {
   try {
@@ -1860,6 +1954,7 @@ app.all('*', (req, res) => {
       '/api/health',
       '/api/projects',
       '/api/workers',
+      '/api/worker-attendance/:id',
       '/api/dashboard/stats',
       '/api/analytics',
       '/api/tools'
