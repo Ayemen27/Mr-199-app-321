@@ -5076,6 +5076,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ====== المسارات المفقودة - إضافة مسارات Dashboard والتحليلات ======
+
+  // مسار إحصائيات لوحة التحكم
+  app.get('/api/dashboard/stats', async (req, res) => {
+    try {
+      console.log('📊 طلب إحصائيات لوحة التحكم');
+
+      // جلب إحصائيات شاملة
+      const [projects, workers, totalExpenses, totalTransfers] = await Promise.all([
+        storage.getProjects(),
+        storage.getWorkers(),
+        storage.getTransportationExpenses(),
+        storage.getFundTransfers()
+      ]);
+
+      const stats = {
+        totalProjects: projects.length,
+        activeProjects: projects.filter(p => p.status === 'active').length || 0,
+        totalWorkers: workers.length,
+        activeWorkers: workers.filter(w => w.isActive).length || 0,
+        totalExpenses: totalExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount || "0"), 0) || 0,
+        totalTransfers: totalTransfers.reduce((sum, transfer) => sum + parseFloat(transfer.amount || "0"), 0) || 0
+      };
+
+      res.json({ success: true, data: stats });
+    } catch (error) {
+      console.error('❌ خطأ في جلب إحصائيات لوحة التحكم:', error);
+      res.status(500).json({ success: false, message: 'خطأ في جلب الإحصائيات' });
+    }
+  });
+
+  // مسار تحليلات متقدمة
+  app.get('/api/analytics', async (req, res) => {
+    try {
+      console.log('📈 طلب التحليلات المتقدمة');
+      
+      // جلب بيانات للتحليل
+      const [materialPurchases, transportationExpenses, workerAttendance] = await Promise.all([
+        storage.getMaterialPurchases(),
+        storage.getTransportationExpenses(),
+        storage.getWorkerAttendance()
+      ]);
+
+      // حساب تكاليف المواد
+      const totalMaterials = materialPurchases.reduce((sum, item) => sum + (parseFloat(item.totalCost || "0") || 0), 0) || 0;
+      
+      // حساب تكاليف المواصلات
+      const totalTransportation = transportationExpenses.reduce((sum, item) => sum + (parseFloat(item.amount || "0") || 0), 0) || 0;
+      
+      // حساب أجور العمال
+      const totalWorkers = workerAttendance
+        .filter(a => a.isPresent === true)
+        .reduce((sum, item) => sum + (parseFloat(item.actualWage || "0") || 0), 0) || 0;
+
+      const analytics = {
+        monthlyExpenses: [], // يمكن إضافة حساب شهري لاحقاً
+        topWorkers: [],      // يمكن إضافة قائمة أفضل العمال لاحقاً
+        projectProgress: [], // يمكن إضافة تقدم المشاريع لاحقاً
+        costAnalysis: {
+          materials: totalMaterials,
+          transportation: totalTransportation,
+          workers: totalWorkers
+        }
+      };
+
+      res.json({ success: true, data: analytics });
+    } catch (error) {
+      console.error('❌ خطأ في التحليلات:', error);
+      res.status(500).json({ success: false, message: 'خطأ في جلب التحليلات' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
