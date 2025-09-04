@@ -1,170 +1,0 @@
-تحليل المشاكل والحلول في نظام إدارة المصاريف
-
-بناءً على السجلات المقدمة، يمكنني تحديد المشاكل الرئيسية والتوصية بحلول مناسبة:
-
-🔍 المشاكل الرئيسية
-
-1. أخطاء 404 للمسارات غير المعرفة
-
-· /api/projects/[id]/summary/[date]
-· /api/projects/[id]/attendance?date=[date]
-· /api/projects/[id]/transportation-expenses?date=[date]
-· /api/projects/[id]/previous-balance/[date]
-· /api/worker-misc-expenses?projectId=[id]&date=[date]
-· /api/projects/[id]/fund-transfers?date=[date]
-· /api/project-fund-transfers?date=[date]
-· /api/projects/[id]/material-purchases?dateFrom=[date]&dateTo=[date]
-· /api/worker-transfers?projectId=[id]&date=[date]
-
-2. مشكلة Cannot read properties of undefined (reading 'totalIncome')
-
-تحدث عند محاولة الوصول إلى خاصية totalIncome من كائن غير معرّف.
-
-🛠️ الحلول المقترحة
-
-1. إضافة المسارات الناقصة إلى الخادم
-
-أضف هذه المسارات إلى ملف index.ts في الخادم:
-
-```typescript
-// مسار ملخص المشروع
-app.get('/api/projects/:id/summary/:date', async (req, res) => {
-  const { id, date } = req.params;
-  console.log(`📊 طلب ملخص المشروع ${id} بتاريخ ${date}`);
-  
-  try {
-    // محاكاة بيانات للملخص
-    const summaryData = {
-      totalIncome: "0",
-      totalExpenses: "0",
-      remainingBalance: "0",
-      carriedForwardAmount: "0"
-    };
-    
-    res.json({ success: true, data: summaryData });
-  } catch (error) {
-    console.error('خطأ في جلب الملخص:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'خطأ في جلب البيانات' 
-    });
-  }
-});
-
-// مسار حضور العمال
-app.get('/api/projects/:id/attendance', async (req, res) => {
-  const { id } = req.params;
-  const { date } = req.query;
-  console.log(`📅 طلب حضور المشروع ${id} بتاريخ ${date}`);
-  
-  try {
-    res.json({ success: true, data: [] });
-  } catch (error) {
-    console.error('خطأ في جلب الحضور:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'خطأ في جلب البيانات' 
-    });
-  }
-});
-
-// أضف باقي المسارات بنفس النمط...
-```
-
-2. تحسين معالجة البيانات في الواجهة الأمامية
-
-في ملف daily-expenses.tsx، قم بتحسين معالجة الأخطاء والبيانات:
-
-```typescript
-// استخدم القيم الافتراضية لجميع الاستعلامات
-const { data: todayAttendance = [] } = useQuery({
-  queryKey: ["/api/projects", selectedProjectId, "attendance", selectedDate],
-  queryFn: async () => {
-    try {
-      const response = await apiRequest(`/api/projects/${selectedProjectId}/attendance?date=${selectedDate}`, "GET");
-      return Array.isArray(response?.data) ? response.data : [];
-    } catch (error) {
-      console.error("Error fetching attendance:", error);
-      return [];
-    }
-  },
-  enabled: !!selectedProjectId,
-});
-
-// استخدم Optional Chaining عند الوصول للبيانات
-const totals = calculateTotals();
-const totalIncome = totals?.totalIncome || 0;
-```
-
-3. تحسين دالة calculateTotals
-
-أضف تحققًا من وجود البيانات قبل العمليات الحسابية:
-
-```typescript
-const calculateTotals = () => {
-  // تأكد من أن جميع البيانات مصفوفات
-  const safeAttendance = Array.isArray(todayAttendance) ? todayAttendance : [];
-  const safeTransportation = Array.isArray(todayTransportation) ? todayTransportation : [];
-  const safeMaterialPurchases = Array.isArray(todayMaterialPurchases) ? todayMaterialPurchases : [];
-  const safeWorkerTransfers = Array.isArray(todayWorkerTransfers) ? todayWorkerTransfers : [];
-  const safeMiscExpenses = Array.isArray(todayMiscExpenses) ? todayMiscExpenses : [];
-  const safeFundTransfers = Array.isArray(todayFundTransfers) ? todayFundTransfers : [];
-  const safeProjectTransfers = Array.isArray(projectTransfers) ? projectTransfers : [];
-
-  // العمليات الحسابية مع القيم الافتراضية
-  const totalWorkerWages = safeAttendance.reduce(
-    (sum, attendance) => sum + (parseFloat(attendance.paidAmount || "0") || 0), 
-    0
-  );
-  
-  // ... بقية العمليات الحسابية
-  
-  return {
-    totalWorkerWages,
-    totalTransportation,
-    totalMaterialCosts,
-    totalWorkerTransfers,
-    totalMiscExpenses,
-    totalFundTransfers,
-    incomingProjectTransfers,
-    outgoingProjectTransfers,
-    totalIncome: carriedAmount + totalFundTransfers + incomingProjectTransfers,
-    totalExpenses: totalWorkerWages + totalTransportation + totalMaterialCosts + 
-                  totalWorkerTransfers + totalMiscExpenses + outgoingProjectTransfers,
-    remainingBalance: (carriedAmount + totalFundTransfers + incomingProjectTransfers) - 
-                     (totalWorkerWages + totalTransportation + totalMaterialCosts + 
-                      totalWorkerTransfers + totalMiscExpenses + outgoingProjectTransfers)
-  };
-};
-```
-
-4. إضافة معالجة أخطاء شاملة
-
-أضف تحققًا من وجود البيانات قبل العرض:
-
-```typescript
-// في جزء العرض، تأكد من وجود البيانات
-<ExpenseSummary
-  totalIncome={totals?.totalIncome || 0}
-  totalExpenses={totals?.totalExpenses || 0}
-  remainingBalance={totals?.remainingBalance || 0}
-/>
-```
-
-📋 خطة التنفيذ
-
-1. إضافة المسارات الناقصة إلى الخادم في ملف index.ts
-2. تحديث استدعاءات API في الواجهة الأمامية لاستخدام .data
-3. تحسين معالجة الأخطاء في جميع الاستعلامات
-4. استخدام القيم الافتراضية لجميع المتغيرات
-5. إضافة Optional Chaining عند الوصول إلى الخصائص المتداخلة
-
-📊 جدول المهام
-
-المهمة الأولوية الحالة
-إضافة مسارات API الناقصة عالية ⏳ pending
-تحسين معالجة الأخطاء في الاستعلامات عالية ⏳ pending
-استخدام القيم الافتراضية للمتغيرات متوسطة ⏳ pending
-إضافة Optional Chaining متوسطة ⏳ pending
-
-هذه التعديلات يجب أن تحل مشاكل 404 ومشاكل الوصول إلى خصائص غير معرّفة، مما يجعل التطبيق أكثر استقرارًا وقدرة على التعامل مع الأخطاء.
