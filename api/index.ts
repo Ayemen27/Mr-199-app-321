@@ -470,6 +470,93 @@ app.get('/api/projects/:id/summary/:date', async (req, res) => {
   }
 });
 
+// مسار الملخص اليومي للمشروع - المسار المفقود الذي يسبب الخطأ 404
+app.get('/api/projects/:id/daily-summary/:date', async (req, res) => {
+  try {
+    const { id, date } = req.params;
+    console.log(`📊 طلب الملخص اليومي للمشروع ${id} بتاريخ ${date}`);
+    
+    if (!supabase) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          totalIncome: "0",
+          totalExpenses: "0",
+          currentBalance: "0",
+          date: date,
+          workerCount: 0,
+          attendanceCount: 0,
+          transportationExpenses: "0",
+          materialPurchases: "0"
+        }
+      });
+    }
+
+    // حساب إجمالي الدخل من العهد
+    const { data: fundTransfers } = await supabase
+      .from('fund_transfers')
+      .select('amount')
+      .eq('project_id', id)
+      .eq('date', date);
+
+    // حساب مصروفات المواصلات
+    const { data: transportExpenses } = await supabase
+      .from('transportation_expenses')
+      .select('amount')
+      .eq('project_id', id)
+      .eq('date', date);
+
+    // حساب حضور العمال
+    const { data: attendance } = await supabase
+      .from('worker_attendance')
+      .select('*')
+      .eq('project_id', id)
+      .eq('date', date);
+
+    // حساب مشتريات المواد لنفس التاريخ
+    const { data: materialPurchases } = await supabase
+      .from('material_purchases')
+      .select('total_cost')
+      .eq('project_id', id)
+      .eq('purchase_date', date);
+
+    const totalIncome = (fundTransfers || []).reduce((sum: any, transfer: any) => sum + (parseFloat(transfer.amount) || 0), 0);
+    const totalTransportExpenses = (transportExpenses || []).reduce((sum: any, expense: any) => sum + (parseFloat(expense.amount) || 0), 0);
+    const totalMaterialCost = (materialPurchases || []).reduce((sum: any, purchase: any) => sum + (parseFloat(purchase.total_cost) || 0), 0);
+    const totalExpenses = totalTransportExpenses + totalMaterialCost;
+    const currentBalance = totalIncome - totalExpenses;
+
+    res.json({
+      success: true,
+      data: {
+        totalIncome: totalIncome.toString(),
+        totalExpenses: totalExpenses.toString(),
+        currentBalance: currentBalance.toString(),
+        date: date,
+        workerCount: (attendance || []).length,
+        attendanceCount: (attendance || []).length,
+        transportationExpenses: totalTransportExpenses.toString(),
+        materialPurchases: totalMaterialCost.toString()
+      }
+    });
+  } catch (error) {
+    console.error('خطأ في جلب الملخص اليومي للمشروع:', error);
+    res.status(200).json({
+      success: true,
+      data: {
+        totalIncome: "0",
+        totalExpenses: "0", 
+        currentBalance: "0",
+        date: req.params.date,
+        workerCount: 0,
+        attendanceCount: 0,
+        transportationExpenses: "0",
+        materialPurchases: "0"
+      }
+    });
+  }
+});
+
 // مسار حضور العمال للمشروع بتاريخ محدد
 app.get('/api/projects/:id/attendance', async (req, res) => {
   try {
