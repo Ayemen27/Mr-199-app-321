@@ -77,33 +77,63 @@ export default function ProjectsPage() {
     return () => setFloatingAction(null);
   }, [setFloatingAction]);
 
-  // Fetch projects with statistics مع إعادة التحديث المحسنة
-  const { data: projects = [], isLoading, refetch: refetchProjects } = useQuery<ProjectWithStats[]>({
+  // Fetch projects with statistics مع معالجة محسنة للأخطاء
+  const { data: projects = [], isLoading, refetch: refetchProjects, error } = useQuery<ProjectWithStats[]>({
     queryKey: ["/api/projects/with-stats"],
     queryFn: async () => {
-      console.log('🔄 جلب المشاريع مع الإحصائيات...');
-      const response = await fetch("/api/projects/with-stats");
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ خطأ في جلب المشاريع:', errorText);
-        throw new Error("فشل في تحميل المشاريع");
+      try {
+        console.log('🔄 جلب المشاريع مع الإحصائيات...');
+        const response = await fetch("/api/projects/with-stats");
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ خطأ في جلب المشاريع:', response.status, errorText);
+          throw new Error(`فشل في تحميل المشاريع: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📊 استجابة المشاريع:', data);
+        
+        // معالجة هيكل الاستجابة المختلفة
+        let projects = [];
+        if (data && typeof data === 'object') {
+          // إذا كانت في شكل {success, data, count}
+          if (data.success !== undefined && data.data !== undefined) {
+            projects = Array.isArray(data.data) ? data.data : [];
+          }
+          // إذا كانت مصفوفة مباشرة
+          else if (Array.isArray(data)) {
+            projects = data;
+          }
+          // إذا كان كائن واحد، حوله لمصفوفة
+          else if (data.id) {
+            projects = [data];
+          }
+        }
+        
+        console.log('✅ تم جلب المشاريع:', projects.length, 'مشروع');
+        
+        // تسجيل عينة من البيانات للتشخيص
+        if (Array.isArray(projects) && projects.length > 0) {
+          console.log('📊 عينة من إحصائيات المشاريع:', projects.slice(0, 2).map((p: any) => ({
+            name: p.name,
+            totalIncome: p.stats?.totalIncome || p.totalIncome,
+            totalExpenses: p.stats?.totalExpenses || p.totalExpenses,
+            currentBalance: p.stats?.currentBalance || p.currentBalance
+          })));
+        }
+        
+        return projects as ProjectWithStats[];
+      } catch (error) {
+        console.error('❌ خطأ في معالجة المشاريع:', error);
+        // إرجاع مصفوفة فارغة لتجنب كسر الواجهة
+        return [] as ProjectWithStats[];
       }
-      const data = await response.json();
-      console.log('✅ تم جلب المشاريع:', data.length, 'مشروع');
-      // تسجيل عينة من البيانات للتشخيص
-      if (data.length > 0) {
-        console.log('📊 عينة من إحصائيات المشاريع:', data.slice(0, 2).map((p: any) => ({
-          name: p.name,
-          totalIncome: p.stats?.totalIncome,
-          totalExpenses: p.stats?.totalExpenses,
-          currentBalance: p.stats?.currentBalance
-        })));
-      }
-      return data;
     },
     refetchInterval: 60000, // إعادة التحديث كل دقيقة
     staleTime: 30000, // البيانات طازجة لـ 30 ثانية
     refetchOnWindowFocus: true,
+    retry: 2, // محاولتين إضافيتين
   });
 
   // Create project form

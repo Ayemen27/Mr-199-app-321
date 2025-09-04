@@ -202,12 +202,87 @@ export default function WorkersPage() {
     }).format(amount) + ' ر.ي';
   };
 
-  const { data: workers = [], isLoading } = useQuery<Worker[]>({
+  const { data: workers = [], isLoading, error } = useQuery<Worker[]>({
     queryKey: ['/api/workers'],
+    queryFn: async () => {
+      try {
+        console.log('🔄 [Workers] جلب قائمة العمال...');
+        const response = await fetch('/api/workers');
+        
+        if (!response.ok) {
+          console.error('❌ [Workers] خطأ HTTP:', response.status, response.statusText);
+          throw new Error(`فشل في جلب العمال: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📊 [Workers] استجابة العمال:', data);
+        
+        // معالجة هيكل الاستجابة المتعددة
+        let workers = [];
+        if (data && typeof data === 'object') {
+          if (data.success !== undefined && data.data !== undefined) {
+            workers = Array.isArray(data.data) ? data.data : [];
+          } else if (Array.isArray(data)) {
+            workers = data;
+          } else if (data.id) {
+            workers = [data];
+          }
+        }
+        
+        if (!Array.isArray(workers)) {
+          console.warn('⚠️ [Workers] البيانات ليست مصفوفة، تحويل إلى مصفوفة فارغة');
+          workers = [];
+        }
+        
+        console.log(`✅ [Workers] تم جلب ${workers.length} عامل بنجاح`);
+        return workers as Worker[];
+      } catch (error) {
+        console.error('❌ [Workers] خطأ في جلب العمال:', error);
+        return [] as Worker[];
+      }
+    },
+    staleTime: 300000,
+    retry: 2,
   });
 
-  const { data: workerTypes = [] } = useQuery<WorkerType[]>({
+  const { data: workerTypes = [], error: workerTypesError } = useQuery<WorkerType[]>({
     queryKey: ['/api/worker-types'],
+    queryFn: async () => {
+      try {
+        console.log('🔄 [Workers] جلب أنواع العمال...');
+        const response = await fetch('/api/worker-types');
+        
+        if (!response.ok) {
+          console.error('❌ [Workers] خطأ في جلب أنواع العمال:', response.status);
+          // في حالة عدم توفر الأنواع، أرجع مصفوفة فارغة ولا تكسر التطبيق
+          return [] as WorkerType[];
+        }
+        
+        const data = await response.json();
+        console.log('📊 [Workers] أنواع العمال:', data);
+        
+        let workerTypes = [];
+        if (data && typeof data === 'object') {
+          if (data.success !== undefined && data.data !== undefined) {
+            workerTypes = Array.isArray(data.data) ? data.data : [];
+          } else if (Array.isArray(data)) {
+            workerTypes = data;
+          }
+        }
+        
+        if (!Array.isArray(workerTypes)) {
+          workerTypes = [];
+        }
+        
+        console.log(`✅ [Workers] تم جلب ${workerTypes.length} نوع عامل`);
+        return workerTypes as WorkerType[];
+      } catch (error) {
+        console.error('❌ [Workers] خطأ في جلب أنواع العمال:', error);
+        return [] as WorkerType[];
+      }
+    },
+    staleTime: 600000, // أنواع العمال أقل تغيراً - 10 دقائق
+    retry: 1,
   });
 
 
