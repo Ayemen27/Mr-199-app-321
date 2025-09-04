@@ -1,27 +1,8 @@
 /**
- * Netlify Function للمصروفات اليومية
- * يعالج /api/transportation-expenses, /api/worker-transfers, /api/worker-misc-expenses
+ * Netlify Function للمصروفات اليومية - متوافق مع Netlify Runtime
  */
 
-let supabase = null;
-
-async function initSupabase() {
-  if (!supabase) {
-    const { createClient } = await import('@supabase/supabase-js');
-    
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('إعدادات Supabase غير موجودة');
-    }
-
-    supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-  }
-  return supabase;
-}
-
-export const handler = async (event, context) => {
+exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -34,7 +15,24 @@ export const handler = async (event, context) => {
   }
 
   try {
-    const supabaseClient = await initSupabase();
+    // Import dynamically to avoid bundling issues
+    const { createClient } = await import('@supabase/supabase-js');
+    
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          message: 'إعدادات قاعدة البيانات غير موجودة'
+        }),
+      };
+    }
+
+    const supabaseClient = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
     const path = event.path || '';
     
     // تحديد نوع المصروف بناءً على المسار

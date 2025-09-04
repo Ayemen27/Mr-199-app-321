@@ -1,18 +1,18 @@
 /**
- * Netlify Function للمصادقة المتقدمة
- * يحاكي جميع وظائف /api/auth من Express server
+ * Netlify Function للمصادقة - متوافق مع Netlify Runtime
  */
 
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+// استيراد المكتبات المطلوبة
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 // إعداد قاعدة البيانات Supabase
 let supabase = null;
 
 async function initSupabase() {
   if (!supabase) {
-    const { createClient } = await import('@supabase/supabase-js');
+    const { createClient } = require('@supabase/supabase-js');
     
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('إعدادات Supabase غير موجودة');
@@ -20,7 +20,13 @@ async function initSupabase() {
 
     supabase = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
   }
   return supabase;
@@ -28,10 +34,10 @@ async function initSupabase() {
 
 // إعدادات JWT
 const JWT_CONFIG = {
-  accessTokenSecret: (process.env.JWT_ACCESS_SECRET || 'construction-app-access-secret-2025'),
-  refreshTokenSecret: (process.env.JWT_REFRESH_SECRET || 'construction-app-refresh-secret-2025'),
-  accessTokenExpiry: '15m', // 15 دقيقة
-  refreshTokenExpiry: '30d', // 30 يوم
+  accessTokenSecret: process.env.JWT_ACCESS_SECRET || 'construction-app-access-secret-2025',
+  refreshTokenSecret: process.env.JWT_REFRESH_SECRET || 'construction-app-refresh-secret-2025',
+  accessTokenExpiry: '15m',
+  refreshTokenExpiry: '30d',
   issuer: 'construction-management-app',
   algorithm: 'HS256',
 };
@@ -120,24 +126,29 @@ async function generateTokenPair(userId, email, role, ipAddress, userAgent) {
     }
   );
 
-  // حفظ الجلسة في قاعدة البيانات
-  const supabaseClient = await initSupabase();
-  await supabaseClient
-    .from('auth_user_sessions')
-    .insert({
-      id: sessionId,
-      user_id: userId,
-      device_id: sessionId,
-      refresh_token_hash: refreshToken,
-      access_token_hash: accessToken,
-      ip_address: ipAddress || null,
-      device_type: 'web',
-      last_activity: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      is_revoked: false,
-      login_method: 'password',
-      is_trusted_device: false,
-    });
+  try {
+    // حفظ الجلسة في قاعدة البيانات
+    const supabaseClient = await initSupabase();
+    await supabaseClient
+      .from('auth_user_sessions')
+      .insert({
+        id: sessionId,
+        user_id: userId,
+        device_id: sessionId,
+        refresh_token_hash: refreshToken,
+        access_token_hash: accessToken,
+        ip_address: ipAddress || null,
+        device_type: 'web',
+        last_activity: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        is_revoked: false,
+        login_method: 'password',
+        is_trusted_device: false,
+      });
+  } catch (error) {
+    console.error('⚠️ تحذير: فشل في حفظ الجلسة في قاعدة البيانات:', error);
+    // نكمل بدون حفظ الجلسة للآن
+  }
 
   return {
     accessToken,
@@ -165,13 +176,21 @@ async function loginUser(request) {
       .eq('email', email)
       .limit(1);
 
-    console.log('🔍 نتيجة البحث:', { found: users?.length || 0, email });
+    console.log('🔍 نتيجة البحث:', { found: users?.length || 0, email, hasError: !!searchError });
 
-    if (searchError || !users || users.length === 0) {
+    if (searchError) {
+      console.error('❌ خطأ في البحث عن المستخدم:', searchError);
+      return {
+        success: false,
+        message: 'خطأ في الاتصال بقاعدة البيانات'
+      };
+    }
+
+    if (!users || users.length === 0) {
       console.log('❌ المستخدم غير موجود');
       return {
         success: false,
-        message: 'بيانات تسجيل الدخول غير صحيحة'
+        message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة'
       };
     }
 
@@ -188,9 +207,7 @@ async function loginUser(request) {
 
     // التحقق من كلمة المرور
     console.log('🔍 فحص كلمة المرور للمستخدم:', email);
-    console.log('🔍 طول كلمة المرور المرسلة:', password?.length);
-    console.log('🔍 لديه كلمة مرور محفوظة:', !!user.password);
-
+    
     const isPasswordValid = await verifyPassword(password, user.password);
     console.log('🔍 نتيجة التحقق من كلمة المرور:', isPasswordValid);
 
@@ -198,14 +215,12 @@ async function loginUser(request) {
       console.log('❌ كلمة مرور خاطئة');
       return {
         success: false,
-        message: 'بيانات تسجيل الدخول غير صحيحة'
+        message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة'
       };
     }
 
-    // نظام JWT المتقدم
-    console.log('🔑 تسجيل دخول ناجح بنظام JWT المتقدم');
-
     // إنشاء JWT tokens مع جلسة جديدة
+    console.log('🔑 إنشاء JWT tokens...');
     const tokens = await generateTokenPair(
       user.id,
       user.email,
@@ -215,10 +230,14 @@ async function loginUser(request) {
     );
 
     // تحديث آخر تسجيل دخول
-    await supabaseClient
-      .from('users')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', user.id);
+    try {
+      await supabaseClient
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', user.id);
+    } catch (updateError) {
+      console.error('⚠️ تحذير: فشل في تحديث آخر تسجيل دخول:', updateError);
+    }
 
     console.log('✅ تم تسجيل الدخول بنجاح');
 
@@ -230,7 +249,7 @@ async function loginUser(request) {
         name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
         role: user.role,
         profilePicture: user.avatar_url,
-        mfaEnabled: false, // مؤقتاً
+        mfaEnabled: false,
       },
       tokens: {
         accessToken: tokens.accessToken,
@@ -243,7 +262,7 @@ async function loginUser(request) {
     console.error('❌ خطأ في تسجيل الدخول:', error);
     return {
       success: false,
-      message: 'حدث خطأ أثناء تسجيل الدخول'
+      message: 'حدث خطأ أثناء تسجيل الدخول: ' + error.message
     };
   }
 }
@@ -293,7 +312,7 @@ async function registerUser(request) {
         phone,
         role,
         is_active: true,
-        email_verified_at: new Date().toISOString(), // تفعيل مباشر للاختبار
+        email_verified_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -302,7 +321,7 @@ async function registerUser(request) {
       console.error('خطأ في إنشاء المستخدم:', error);
       return {
         success: false,
-        message: 'حدث خطأ أثناء إنشاء الحساب'
+        message: 'حدث خطأ أثناء إنشاء الحساب: ' + error.message
       };
     }
 
@@ -323,13 +342,14 @@ async function registerUser(request) {
     console.error('خطأ في التسجيل:', error);
     return {
       success: false,
-      message: 'حدث خطأ أثناء إنشاء الحساب'
+      message: 'حدث خطأ أثناء إنشاء الحساب: ' + error.message
     };
   }
 }
 
 // المعالج الرئيسي لـ Netlify Function
-export const handler = async (event, context) => {
+exports.handler = async (event, context) => {
+  // إعداد CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -339,22 +359,38 @@ export const handler = async (event, context) => {
 
   // معالجة طلبات OPTIONS (CORS preflight)
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+    return { 
+      statusCode: 200, 
+      headers, 
+      body: JSON.stringify({ message: 'CORS OK' })
+    };
   }
 
-  try {
-    console.log('📨 طلب API جديد:', {
-      method: event.httpMethod,
-      path: event.path,
-      queryStringParameters: event.queryStringParameters
-    });
+  console.log('📨 طلب Netlify Function جديد:', {
+    method: event.httpMethod,
+    path: event.path,
+    queryStringParameters: event.queryStringParameters,
+    environment: {
+      hasSupabaseUrl: !!process.env.SUPABASE_URL,
+      hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hasJwtSecret: !!process.env.JWT_ACCESS_SECRET
+    }
+  });
 
-    // استخراج المسار من URL (إزالة الحماية من query parameters)
+  try {
+    // استخراج المسار من URL
     const path = event.path || '';
     const pathSegments = path.split('/').filter(p => p);
-    const action = pathSegments[pathSegments.length - 1] || 'login';
+    
+    // تحديد الإجراء: إما login أو register
+    let action = 'login';
+    if (path.includes('register') || pathSegments.includes('register')) {
+      action = 'register';
+    } else if (path.includes('login') || pathSegments.includes('login')) {
+      action = 'login';
+    }
 
-    console.log('🎯 الإجراء المطلوب:', action);
+    console.log('🎯 الإجراء المطلوب:', action, 'من المسار:', path);
 
     // معلومات الطلب
     const requestInfo = {
@@ -367,6 +403,7 @@ export const handler = async (event, context) => {
     if (event.body) {
       try {
         requestData = JSON.parse(event.body);
+        console.log('📋 بيانات الطلب تم تحليلها بنجاح');
       } catch (parseError) {
         console.error('❌ خطأ في تحليل JSON:', parseError);
         return {
@@ -381,8 +418,6 @@ export const handler = async (event, context) => {
       }
     }
 
-    console.log('📋 بيانات الطلب:', { action, hasData: !!event.body, method: event.httpMethod });
-
     // معالجة طلبات تسجيل الدخول
     if (action === 'login' && event.httpMethod === 'POST') {
       console.log('🔐 معالجة طلب تسجيل الدخول');
@@ -390,6 +425,7 @@ export const handler = async (event, context) => {
       const { email, password, totpCode } = requestData;
       
       if (!email || !password) {
+        console.log('❌ بيانات ناقصة في طلب تسجيل الدخول');
         return {
           statusCode: 400,
           headers,
@@ -424,6 +460,7 @@ export const handler = async (event, context) => {
       const { email, password, name, phone, role } = requestData;
       
       if (!email || !password || !name) {
+        console.log('❌ بيانات ناقصة في طلب التسجيل');
         return {
           statusCode: 400,
           headers,
@@ -454,26 +491,29 @@ export const handler = async (event, context) => {
     }
 
     // Route غير مدعوم
-    console.log('❓ مسار غير مدعوم:', { action, method: event.httpMethod });
+    console.log('❓ مسار غير مدعوم:', { action, method: event.httpMethod, path });
     return {
       statusCode: 404,
       headers,
       body: JSON.stringify({
         success: false,
         message: 'المسار غير موجود',
+        path: path,
+        method: event.httpMethod,
         availableRoutes: ['POST /auth/login', 'POST /auth/register']
       }),
     };
 
   } catch (error) {
-    console.error('❌ خطأ عام في المعالج:', error);
+    console.error('❌ خطأ عام في معالج Netlify Function:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         success: false,
         message: 'حدث خطأ داخلي في الخادم',
-        error: error.message
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       }),
     };
   }
