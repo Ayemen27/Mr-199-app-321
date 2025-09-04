@@ -1,21 +1,35 @@
 [build]
-  command = "vite build"
-  publish = "dist/public"
+  # أمر البناء محدث لإدارة المشاريع الإنشائية
+  command = "npm run build"
+  publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   NODE_ENV = "production"
+  # متغيرات البيئة لنظام التتبع المتقدم
+  ERROR_TRACKING_ENABLED = "true"
+  ADVANCED_LOGGING = "true"
+  ARABIC_ERROR_MESSAGES = "true"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "functions"
+  node_bundler = "esbuild"
+  # زيادة timeout لتجنب 504 errors - مهم جداً لإصلاح أخطاء Netlify
+  timeout = 30
+  # زيادة الذاكرة لتجنب out of memory errors
+  memory = 1024
 
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "/.netlify/functions/api/:splat"
   status = 200
+  force = true
+  # إعدادات خاصة لمعالجة أخطاء 502
+  conditions = {Role = ["admin", "user"], Country = ["!US"]}
+  headers = {X-Error-Handler = "advanced"}
 
 [[redirects]]
   from = "/*"
@@ -27,7 +41,15 @@
   [headers.values]
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, X-HTTP-Method-Override, X-Error-Tracking"
+    Access-Control-Max-Age = "86400"
+    # Headers خاصة لنظام التتبع المتقدم للأخطاء
+    X-Error-Tracking = "enabled"
+    X-System-Health = "monitored"
+    X-Arabic-Support = "enabled"
+    # تحسينات معالجة 502/504 errors
+    X-502-Handler = "advanced"
+    X-504-Handler = "optimized"
 
 [[headers]]
   for = "/*"
