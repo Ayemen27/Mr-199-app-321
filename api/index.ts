@@ -172,17 +172,81 @@ app.get('/api/projects/with-stats', async (req, res) => {
       });
     }
 
-    // إضافة إحصائيات بسيطة لكل مشروع
-    const projectsWithStats = (projects || []).map((project: any) => ({
-      ...project,
-      totalWorkers: 0,
-      totalExpenses: 0,
-      totalIncome: 0,
-      currentBalance: 0,
-      activeWorkers: 0,
-      completedDays: 0,
-      materialPurchases: 0,
-      lastActivity: new Date().toISOString().split('T')[0]
+    // حساب الإحصائيات الحقيقية لكل مشروع
+    const projectsWithStats = await Promise.all((projects || []).map(async (project: any) => {
+      try {
+        // حساب إجمالي العمال
+        const { data: workers } = await supabase
+          .from('workers')
+          .select('id')
+          .eq('project_id', project.id);
+        
+        // حساب إجمالي الدخل من تحويلات العهد
+        const { data: fundTransfers } = await supabase
+          .from('fund_transfers')
+          .select('amount')
+          .eq('project_id', project.id)
+          .eq('type', 'in');
+        
+        // حساب إجمالي المصروفات
+        const { data: expenses } = await supabase
+          .from('transportation_expenses')
+          .select('amount')
+          .eq('project_id', project.id);
+        
+        // حساب مشتريات المواد
+        const { data: materials } = await supabase
+          .from('material_purchases')
+          .select('id')
+          .eq('project_id', project.id);
+        
+        // حساب حضور العمال المكتمل
+        const { data: attendance } = await supabase
+          .from('worker_attendance')
+          .select('date')
+          .eq('project_id', project.id)
+          .eq('status', 'present');
+        
+        const totalWorkers = workers?.length || 0;
+        const totalIncome = fundTransfers?.reduce((sum: number, t: any) => sum + (parseFloat(t.amount) || 0), 0) || 0;
+        const totalExpenses = expenses?.reduce((sum: number, e: any) => sum + (parseFloat(e.amount) || 0), 0) || 0;
+        const currentBalance = totalIncome - totalExpenses;
+        const materialPurchases = materials?.length || 0;
+        
+        // حساب أيام العمل المكتملة (أيام فريدة)
+        const uniqueDates = new Set(attendance?.map((a: any) => a.date) || []);
+        const completedDays = uniqueDates.size;
+        
+        return {
+          ...project,
+          stats: {
+            totalWorkers,
+            totalExpenses,
+            totalIncome,
+            currentBalance,
+            activeWorkers: totalWorkers, // نفترض أن جميع العمال نشطين
+            completedDays,
+            materialPurchases,
+            lastActivity: new Date().toISOString().split('T')[0]
+          }
+        };
+      } catch (error) {
+        console.error(`خطأ في حساب إحصائيات المشروع ${project.id}:`, error);
+        // إرجاع قيم افتراضية في حالة الخطأ
+        return {
+          ...project,
+          stats: {
+            totalWorkers: 0,
+            totalExpenses: 0,
+            totalIncome: 0,
+            currentBalance: 0,
+            activeWorkers: 0,
+            completedDays: 0,
+            materialPurchases: 0,
+            lastActivity: new Date().toISOString().split('T')[0]
+          }
+        };
+      }
     }));
 
     console.log(`✅ تم جلب ${projectsWithStats.length} مشروع مع الإحصائيات`);
