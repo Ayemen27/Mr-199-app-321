@@ -1680,14 +1680,50 @@ app.get('/api/analytics', async (req, res) => {
   try {
     console.log('📈 طلب التحليلات المتقدمة');
     
+    if (!supabase) {
+      return res.json({ 
+        success: true, 
+        data: {
+          monthlyExpenses: [],
+          topWorkers: [],
+          projectProgress: [],
+          costAnalysis: {
+            materials: 0,
+            transportation: 0,
+            workers: 0
+          }
+        }
+      });
+    }
+
+    // حساب تكاليف المواد
+    const { data: materialCosts } = await supabase
+      .from('material_purchases')
+      .select('total_cost');
+    
+    // حساب تكاليف المواصلات
+    const { data: transportationCosts } = await supabase
+      .from('transportation_expenses')
+      .select('amount');
+    
+    // حساب أجور العمال
+    const { data: workerWages } = await supabase
+      .from('worker_attendance')
+      .select('actual_wage')
+      .eq('status', 'present');
+
+    const totalMaterials = materialCosts?.reduce((sum, item) => sum + (parseFloat(item.total_cost) || 0), 0) || 0;
+    const totalTransportation = transportationCosts?.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0) || 0;
+    const totalWorkers = workerWages?.reduce((sum, item) => sum + (parseFloat(item.actual_wage) || 0), 0) || 0;
+
     const analytics = {
-      monthlyExpenses: [],
-      topWorkers: [],
-      projectProgress: [],
+      monthlyExpenses: [], // يمكن إضافة حساب شهري لاحقاً
+      topWorkers: [],      // يمكن إضافة قائمة أفضل العمال لاحقاً
+      projectProgress: [], // يمكن إضافة تقدم المشاريع لاحقاً
       costAnalysis: {
-        materials: 0,
-        transportation: 0,
-        workers: 0
+        materials: totalMaterials,
+        transportation: totalTransportation,
+        workers: totalWorkers
       }
     };
 
