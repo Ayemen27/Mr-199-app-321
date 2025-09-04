@@ -60,7 +60,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ====== استيراد النظام الآمن للمصادقة ======
-import authRoutes from '../server/routes/auth.js';
+import authRoutes from '../server/routes/auth';
 
 // ====== تفعيل النظام الآمن للمصادقة ======
 app.use('/api/auth', authRoutes);

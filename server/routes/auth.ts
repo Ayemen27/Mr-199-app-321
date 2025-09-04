@@ -60,7 +60,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 // استيراد middleware من ملف منفصل
-import { requireAuth, requirePermission, requireRole } from '../middleware/auth.js';
+import { requireAuth, requirePermission, requireRole } from '../middleware/auth';
 
 // دالة مساعدة للحصول على معلومات الطلب
 function getRequestInfo(req: any) {
