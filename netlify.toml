@@ -1,58 +1,37 @@
-# إعدادات النشر على Netlify لنظام إدارة المشاريع الإنشائية
+# Netlify configuration for Construction Project Management System
 
 [build]
-  # أمر البناء للمشروع
   command = "npm run build"
-  
-  # مجلد الملفات الجاهزة للنشر (بعد البناء)
   publish = "dist/public"
-  
-  # Node.js version
-  environment = { NODE_VERSION = "18" }
 
 [build.environment]
-  # متغيرات البيئة للبناء
+  NODE_VERSION = "18"
   NODE_ENV = "production"
 
-# إعدادات Netlify Functions (للـ API Backend)
 [functions]
-  # مجلد الدوال السيرفرلس
   directory = "netlify/functions"
-  
-  # إعدادات محرك Node.js
-  node_bundler = "esbuild"
 
-# إعادة التوجيه والتوجيهات
 [[redirects]]
-  # توجيه طلبات API إلى Netlify Functions
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
 [[redirects]]
-  # دعم Single Page Application (SPA)
-  # أي مسار غير موجود يتم توجيهه إلى index.html
   from = "/*"
   to = "/index.html"
   status = 200
 
-# إعدادات Headers للأمان والأداء
 [[headers]]
   for = "/*"
   [headers.values]
-    # أمان
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    
-    # أداء
-    Cache-Control = "public, max-age=31536000"
 
 [[headers]]
   for = "/api/*"
   [headers.values]
-    # CORS للـ API
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
@@ -60,31 +39,18 @@
 [[headers]]
   for = "*.html"
   [headers.values]
-    # ملفات HTML لا تُخزن في الكاش طويلاً
     Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/assets/*"
   [headers.values]
-    # ملفات الأصول (CSS, JS, images) تُخزن لفترة طويلة
     Cache-Control = "public, max-age=31536000, immutable"
 
-# إعدادات خاصة بالبيئة المختلفة
 [context.production]
   command = "npm run build"
-  
+
 [context.branch-deploy]
   command = "npm run build"
 
 [context.deploy-preview]
   command = "npm run build"
-
-# إعدادات خاصة للتطوير
-[context.dev]
-  command = "npm run dev"
-  port = 5000
-
-# قواعد معالجة الملفات
-[[edge_functions]]
-  function = "auth-middleware"
-  path = "/api/auth/*"
