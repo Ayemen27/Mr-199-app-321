@@ -1,5 +1,3 @@
-const { createClient } = require('@supabase/supabase-js');
-
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -13,13 +11,16 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // Import dynamically to avoid bundling issues
+    const { createClient } = await import('@supabase/supabase-js');
+    
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           success: false,
-          message: 'Supabase configuration missing'
+          message: 'Database configuration missing'
         }),
       };
     }
@@ -36,13 +37,13 @@ exports.handler = async (event, context) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching workers:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             success: false,
-            message: 'Failed to fetch workers'
+            message: 'Failed to fetch workers',
+            error: error.message
           }),
         };
       }
@@ -59,7 +60,7 @@ exports.handler = async (event, context) => {
     }
 
     if (event.httpMethod === 'POST') {
-      const { name, type, dailyWage, isActive } = JSON.parse(event.body);
+      const { name, type, dailyWage, isActive } = JSON.parse(event.body || '{}');
       
       const { data: newWorker, error } = await supabase
         .from('workers')
@@ -73,13 +74,13 @@ exports.handler = async (event, context) => {
         .single();
 
       if (error) {
-        console.error('Error creating worker:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             success: false,
-            message: 'Failed to create worker'
+            message: 'Failed to create worker',
+            error: error.message
           }),
         };
       }
@@ -105,7 +106,6 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Function error:', error);
     return {
       statusCode: 500,
       headers,
