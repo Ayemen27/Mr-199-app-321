@@ -1,6 +1,10 @@
 /**
- * Netlify Function للمصادقة - متوافق مع Netlify Runtime
+ * Netlify Function للمصادقة - محسنة للعمل على Netlify
  */
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 exports.handler = async (event, context) => {
   // إعداد CORS headers
@@ -20,10 +24,9 @@ exports.handler = async (event, context) => {
     };
   }
 
-  console.log('📨 طلب Netlify Function جديد:', {
+  console.log('📨 طلب Netlify Function:', {
     method: event.httpMethod,
     path: event.path,
-    queryStringParameters: event.queryStringParameters,
     environment: {
       hasSupabaseUrl: !!process.env.SUPABASE_URL,
       hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -32,14 +35,12 @@ exports.handler = async (event, context) => {
   });
 
   try {
-    // Import dependencies dynamically
-    const bcrypt = await import('bcryptjs');
-    const jwt = await import('jsonwebtoken');
-    const crypto = await import('crypto');
+    // Import Supabase dynamically
     const { createClient } = await import('@supabase/supabase-js');
 
     // إعداد Supabase
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('❌ Environment variables missing');
       return {
         statusCode: 500,
         headers,
@@ -61,6 +62,8 @@ exports.handler = async (event, context) => {
       }
     );
 
+    console.log('✅ Supabase client created successfully');
+
     // إعدادات JWT
     const JWT_CONFIG = {
       accessTokenSecret: process.env.JWT_ACCESS_SECRET || 'construction-app-access-secret-2025',
@@ -74,11 +77,11 @@ exports.handler = async (event, context) => {
     // دوال المساعدة
     async function hashPassword(password) {
       const SALT_ROUNDS = 12;
-      return bcrypt.default.hash(password, SALT_ROUNDS);
+      return bcrypt.hash(password, SALT_ROUNDS);
     }
 
     async function verifyPassword(password, hash) {
-      return bcrypt.default.compare(password, hash);
+      return bcrypt.compare(password, hash);
     }
 
     function validatePasswordStrength(password) {
@@ -114,7 +117,7 @@ exports.handler = async (event, context) => {
 
     // إنشاء JWT tokens
     async function generateTokenPair(userId, email, role, ipAddress, userAgent) {
-      const sessionId = crypto.default.randomUUID();
+      const sessionId = crypto.randomUUID();
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 دقيقة
 
@@ -127,7 +130,7 @@ exports.handler = async (event, context) => {
         type: 'access',
       };
 
-      const accessToken = jwt.default.sign(
+      const accessToken = jwt.sign(
         accessPayload,
         JWT_CONFIG.accessTokenSecret,
         {
@@ -145,7 +148,7 @@ exports.handler = async (event, context) => {
         type: 'refresh',
       };
 
-      const refreshToken = jwt.default.sign(
+      const refreshToken = jwt.sign(
         refreshPayload,
         JWT_CONFIG.refreshTokenSecret,
         {
@@ -262,6 +265,8 @@ exports.handler = async (event, context) => {
     // تسجيل مستخدم جديد
     async function registerUser(request) {
       const { email, password, name, phone, role = 'user', ipAddress, userAgent } = request;
+
+      console.log('📝 بدء عملية التسجيل للمستخدم:', email);
 
       // التحقق من قوة كلمة المرور
       const passwordValidation = validatePasswordStrength(password);
