@@ -1,5 +1,3 @@
-# Netlify configuration for Construction Project Management System
-
 [build]
   command = "npm run build"
   publish = "dist/public"
@@ -22,14 +20,6 @@
   status = 200
 
 [[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-[[headers]]
   for = "/api/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
@@ -37,20 +27,13 @@
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
 
 [[headers]]
-  for = "*.html"
+  for = "/*"
   [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
     Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-
-[context.production]
-  command = "npm run build"
-
-[context.branch-deploy]
-  command = "npm run build"
-
-[context.deploy-preview]
-  command = "npm run build"
