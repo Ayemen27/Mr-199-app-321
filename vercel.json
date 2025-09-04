@@ -6,6 +6,18 @@
     "api/index.ts": {
       "maxDuration": 30,
       "memory": 1024
+    },
+    "api/auth/login.ts": {
+      "maxDuration": 15,
+      "memory": 512
+    },
+    "api/auth/register.ts": {
+      "maxDuration": 15,
+      "memory": 512
+    },
+    "api/health.ts": {
+      "maxDuration": 10,
+      "memory": 256
     }
   },
   "rewrites": [
