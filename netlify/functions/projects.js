@@ -1,23 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// إعداد Supabase
-let supabase = null;
-try {
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-    console.log('✅ تم الاتصال بقاعدة بيانات Supabase');
-  } else {
-    console.error('❌ متغيرات بيئة Supabase غير موجودة');
-  }
-} catch (error) {
-  console.error('❌ خطأ في الاتصال بقاعدة البيانات:', error);
-}
-
 exports.handler = async (event, context) => {
-  // إعداد CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -25,30 +8,27 @@ exports.handler = async (event, context) => {
     'Content-Type': 'application/json',
   };
 
-  // معالجة OPTIONS preflight request
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
+    return { statusCode: 200, headers, body: '' };
   }
 
   try {
-    console.log('📋 [Netlify] طلب المشاريع');
-    
-    if (!supabase) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           success: false,
-          message: 'قاعدة البيانات غير متصلة'
+          message: 'Supabase configuration missing'
         }),
       };
     }
 
-    // معالجة طلبات GET
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
     if (event.httpMethod === 'GET') {
       const { data: projects, error } = await supabase
         .from('projects')
@@ -56,18 +36,17 @@ exports.handler = async (event, context) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('خطأ في جلب المشاريع:', error);
+        console.error('Error fetching projects:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             success: false,
-            message: 'فشل في جلب المشاريع'
+            message: 'Failed to fetch projects'
           }),
         };
       }
 
-      console.log(`✅ تم جلب ${projects?.length || 0} مشروع`);
       return {
         statusCode: 200,
         headers,
@@ -79,64 +58,59 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // معالجة طلبات POST (إنشاء مشروع جديد)
     if (event.httpMethod === 'POST') {
       const { name, status, imageUrl } = JSON.parse(event.body);
       
       const { data: newProject, error } = await supabase
         .from('projects')
-        .insert([
-          {
-            name,
-            status: status || 'active',
-            image_url: imageUrl || null,
-          }
-        ])
+        .insert([{
+          name,
+          status: status || 'active',
+          image_url: imageUrl || null,
+        }])
         .select()
         .single();
 
       if (error) {
-        console.error('خطأ في إنشاء المشروع:', error);
+        console.error('Error creating project:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             success: false,
-            message: 'فشل في إنشاء المشروع'
+            message: 'Failed to create project'
           }),
         };
       }
 
-      console.log('✅ تم إنشاء مشروع جديد:', newProject.name);
       return {
         statusCode: 201,
         headers,
         body: JSON.stringify({
           success: true,
           data: newProject,
-          message: 'تم إنشاء المشروع بنجاح'
+          message: 'Project created successfully'
         }),
       };
     }
 
-    // طريقة غير مدعومة
     return {
       statusCode: 405,
       headers,
       body: JSON.stringify({
         success: false,
-        message: 'طريقة غير مدعومة'
+        message: 'Method not supported'
       }),
     };
 
   } catch (error) {
-    console.error('❌ خطأ في دالة المشاريع:', error);
+    console.error('Function error:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         success: false,
-        message: 'خطأ داخلي في الخادم',
+        message: 'Internal server error',
         error: error.message
       }),
     };

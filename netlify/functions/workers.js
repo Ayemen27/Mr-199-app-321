@@ -1,23 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// إعداد Supabase
-let supabase = null;
-try {
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-    console.log('✅ تم الاتصال بقاعدة بيانات Supabase');
-  } else {
-    console.error('❌ متغيرات بيئة Supabase غير موجودة');
-  }
-} catch (error) {
-  console.error('❌ خطأ في الاتصال بقاعدة البيانات:', error);
-}
-
 exports.handler = async (event, context) => {
-  // إعداد CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -25,30 +8,27 @@ exports.handler = async (event, context) => {
     'Content-Type': 'application/json',
   };
 
-  // معالجة OPTIONS preflight request
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
+    return { statusCode: 200, headers, body: '' };
   }
 
   try {
-    console.log('👷 [Netlify] طلب العمال');
-    
-    if (!supabase) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           success: false,
-          message: 'قاعدة البيانات غير متصلة'
+          message: 'Supabase configuration missing'
         }),
       };
     }
 
-    // معالجة طلبات GET
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
     if (event.httpMethod === 'GET') {
       const { data: workers, error } = await supabase
         .from('workers')
@@ -56,18 +36,17 @@ exports.handler = async (event, context) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('خطأ في جلب العمال:', error);
+        console.error('Error fetching workers:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             success: false,
-            message: 'فشل في جلب العمال'
+            message: 'Failed to fetch workers'
           }),
         };
       }
 
-      console.log(`✅ تم جلب ${workers?.length || 0} عامل`);
       return {
         statusCode: 200,
         headers,
@@ -79,65 +58,60 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // معالجة طلبات POST (إنشاء عامل جديد)
     if (event.httpMethod === 'POST') {
       const { name, type, dailyWage, isActive } = JSON.parse(event.body);
       
       const { data: newWorker, error } = await supabase
         .from('workers')
-        .insert([
-          {
-            name,
-            type,
-            daily_wage: dailyWage,
-            is_active: isActive !== undefined ? isActive : true,
-          }
-        ])
+        .insert([{
+          name,
+          type,
+          daily_wage: dailyWage,
+          is_active: isActive !== undefined ? isActive : true,
+        }])
         .select()
         .single();
 
       if (error) {
-        console.error('خطأ في إنشاء العامل:', error);
+        console.error('Error creating worker:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             success: false,
-            message: 'فشل في إنشاء العامل'
+            message: 'Failed to create worker'
           }),
         };
       }
 
-      console.log('✅ تم إنشاء عامل جديد:', newWorker.name);
       return {
         statusCode: 201,
         headers,
         body: JSON.stringify({
           success: true,
           data: newWorker,
-          message: 'تم إنشاء العامل بنجاح'
+          message: 'Worker created successfully'
         }),
       };
     }
 
-    // طريقة غير مدعومة
     return {
       statusCode: 405,
       headers,
       body: JSON.stringify({
         success: false,
-        message: 'طريقة غير مدعومة'
+        message: 'Method not supported'
       }),
     };
 
   } catch (error) {
-    console.error('❌ خطأ في دالة العمال:', error);
+    console.error('Function error:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         success: false,
-        message: 'خطأ داخلي في الخادم',
+        message: 'Internal server error',
         error: error.message
       }),
     };

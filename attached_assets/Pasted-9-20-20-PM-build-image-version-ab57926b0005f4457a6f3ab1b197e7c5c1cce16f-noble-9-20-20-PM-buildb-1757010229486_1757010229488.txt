@@ -1,0 +1,170 @@
+9:20:20 PM: build-image version: ab57926b0005f4457a6f3ab1b197e7c5c1cce16f (noble)
+9:20:20 PM: buildbot version: b3b5b4a30e1a6519e8e7fa8f866565b02461c61b
+9:20:21 PM: Fetching cached dependencies
+9:20:21 PM: Starting to download cache of 433.7MB (Last modified: 2025-09-04 18:13:24 +0000 UTC)
+9:20:22 PM: Finished downloading cache in 1.675s
+9:20:22 PM: Starting to extract cache
+9:20:29 PM: Finished extracting cache in 6.944s
+9:20:29 PM: Finished fetching cache in 8.666s
+9:20:29 PM: Starting to prepare the repo for build
+9:20:29 PM: Preparing Git Reference refs/heads/main
+9:20:30 PM: Custom publish path detected. Proceeding with the specified path: 'dist/public'
+9:20:30 PM: Custom functions path detected. Proceeding with the specified path: 'netlify/functions'
+9:20:30 PM: Custom build command detected. Proceeding with the specified command: 'npm run build'
+9:20:31 PM: Starting to install dependencies
+9:20:31 PM: Started restoring cached python cache
+9:20:31 PM: Finished restoring cached python cache
+9:20:31 PM: Started restoring cached ruby cache
+9:20:32 PM: Finished restoring cached ruby cache
+9:20:32 PM: Started restoring cached go cache
+9:20:32 PM: Finished restoring cached go cache
+9:20:33 PM: Downloading and installing node v18.20.8...
+9:20:33 PM: Downloading https://nodejs.org/dist/v18.20.8/node-v18.20.8-linux-x64.tar.xz...
+9:20:34 PM: Computing checksum with sha256sum
+9:20:34 PM: Checksums matched!
+9:20:36 PM: Now using node v18.20.8 (npm v10.8.2)
+9:20:36 PM: Enabling Node.js Corepack
+9:20:36 PM: Started restoring cached build plugins
+9:20:36 PM: Finished restoring cached build plugins
+9:20:36 PM: WARNING: The environment variable 'NODE_ENV' is set to 'production'. Any 'devDependencies' in package.json will not be installed
+9:20:36 PM: Started restoring cached corepack dependencies
+9:20:36 PM: Finished restoring cached corepack dependencies
+9:20:36 PM: Started restoring cached pnpm cache
+9:20:36 PM: Finished restoring cached pnpm cache
+9:20:36 PM: No pnpm workspaces detected
+9:20:36 PM: Started restoring cached node modules
+9:20:36 PM: Finished restoring cached node modules
+9:20:37 PM: Installing npm packages using pnpm version 10.15.0
+9:20:37 PM: Lockfile is up to date, resolution step is skipped
+9:20:37 PM: Already up to date
+9:20:38 PM: ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+9:20:38 PM: │                                                                              │
+9:20:38 PM: │   Ignored build scripts: @tailwindcss/oxide, bufferutil, core-js, es5-ext,   │
+9:20:38 PM: │   esbuild.                                                                   │
+9:20:38 PM: │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+9:20:38 PM: │   to run scripts.                                                            │
+9:20:38 PM: │                                                                              │
+9:20:38 PM: ╰──────────────────────────────────────────────────────────────────────────────╯
+9:20:38 PM: Done in 1.1s using pnpm v10.15.0
+9:20:38 PM: npm packages installed using pnpm
+9:20:38 PM: Successfully installed dependencies
+9:20:38 PM: Starting build script
+9:20:39 PM: Detected 2 framework(s)
+9:20:39 PM: "vite" at version "5.4.19"
+9:20:39 PM: "expo" at version "53.0.20"
+9:20:39 PM: Section completed: initializing
+9:20:41 PM: ​
+9:20:41 PM: Netlify Build                                                 
+9:20:41 PM: ────────────────────────────────────────────────────────────────
+9:20:41 PM: ​
+9:20:41 PM: ❯ Version
+9:20:41 PM:   @netlify/build 35.1.4
+9:20:41 PM: ​
+9:20:41 PM: ❯ Flags
+9:20:41 PM:   accountId: 68b9d26c26dc65512d95f3bb
+9:20:41 PM:   baseRelDir: true
+9:20:41 PM:   buildId: 68b9d8641b64d100080ed46b
+9:20:41 PM:   deployId: 68b9d8641b64d100080ed46d
+9:20:41 PM: ​
+9:20:41 PM: ❯ Current directory
+9:20:41 PM:   /opt/build/repo
+9:20:41 PM: ​
+9:20:41 PM: ❯ Config file
+9:20:41 PM:   /opt/build/repo/netlify.toml
+9:20:41 PM: ​
+9:20:41 PM: ❯ Context
+9:20:41 PM:   production
+9:20:41 PM: ​
+9:20:41 PM: build.command from netlify.toml                               
+9:20:41 PM: ────────────────────────────────────────────────────────────────
+9:20:41 PM: ​
+9:20:41 PM: $ npm run build
+9:20:41 PM: > rest-express@1.0.0 build
+9:20:41 PM: > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+9:20:41 PM: vite v5.4.19 building for production...
+9:20:41 PM: transforming...
+9:20:52 PM: Failed during stage 'building site': Build script returned non-zero exit code: 2 (https://ntl.fyi/exit-code-2)
+9:20:51 PM: ✓ 3098 modules transformed.
+9:20:51 PM: rendering chunks...
+9:20:51 PM: computing gzip size...
+9:20:51 PM: ../dist/public/index.html                          7.94 kB │ gzip:   2.71 kB
+9:20:51 PM: ../dist/public/assets/index-C3fxy5Zu.css         140.58 kB │ gzip:  23.34 kB
+9:20:51 PM: ../dist/public/assets/exceljs.min-COfda2Xc.js    938.56 kB │ gzip: 271.04 kB
+9:20:51 PM: ../dist/public/assets/index-CdKRwC7h.js        1,247.23 kB │ gzip: 338.66 kB
+9:20:51 PM: 
+9:20:51 PM: (!) Some chunks are larger than 500 kB after minification. Consider:
+9:20:51 PM: - Using dynamic import() to code-split the application
+9:20:51 PM: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+9:20:51 PM: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+9:20:51 PM: ✓ built in 10.19s
+9:20:52 PM:   dist/index.js  783.0kb
+9:20:52 PM: ⚡ Done in 81ms
+9:20:52 PM: ​
+9:20:52 PM: (build.command completed in 10.9s)
+9:20:52 PM: ​
+9:20:52 PM: Functions bundling                                            
+9:20:52 PM: ────────────────────────────────────────────────────────────────
+9:20:52 PM: ​
+9:20:52 PM: Packaging Functions from netlify/functions directory:
+9:20:52 PM:  - projects.js
+9:20:52 PM:  - workers.js
+9:20:52 PM: ​
+9:20:52 PM: ​
+9:20:52 PM: Dependencies installation error                               
+9:20:52 PM: ────────────────────────────────────────────────────────────────
+9:20:52 PM: ​
+9:20:52 PM:   Error message
+9:20:52 PM:   A Netlify Function failed to require one of its dependencies.
+9:20:52 PM:   Please make sure it is present in the site's top-level "package.json".
+​
+9:20:52 PM:   In file "/opt/build/repo/netlify/functions/workers.js"
+9:20:52 PM:   Cannot find module '@supabase/auth-js'
+9:20:52 PM:   Require stack:
+9:20:52 PM:   - /opt/buildhome/node-deps/node_modules/@netlify/zip-it-and-ship-it/dist/runtimes/node/bundlers/zisi/resolve.js
+9:20:52 PM: ​
+9:20:52 PM:   Resolved config
+9:20:52 PM:   build:
+9:20:52 PM:     command: npm run build
+9:20:52 PM:     commandOrigin: config
+9:20:52 PM:     environment:
+9:20:52 PM:       - ENCRYPTION_KEY
+9:20:52 PM:       - JWT_ACCESS_SECRET
+9:20:52 PM:       - JWT_REFRESH_SECRET
+9:20:52 PM:       - NODE_ENV
+9:20:52 PM:       - SUPABASE_ANON_KEY
+9:20:52 PM:       - SUPABASE_SERVICE_ROLE_KEY
+9:20:52 PM:       - SUPABASE_URL
+9:20:52 PM:       - NODE_VERSION
+9:20:52 PM:     publish: /opt/build/repo/dist/public
+9:20:52 PM:     publishOrigin: config
+9:20:52 PM:   functionsDirectory: /opt/build/repo/netlify/functions
+9:20:52 PM:   headers:
+9:20:52 PM:     - for: /*
+      values:
+        Referrer-Policy: strict-origin-when-cross-origin
+        X-Content-Type-Options: nosniff
+        X-Frame-Options: DENY
+        X-XSS-Protection: 1; mode=block
+    - for: /api/*
+      values:
+        Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With
+        Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH
+        Access-Control-Allow-Origin: "*"
+    - for: "*.html"
+      values:
+        Cache-Control: public, max-age=0, must-revalidate
+    - for: /assets/*
+      values:
+        Cache-Control: public, max-age=31536000, immutable
+  headersOrigin: config
+  redirects:
+    - from: /api/*
+      status: 200
+      to: /.netlify/functions/:splat
+    - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
+9:20:52 PM: Build failed due to a user error: Build script returned non-zero exit code: 2
+9:20:52 PM: Failing build: Failed to build site
+9:20:53 PM: Finished processing build request in 31.832s
