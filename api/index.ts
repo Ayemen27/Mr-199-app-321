@@ -1617,11 +1617,11 @@ app.get('/api/dashboard/stats', async (req, res) => {
 
     const stats = {
       totalProjects: projects.count || 0,
-      activeProjects: projects.data?.filter(p => p.status === 'active').length || 0,
+      activeProjects: projects.data?.filter((p: any) => p.status === 'active').length || 0,
       totalWorkers: workers.count || 0,
-      activeWorkers: workers.data?.filter(w => w.isActive).length || 0,
-      totalExpenses: totalExpenses.data?.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0) || 0,
-      totalTransfers: totalTransfers.data?.reduce((sum, transfer) => sum + parseFloat(transfer.amount || 0), 0) || 0
+      activeWorkers: workers.data?.filter((w: any) => w.isActive).length || 0,
+      totalExpenses: totalExpenses.data?.reduce((sum: any, exp: any) => sum + parseFloat(exp.amount || 0), 0) || 0,
+      totalTransfers: totalTransfers.data?.reduce((sum: any, transfer: any) => sum + parseFloat(transfer.amount || 0), 0) || 0
     };
 
     res.json({ success: true, data: stats });
@@ -1668,9 +1668,9 @@ app.get('/api/analytics', async (req, res) => {
       .select('actual_wage')
       .eq('status', 'present');
 
-    const totalMaterials = materialCosts?.reduce((sum, item) => sum + (parseFloat(item.total_cost) || 0), 0) || 0;
-    const totalTransportation = transportationCosts?.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0) || 0;
-    const totalWorkers = workerWages?.reduce((sum, item) => sum + (parseFloat(item.actual_wage) || 0), 0) || 0;
+    const totalMaterials = materialCosts?.reduce((sum: any, item: any) => sum + (parseFloat(item.total_cost) || 0), 0) || 0;
+    const totalTransportation = transportationCosts?.reduce((sum: any, item: any) => sum + (parseFloat(item.amount) || 0), 0) || 0;
+    const totalWorkers = workerWages?.reduce((sum: any, item: any) => sum + (parseFloat(item.actual_wage) || 0), 0) || 0;
 
     const analytics = {
       monthlyExpenses: [], // يمكن إضافة حساب شهري لاحقاً
@@ -1867,8 +1867,8 @@ app.get('/api/reports/worker-attendance/:projectId/:date', async (req, res) => {
       data: attendance || [],
       summary: {
         totalWorkers: attendance?.length || 0,
-        presentWorkers: attendance?.filter(a => a.isPresent).length || 0,
-        totalWages: attendance?.reduce((sum, a) => sum + parseFloat(a.actualWage || 0), 0) || 0
+        presentWorkers: attendance?.filter((a: any) => a.isPresent).length || 0,
+        totalWages: attendance?.reduce((sum: any, a: any) => sum + parseFloat(a.actualWage || 0), 0) || 0
       }
     });
   } catch (error) {
