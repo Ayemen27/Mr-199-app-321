@@ -14,10 +14,6 @@
 [functions]
   directory = "functions"
   node_bundler = "esbuild"
-  # زيادة timeout لتجنب 504 errors - مهم جداً لإصلاح أخطاء Netlify
-  timeout = 30
-  # زيادة الذاكرة لتجنب out of memory errors
-  memory = 1024
 
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
@@ -27,9 +23,6 @@
   to = "/.netlify/functions/api/:splat"
   status = 200
   force = true
-  # إعدادات خاصة لمعالجة أخطاء 502
-  conditions = {Role = ["admin", "user"], Country = ["!US"]}
-  headers = {X-Error-Handler = "advanced"}
 
 [[redirects]]
   from = "/*"
